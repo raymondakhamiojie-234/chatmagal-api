@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id                String     @id @default(uuid())
+  name              String
+  metaWabaId        String?
+  metaPhoneNumberId String?
+  walletBalance     Decimal    @default(0.0)
+  createdAt         DateTime   @default(now())
+
+  contacts          Contact[]
+  messages          Message[]
+  campaigns         Campaign[]
+  transactions      Transaction[]
+}
+
+model Contact {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  phoneNumber   String
+  optInStatus   Boolean   @default(true)
+  assignedAgent String?
+  botEnabled    Boolean   @default(true) // New field: toggles bot automated replies
+  sentiment     String    @default("NEUTRAL") // NEW: HAPPY, NEUTRAL, ANGRY, URGENT
+  priority      String    @default("STANDARD") // NEW: STANDARD, HIGH, URGENT
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  messages    Message[]
+
+  @@unique([workspaceId, phoneNumber])
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageLane {
+  SUPPORT
+  MARKETING
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model Message {
+  id          String           @id @default(uuid())
+  workspaceId String
+  contactId   String
+  direction   MessageDirection
+  lane        MessageLane
+  content     Json
+  status      MessageStatus    @default(SENT)
+  createdAt   DateTime         @default(now())
+
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id])
+  contact     Contact          @relation(fields: [contactId], references: [id])
+}
+
+enum CampaignStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  SCHEDULED
+  CANCELLED
+}
+
+model Campaign {
+  id           String         @id @default(uuid())
+  workspaceId  String
+  templateName String
+  status       CampaignStatus @default(PENDING)
+  createdAt    DateTime       @default(now())
+  scheduledAt  DateTime?
+
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id])
+}
+
+enum TransactionType {
+  REFILL
+  CHARGE
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  workspaceId String
+  type        TransactionType
+  amount      Decimal         @db.Decimal(10, 2)
+  description String
+  createdAt   DateTime        @default(now())
+
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id])
+}

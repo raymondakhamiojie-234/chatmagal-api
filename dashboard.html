@@ -1,0 +1,3805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatmagal SaaS Admin Console</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Socket.io Client -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- Chart.js for Premium Visual Reports -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Premium Vanilla CSS -->
+  <style>
+    :root {
+      --bg-deep: #f8fafc;
+      --bg-panel: rgba(255, 255, 255, 0.9);
+      --border-light: rgba(15, 23, 42, 0.07);
+      --border-glowing: rgba(16, 185, 129, 0.25);
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --primary-glow: rgba(16, 185, 129, 0.15);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.15);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --bubble-in: #e2e8f0;
+      --bubble-out: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%);
+      --sidebar-width: 260px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, sans-serif;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(15, 23, 42, 0.08) transparent;
+    }
+
+    /* Scrollbars */
+    *::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    *::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.1);
+      border-radius: 99px;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(15, 23, 42, 0.25);
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background-image: 
+        radial-gradient(circle at 5% 5%, rgba(16, 185, 129, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 95% 95%, rgba(16, 185, 129, 0.04) 0%, transparent 45%);
+    }
+
+    /* Layout structure */
+    .app-sidebar {
+      width: var(--sidebar-width);
+      border-right: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Sidebar Logo / Workspace details */
+    .sidebar-header {
+      padding: 1.5rem 1.75rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary) 0%, #34d399 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 1.1rem;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #0f172a, #047857);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    /* Wallet Glowing Card */
+    .wallet-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.8) 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    .wallet-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, var(--primary-glow) 0%, transparent 60%);
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    .wallet-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .wallet-balance {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0.25rem 0 0.5rem 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .refill-btn {
+      width: 100%;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #047857;
+      padding: 0.45rem;
+      font-size: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+    }
+
+    .refill-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    /* Sidebar Navigation Links */
+    .sidebar-menu {
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex: 1;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .menu-item:hover {
+      background: rgba(0, 0, 0, 0.02);
+      color: #000;
+    }
+
+    .menu-item.active {
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid var(--border-glowing);
+      color: #047857;
+      font-weight: 600;
+    }
+
+    /* Connection Status Footer */
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #f43f5e;
+      display: inline-block;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success-glow);
+      animation: pulse 2s infinite;
+    }
+
+    /* Main Panel Header */
+    .app-header {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.4);
+      border-bottom: 1px solid var(--border-light);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .header-title-container h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .header-title-container p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .workspace-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #0f172a;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-light);
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+    }
+
+    /* Main Scrollable View Area */
+    .view-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view-pane {
+      display: none;
+      height: 100%;
+      width: 100%;
+      animation: tabFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .view-pane.active {
+      display: flex;
+    }
+
+    /* Workspace ID Portal Overlay (Locks screen until ID is typed) */
+    .portal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(248, 250, 252, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .portal-card {
+      background: #fff;
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-radius: 24px;
+      padding: 2.5rem;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08), 0 0 30px var(--primary-glow);
+    }
+
+    /* ---------------------------------------------------- */
+    /* VIEW PANE 1: ANALYTICS OVERVIEW */
+    /* ---------------------------------------------------- */
+    .analytics-view {
+      padding: 2rem;
+      overflow-y: auto;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    .kpi-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: 18px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0, 0, 0, 0.12);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    .kpi-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0.5rem;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .kpi-accent-glow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle at 100% 0%, var(--primary-glow) 0%, transparent 70%);
+      opacity: 0.4;
+      border-radius: 0 18px 0 0;
+    }
+
+    .kpi-card.success-glow .kpi-accent-glow {
+      background: radial-gradient(circle at 100% 0%, var(--success-glow) 0%, transparent 70%);
+    }
+
+    /* Quick Guide cards */
+    .dashboard-bottom-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    .analytics-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .analytics-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ---------------------------------------------------- */
+    /* VIEW PANE 2: SHARED SUPPORT CHAT INBOX */
+    /* ---------------------------------------------------- */
+    .chat-view {
+      display: flex;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Contacts Thread Sidebar */
+    .chat-threads-sidebar {
+      width: 300px;
+      border-right: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.6);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .threads-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .threads-count {
+      font-size: 0.7rem;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.2rem 0.5rem;
+      border-radius: 99px;
+      color: var(--text-muted);
+    }
+
+    .threads-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .thread-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .thread-item:hover {
+      background: rgba(0, 0, 0, 0.015);
+    }
+
+    .thread-item.active {
+      background: rgba(16, 185, 129, 0.05);
+      border-left: 3px solid var(--primary);
+    }
+
+    .thread-avatar {
+      width: 38px;
+      height: 38px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #047857;
+      flex-shrink: 0;
+    }
+
+    .thread-details {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .thread-contact-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.25rem;
+    }
+
+    .thread-number {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .thread-time {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .thread-preview {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Active Conversation Window */
+    .active-chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .active-chat-header {
+      padding: 1.1rem 2rem;
+      border-bottom: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .active-contact-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+
+    .active-chat-messages {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      background: rgba(241, 245, 249, 0.5);
+    }
+
+    .chat-bubble-row {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .chat-bubble-row.inbound {
+      align-items: flex-start;
+    }
+
+    .chat-bubble-row.outbound {
+      align-items: flex-end;
+    }
+
+    .chat-bubble {
+      max-width: 70%;
+      padding: 0.85rem 1.15rem;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .chat-bubble-row.inbound .chat-bubble {
+      background-color: var(--bubble-in);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+      border-bottom-left-radius: 4px;
+      color: #0f172a;
+    }
+
+    .chat-bubble-row.outbound .chat-bubble {
+      background: var(--bubble-out);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-bottom-right-radius: 4px;
+      color: #0f172a;
+    }
+
+    .bubble-time {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      text-align: right;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.25rem;
+    }
+
+    .bubble-time.inbound {
+      justify-content: flex-start;
+    }
+
+    /* Outbound Status Marks */
+    .status-check {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .status-check.sent {
+      color: #10b981;
+    }
+
+    .status-check.failed {
+      color: var(--danger);
+    }
+
+    /* Collapsible JSON block inside bubbles */
+    .bubble-meta {
+      font-size: 0.7rem;
+      font-family: monospace;
+      background: #f8fafc;
+      padding: 0.5rem;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      max-height: 150px;
+      overflow-y: auto;
+      color: #047857;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      display: none;
+    }
+
+    .toggle-meta-link {
+      font-size: 0.68rem;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-top: 0.35rem;
+      text-align: left;
+      font-weight: 600;
+      outline: none;
+      display: block;
+    }
+
+    .toggle-meta-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Active Chat Bottom Input Area */
+    .active-chat-input-bar {
+      padding: 1.25rem 2rem;
+      border-top: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.85);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .chat-text-area {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 0.85rem 1.25rem;
+      color: var(--text-main);
+      outline: none;
+      font-size: 0.9rem;
+      resize: none;
+      height: 48px;
+      line-height: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .chat-text-area:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .chat-send-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px var(--primary-glow);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .chat-send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px var(--primary-glow);
+    }
+
+    .chat-send-btn:active {
+      transform: translateY(0);
+    }
+
+    .chat-send-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Placeholder Screen */
+    .empty-chat-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      color: var(--text-muted);
+      padding: 2rem;
+    }
+
+    .empty-icon {
+      font-size: 3.5rem;
+      opacity: 0.25;
+      margin-bottom: 1.5rem;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    /* Chat Right Sidebar details */
+    .chat-details-sidebar {
+      width: 260px;
+      border-left: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.4);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .detail-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+
+    .detail-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+
+    .detail-val {
+      font-size: 0.875rem;
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    /* ---------------------------------------------------- */
+    /* VIEW PANE 3: CAMPAIGNS & BROADCASTS */
+    /* ---------------------------------------------------- */
+    .campaigns-view {
+      padding: 2rem;
+      overflow-y: auto;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .campaign-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .campaign-list-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 1.75rem;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Campaign Logs Table */
+    .campaign-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      text-align: left;
+    }
+
+    .campaign-table th {
+      padding: 1rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-light);
+      letter-spacing: 0.5px;
+    }
+
+    .campaign-table td {
+      padding: 1.1rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .campaign-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Pulsing Badge */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+
+    .badge-status.processing {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #047857;
+    }
+
+    .badge-status.completed {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: #047857;
+    }
+
+    .badge-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge-status.processing .badge-status-dot {
+      animation: pulse 1.5s infinite;
+    }
+
+    .badge-status.scheduled {
+      background: rgba(249, 115, 22, 0.08);
+      border-color: rgba(249, 115, 22, 0.2);
+      color: #c2410c;
+    }
+
+    .badge-status.scheduled .badge-status-dot {
+      animation: pulse 2s infinite;
+    }
+
+    .badge-status.cancelled {
+      background: rgba(100, 116, 139, 0.08);
+      border-color: rgba(100, 116, 139, 0.2);
+      color: #64748b;
+    }
+
+    /* Campaign launcher panel overlay */
+    .campaign-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(248, 250, 252, 0.8);
+      backdrop-filter: blur(12px);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .campaign-modal.active {
+      display: flex;
+    }
+
+    .campaign-modal-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: 24px;
+      padding: 2.25rem;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+
+    /* ---------------------------------------------------- */
+    /* VIEW PANE 4: SETTINGS */
+    /* ---------------------------------------------------- */
+    .settings-view {
+      padding: 2rem;
+      overflow-y: auto;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 720px;
+    }
+
+    /* General Form fields */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.015);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+      background: #fff;
+    }
+
+    /* Global buttons */
+    .btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #fff;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px var(--primary-glow);
+      filter: brightness(1.08);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-light);
+      color: var(--text-main);
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 0, 0, 0.06);
+      box-shadow: none;
+      transform: none;
+      filter: none;
+    }
+
+    .banner {
+      padding: 0.85rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid transparent;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .banner.success {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #047857;
+      display: flex;
+    }
+
+    .banner.error {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.18);
+      color: #b91c1c;
+      display: flex;
+    }
+
+    /* Keyframes */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: scale(0.995); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Credit Billing & Logs Styles */
+    .billing-view {
+      padding: 2rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    
+    .billing-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .billing-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 1.75rem;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+    
+    .billing-overview-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.8) 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .badge-tx {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    
+    .badge-tx.refill {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #047857;
+    }
+    
+    .badge-tx.charge {
+      background: rgba(15, 23, 42, 0.05);
+      border-color: rgba(15, 23, 42, 0.1);
+      color: var(--text-main);
+    }
+
+    /* Print receipt styling components */
+    .receipt-header {
+      border-bottom: 2px dashed #cbd5e1;
+      padding-bottom: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .receipt-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .receipt-meta-info {
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+    }
+
+    .receipt-table th {
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.6rem 0;
+      letter-spacing: 0.5px;
+    }
+
+    .receipt-table td {
+      font-size: 0.825rem;
+      color: #0f172a;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .receipt-total-row {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1rem;
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .paid-stamp {
+      border: 2px solid #10b981;
+      color: #10b981;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: inline-block;
+      transform: rotate(-4deg);
+      letter-spacing: 1px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #receipt-modal, #receipt-modal *, #printable-receipt-content, #printable-receipt-content * {
+        visibility: visible;
+      }
+      #receipt-modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        background: #fff;
+        display: flex !important;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+      #printable-receipt-content {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Charts Grid Layout */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+
+    /* Team Leader Mode Toggle (Option F Extra Security) */
+    .toggle-switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed rgba(16, 185, 129, 0.15);
+    }
+    .toggle-switch-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 20px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    input:checked + .toggle-slider {
+      background-color: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Login & Register Tab Styles */
+    .portal-pane {
+      display: none;
+      animation: portalFadeIn 0.3s ease;
+    }
+    .portal-pane.active {
+      display: block;
+    }
+    @keyframes portalFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blinkPulse {
+      0% { opacity: 0.35; }
+      50% { opacity: 1; }
+      100% { opacity: 0.35; }
+    }
+    @keyframes pulseRed {
+      0% { opacity: 0.75; }
+      50% { opacity: 1; }
+      100% { opacity: 0.75; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PORTAL GATEWAY: Sign In / Register Portal -->
+  <div class="portal-overlay" id="portal-overlay">
+    <div class="portal-card" style="max-width: 400px; width: 100%; transition: all 0.3s ease;">
+      <div class="logo-container" style="justify-content: center; margin-bottom: 1.25rem;">
+        <div class="logo-badge">C</div>
+        <div class="logo-text">Chatmagal Gate</div>
+      </div>
+      
+      <!-- Interactive Selector Tabs -->
+      <div class="portal-tabs" style="display: flex; background: rgba(15, 23, 42, 0.03); border: 1px solid var(--border-light); padding: 0.25rem; border-radius: 10px; margin-bottom: 1.5rem;">
+        <button type="button" id="portal-tab-signin" class="btn" style="flex: 1; padding: 0.45rem; font-size: 0.78rem; border-radius: 8px; border: none; box-shadow: none; font-weight: 600; background: var(--primary); color: #fff; transition: all 0.2s;">Sign In</button>
+        <button type="button" id="portal-tab-signup" class="btn btn-secondary" style="flex: 1; padding: 0.45rem; font-size: 0.78rem; border-radius: 8px; border: none; box-shadow: none; font-weight: 500; background: transparent; color: var(--text-muted); transition: all 0.2s;">Create Account</button>
+      </div>
+
+      <!-- PANE 1: SIGN IN -->
+      <div class="portal-pane active" id="portal-pane-signin">
+        <h2 style="font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 700;">Welcome Back</h2>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.45;">
+          Input your Workspace credentials below. If using sandbox, you can sign in instantly using the prefilled testing details.
+        </p>
+        
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-signin-email">Admin Email (Mock)</label>
+          <input type="email" id="portal-signin-email" class="form-input" placeholder="e.g. admin@business.com" value="admin@business.com">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-signin-password">Password (Mock)</label>
+          <input type="password" id="portal-signin-password" class="form-input" placeholder="••••••••" value="password123">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-id-input">Workspace ID</label>
+          <input type="text" id="portal-id-input" class="form-input" placeholder="e.g. test-workspace-id" value="test-workspace-id" style="font-family: monospace; font-weight: 600; color: #047857;">
+        </div>
+        <button class="btn" id="portal-enter-btn" style="width: 100%; margin-top: 0.5rem;">Authorize Session</button>
+      </div>
+
+      <!-- PANE 2: CREATE ACCOUNT -->
+      <div class="portal-pane" id="portal-pane-signup">
+        <h2 style="font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 700;">Register Workspace</h2>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.45;">
+          Create a new isolated SaaS Workspace. Your business will be instantly pre-funded with **$100.00** starting credits.
+        </p>
+        
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-signup-name">Business / Workspace Name</label>
+          <input type="text" id="portal-signup-name" class="form-input" placeholder="e.g. Acme WABA Logistics" required>
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-signup-email">Admin Email (Mock)</label>
+          <input type="email" id="portal-signup-email" class="form-input" placeholder="e.g. contact@acme.com" value="ceo@acme.com">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-signup-password">Secure Password (Mock)</label>
+          <input type="password" id="portal-signup-password" class="form-input" placeholder="••••••••" value="secretPass123">
+        </div>
+        <button class="btn" id="portal-signup-btn" style="width: 100%; margin-top: 0.5rem;">Create Workspace Account</button>
+      </div>
+
+      <!-- SIGN UP SUCCESS SUB-CARD -->
+      <div id="portal-signup-success" style="display: none; background: rgba(16,185,129,0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 1.25rem; margin-top: 1rem; text-align: left; animation: portalFadeIn 0.3s ease;">
+        <h3 style="color:#047857; font-size:0.9rem; font-weight:700; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">✓ Account Created Successfully!</h3>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">Your account is pre-funded with <strong>$100.00</strong> starting credits. Copy your Workspace ID to secure your access:</p>
+        
+        <div style="display:flex; gap:0.5rem; align-items:center; background:#fff; border:1px solid var(--border-light); padding:0.4rem 0.6rem; border-radius:8px;">
+          <span id="portal-new-id-badge" style="font-family:monospace; font-size:0.75rem; font-weight:700; color:#0f172a; flex:1; overflow:hidden; text-overflow:ellipsis;"></span>
+          <button type="button" id="portal-copy-btn" class="refill-btn" style="width:auto; margin:0; padding:0.25rem 0.5rem; font-size:0.68rem; border-radius:6px; box-shadow:none;">📋 Copy</button>
+        </div>
+        
+        <button type="button" id="portal-go-btn" class="btn" style="width:100%; margin-top:1.25rem; padding:0.6rem; font-weight:700;">Enter Workspace Dashboard</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- APPLICATION CONTAINER -->
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-container">
+        <div class="logo-badge">C</div>
+        <div class="logo-text">Chatmagal</div>
+      </div>
+      
+      <!-- Wallet Panel Card -->
+      <div class="wallet-card">
+        <div class="wallet-label">Wallet Balance</div>
+        <div class="wallet-balance" id="sidebar-wallet-balance">$0.00</div>
+        <button class="refill-btn" id="sidebar-refill-btn">
+          <svg style="width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Refill Wallet
+        </button>
+      </div>
+
+      <!-- Agent Status Card (Option F) -->
+      <div class="wallet-card" style="margin-top: 0.75rem; border-color: rgba(16, 185, 129, 0.1);">
+        <div class="wallet-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Active Agent</span>
+          <span style="display:flex; align-items:center; gap:0.25rem; font-size:0.65rem; font-weight:700;" id="agent-presence-badge">
+            <span class="status-dot active" style="width:6px; height:6px; background:#10b981;" id="agent-presence-dot"></span>
+            <span id="agent-presence-text" style="color:#047857;">ONLINE</span>
+          </span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.35rem;">
+          <div class="thread-avatar" style="width:28px; height:28px; font-size:0.75rem; border-radius:8px; background:rgba(16,185,129,0.1); color:#047857; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">ME</div>
+          <select id="agent-status-select" class="form-input" style="padding:0.25rem 0.5rem; font-size:0.75rem; height:28px; border-radius:6px; cursor:pointer; font-weight:600; background:#fff; border:1px solid var(--border-light); flex:1; outline:none;">
+            <option value="Online">🟢 Online (Available)</option>
+            <option value="Away">🟡 Away</option>
+            <option value="Offline">🔴 Offline</option>
+          </select>
+        </div>
+        <!-- Team Leader Mode (Option F Extra Security) -->
+        <div class="toggle-switch-container">
+          <span class="toggle-switch-label">
+            <span id="role-icon">🔒</span> Team Leader Mode
+          </span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="team-leader-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-menu">
+      <div class="menu-item active" data-tab="analytics">
+        📊 Overview Analytics
+      </div>
+      <div class="menu-item" data-tab="chat">
+        💬 Live Shared Inbox
+      </div>
+      <div class="menu-item" data-tab="campaigns">
+        🚀 Broadcast Campaigns
+      </div>
+      <div class="menu-item" data-tab="billing">
+        💳 Credit Billing & Logs
+      </div>
+    </nav>
+
+    <!-- Sidebar footer (Socket connection status) -->
+    <div class="sidebar-footer">
+      <div class="status-badge">
+        <span class="status-dot" id="socket-status-dot"></span>
+        <span id="socket-status-text" style="color: var(--text-muted)">Offline</span>
+      </div>
+      <span style="font-size:0.65rem; color: rgba(255,255,255,0.15)">v1.0.0</span>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="app-main">
+    <header class="app-header">
+      <div class="header-title-container">
+        <h1 id="header-view-title">Workspace Overview</h1>
+        <p id="header-view-desc">Monitor pipeline statistics and core KPIs in real-time.</p>
+      </div>
+      <div class="header-actions">
+        <span class="workspace-pill" id="active-workspace-pill">Workspace: ...</span>
+        <button class="btn btn-secondary" id="logout-btn" style="padding: 0.4rem 0.85rem; font-size: 0.75rem; border-radius: 8px;">Switch Workspace</button>
+      </div>
+    </header>
+
+    <div class="view-content">
+      
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 1: ANALYTICS OVERVIEW -->
+      <!-- ---------------------------------------------------- -->
+      <div class="view-pane active" id="pane-analytics">
+        <div class="analytics-view">
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <span class="kpi-title">Outbound Messages</span>
+              <div class="kpi-value" id="kpi-sent">0</div>
+              <span style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem;">Total marketing templates & replies</span>
+              <div class="kpi-accent-glow"></div>
+            </div>
+            <div class="kpi-card success-glow">
+              <span class="kpi-title">Inbound Messages</span>
+              <div class="kpi-value" id="kpi-received">0</div>
+              <span style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem;">Real-time customer support queries</span>
+              <div class="kpi-accent-glow"></div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">Active Contacts</span>
+              <div class="kpi-value" id="kpi-contacts">0</div>
+              <span style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem;">Unique WhatsApp threads generated</span>
+              <div class="kpi-accent-glow"></div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">Campaigns Sent</span>
+              <div class="kpi-value" id="kpi-campaigns">0</div>
+              <span style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem;">Marketing broadcast groups completed</span>
+              <div class="kpi-accent-glow"></div>
+            </div>
+          </div>
+
+          <div class="dashboard-bottom-grid">
+            <div class="analytics-card">
+              <h3>⚡ Getting Started & Testing Guide</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+                Welcome to Chatmagal, a multi-tenant WhatsApp Business platform. Your local stack is fully connected. Follow these instructions to perform integration testing:
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.825rem;">
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-light); padding: 0.85rem; border-radius: 10px;">
+                  <strong style="color: #fff; display: block; margin-bottom: 0.25rem;">1. Test Inbound Messages (Live Inbox)</strong>
+                  Send a standard WhatsApp text to your official Meta developer phone number. It routes through localtunnel, hits your webhook, and immediately pops up in the <strong>Live Shared Inbox</strong> tab.
+                </div>
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-light); padding: 0.85rem; border-radius: 10px;">
+                  <strong style="color: #fff; display: block; margin-bottom: 0.25rem;">2. Outbound Broadcasts</strong>
+                  Open the <strong>Broadcast Campaigns</strong> tab, click **Launch Campaign**, and enter your phone number. The server automatically batches contacts in groups of 50 and handles background delivery via BullMQ and Redis.
+                </div>
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-light); padding: 0.85rem; border-radius: 10px;">
+                  <strong style="color: #fff; display: block; margin-bottom: 0.25rem;">3. Real-Time Chat Console</strong>
+                  Open the <strong>Live Shared Inbox</strong> tab, select your contact, type a message, and hit send! It will immediately push a live text reply to your phone and bill the Workspace balance.
+                </div>
+              </div>
+            </div>
+
+            <div class="analytics-card" style="display: flex; flex-direction: column; gap: 1rem;">
+              <h3>💳 Billing & Wallet Card</h3>
+              <div style="text-align: center; padding: 1rem 0;">
+                <div style="font-size: 2.2rem; font-weight: 800; color: #10b981; font-family: 'Outfit', sans-serif;" id="overview-wallet-balance">$0.00</div>
+                <span style="font-size: 0.75rem; color: var(--text-muted)">Current Account Limit Credits</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; line-height: 1.4;">
+                Campaign Broadcasts and Inbound/Outbound agent replies deduct credits from your balance in real-time. Click below to refill instantly.
+              </p>
+              <button class="btn" id="overview-refill-btn" style="width:100%;">Top Up Wallet (+$100.00)</button>
+            </div>
+          </div>
+
+          <!-- INTERACTIVE CHARTS SECTION -->
+          <div class="charts-grid">
+            <div class="analytics-card">
+              <h3>📊 Inbound vs Outbound Message Flow</h3>
+              <div style="position: relative; height: 260px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                <canvas id="trafficChart" style="max-height: 240px; max-width: 240px;"></canvas>
+              </div>
+            </div>
+
+            <div class="analytics-card">
+              <h3>💸 Prepaid Credit Spend Ledger</h3>
+              <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="spendChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 2: SHARED SUPPORT CHAT INBOX -->
+      <!-- ---------------------------------------------------- -->
+      <div class="view-pane" id="pane-chat">
+        <div class="chat-view">
+          
+          <!-- Threads list Sidebar -->
+          <div class="chat-threads-sidebar">
+            <div class="threads-header">
+              <span>Active Threads</span>
+              <span class="threads-count" id="chat-threads-count">0 threads</span>
+            </div>
+            <div class="threads-list" id="chat-threads-list">
+              <!-- Dynamically populated contacts -->
+            </div>
+          </div>
+
+          <!-- Active Conversation -->
+          <div class="active-chat-container">
+            <div class="active-chat-header" id="active-chat-header" style="display: none; align-items: center; justify-content: space-between;">
+              <div>
+                <div class="active-contact-title" id="active-contact-title">+2348054540828</div>
+                <div style="font-size:0.7rem; color:var(--success); font-weight:600; display:flex; align-items:center; gap:0.25rem;">
+                  <span class="status-dot active" style="width:5px; height:5px; background:var(--success);"></span>
+                  Customer Care Session Active
+                  <span id="chat-bot-paused-banner" style="display: none; background: #fee2e2; color: #ef4444; padding: 0.1rem 0.4rem; border-radius: 6px; font-weight: 700; font-size: 0.65rem; border: 1px solid #fca5a5; margin-left: 0.3rem; animation: pulseRed 1.5s infinite ease-in-out;">⏸ Bot Paused for Handoff</span>
+                  <span id="chat-priority-urgent-banner" style="display: none; background: #fee2e2; color: #ef4444; padding: 0.1rem 0.4rem; border-radius: 6px; font-weight: 700; font-size: 0.65rem; border: 1px solid #fca5a5; margin-left: 0.3rem; animation: pulseRed 1.5s infinite ease-in-out;">🚨 URGENT PRIORITY</span>
+                  <span id="chat-typing-indicator" style="display: none; font-size: 0.72rem; color: #10b981; font-weight: 700; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; animation: blinkPulse 1.2s infinite ease-in-out;">💬 typing...</span>
+                </div>
+              </div>
+              
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <!-- Auto-Bot Toggle Switch (Option A) -->
+                <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(15,23,42,0.03); border:1px solid var(--border-light); padding:0.25rem 0.5rem; border-radius:8px;" id="bot-toggle-container">
+                  <span style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">🤖 Auto-Bot:</span>
+                  <label class="toggle-switch" style="width:34px; height:18px;">
+                    <input type="checkbox" id="chat-bot-toggle" checked>
+                    <span class="toggle-slider" style="border-radius:18px;"></span>
+                  </label>
+                </div>
+
+                <!-- Ticket Assignment Selector (Option F) -->
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span id="assignee-lock-icon" style="font-size: 0.85rem; color: #ef4444; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: -0.15rem;">🔒</span>
+                  <span style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Assignee:</span>
+                  <select id="chat-assignee-select" class="form-input" disabled style="padding:0.25rem 0.5rem; font-size:0.75rem; height:28px; width:130px; border-radius:6px; cursor:not-allowed; font-weight:600; background:#f1f5f9; border:1px solid var(--border-light); outline:none; opacity: 0.6; transition: all 0.3s ease;">
+                    <option value="Unassigned">👤 Unassigned</option>
+                    <option value="Agent Me">🟢 Agent Me</option>
+                    <option value="Agent Alice">👩‍💼 Agent Alice</option>
+                    <option value="Technical Ray">🛠️ Technical Ray</option>
+                    <option value="CEO Praise">👑 CEO Praise</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Thread -->
+            <div class="active-chat-messages" id="active-chat-messages">
+              <div class="empty-chat-placeholder" id="chat-empty-placeholder">
+                <div class="empty-icon">💬</div>
+                <h3>No Thread Selected</h3>
+                <p style="font-size: 0.85rem; margin-top: 0.5rem; max-width: 280px; line-height: 1.45;">
+                  Select an active customer thread from the left panel to load their conversation log and send manual replies.
+                </p>
+              </div>
+            </div>
+
+            <!-- Chat Bottom Typing Console -->
+            <div class="active-chat-input-bar" id="active-chat-input-bar" style="display: none; position: relative;">
+              <!-- Slash Commands Popup Autocomplete Modal (Option F) -->
+              <div id="slash-commands-popup" style="display: none; position: absolute; bottom: 70px; left: 2rem; right: 2rem; background: #fff; border: 1px solid rgba(16,185,129,0.2); border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 0 15px var(--primary-glow); z-index: 100; overflow: hidden; animation: fadeIn 0.2s ease;">
+                <div style="background: rgba(16,185,129,0.06); padding: 0.5rem 1rem; border-bottom: 1px solid var(--border-light); font-size: 0.72rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.5px; display:flex; justify-content:space-between; align-items:center;">
+                  <span>⚡ Canned Quick Replies (Select or type to search)</span>
+                  <span style="font-family: monospace; background:rgba(0,0,0,0.05); padding:0.1rem 0.3rem; border-radius:4px; font-weight:normal; text-transform:none;">Type / to trigger</span>
+                </div>
+                <div id="slash-commands-list" style="max-height: 200px; overflow-y: auto;">
+                  <!-- Dynamically populated options -->
+                </div>
+              </div>
+
+              <input type="text" id="chat-message-input" class="chat-text-area" placeholder="Type a manual WhatsApp support reply (type '/' for canned replies)...">
+              <button class="chat-send-btn" id="chat-send-btn">
+                <svg viewBox="0 0 24 24">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Contact Details Sidebar -->
+          <div class="chat-details-sidebar" id="chat-details-sidebar" style="display: none;">
+            <h3 style="font-size: 0.9rem; font-weight:600; color:#fff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">Contact Inspector</h3>
+            
+            <div class="detail-card">
+              <div class="detail-label">WhatsApp Number</div>
+              <div class="detail-val" id="inspector-phone">-</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Opt-In Status</div>
+              <div class="detail-val" id="inspector-opt-in">-</div>
+            </div>
+
+            <div class="detail-card">
+              <div class="detail-label">Contact ID</div>
+              <div class="detail-val" style="font-family: monospace; font-size: 0.7rem; color: #a78bfa;" id="inspector-id">-</div>
+            </div>
+
+            <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.45;">
+              ⚠️ Support replies must be sent within 24 hours of the customer's last inbound message per Meta policies.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 3: CAMPAIGNS & BROADCASTS -->
+      <!-- ---------------------------------------------------- -->
+      <div class="view-pane" id="pane-campaigns">
+        <div class="campaigns-view">
+          
+          <div class="campaign-header-row">
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff;">Marketing Broadcast Campaigns</h2>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">Enqueue bulk template campaigns and monitor background worker status.</p>
+            </div>
+            <button class="btn" id="btn-open-campaign-modal">
+              🚀 Launch New Campaign
+            </button>
+          </div>
+
+          <div class="campaign-list-card">
+            <h3 style="font-size: 0.95rem; font-weight: 600; color:#fff; margin-bottom: 1rem;">Campaign History Logs</h3>
+            <div style="overflow-x: auto;">
+              <table class="campaign-table">
+                <thead>
+                  <tr>
+                    <th>Campaign ID</th>
+                    <th>Template Name</th>
+                    <th>Status</th>
+                    <th>Release Time / Created At</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="campaign-logs-table-body">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading campaigns...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- APPROVED META TEMPLATES CARD -->
+          <div class="campaign-list-card" style="margin-top: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <div>
+                <h3 style="font-size: 0.95rem; font-weight: 600; color:#0f172a;">Approved Meta Templates</h3>
+                <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem;">Review available templates sync'd from Meta's API for broadcasts.</p>
+              </div>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="campaign-table">
+                <thead>
+                  <tr>
+                    <th>Template Name</th>
+                    <th>Language</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Body Content Preview</th>
+                  </tr>
+                </thead>
+                <tbody id="meta-templates-table-body">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading templates...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CAMPAIGN LAUNCHER MODAL -->
+      <div class="campaign-modal" id="campaign-modal">
+        <div class="campaign-modal-card">
+          <h2 style="font-size:1.2rem; font-weight:700; margin-bottom: 0.5rem;">Launch WhatsApp Campaign</h2>
+          <p style="font-size: 0.75rem; color:var(--text-muted); margin-bottom: 1.5rem;">
+            Enter your approved Meta template name and target phone number. This campaign will be enqueued in BullMQ.
+          </p>
+
+          <form id="dashboard-campaign-form">
+            <!-- Recipient Mode Toggle -->
+            <div class="form-group">
+              <label style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.5rem;">Campaign Recipient Mode</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(15, 23, 42, 0.03); border: 1px solid var(--border-light); padding: 0.25rem; border-radius: 10px; margin-bottom: 1rem;">
+                <button type="button" id="btn-mode-single" class="btn" style="padding: 0.5rem; font-size: 0.8rem; border-radius: 8px; background: var(--primary); box-shadow: none; border: none; font-weight: 600; color: #fff;">Single Recipient</button>
+                <button type="button" id="btn-mode-bulk" class="btn btn-secondary" style="padding: 0.5rem; font-size: 0.8rem; border-radius: 8px; border: none; box-shadow: none; font-weight: 500; color: var(--text-muted); background: transparent;">Bulk CSV Upload</button>
+              </div>
+            </div>
+
+            <!-- Single Recipient Input -->
+            <div class="form-group" id="group-recipient-single">
+              <label for="campaign-phone">Recipient Phone Number</label>
+              <input type="text" id="campaign-phone" class="form-input" placeholder="e.g. 2348054540828" required>
+            </div>
+
+            <!-- Bulk Recipient CSV Input -->
+            <div class="form-group" id="group-recipient-bulk" style="display: none;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.5rem;">Upload Recipients CSV</label>
+              <div id="csv-dropzone" style="border: 2px dashed rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.02); border-radius: 14px; padding: 2rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s ease;">
+                <span style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem;">📊</span>
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block;">Drag & Drop CSV File Here</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">Or click to select a file from your computer</span>
+                <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+              </div>
+              
+              <!-- Parsed CSV Summary Card -->
+              <div id="csv-summary-card" style="display: none; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 12px; padding: 1rem; margin-top: 1rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-size: 0.825rem; font-weight: 700; color: #047857;" id="csv-summary-title">0 Contacts Found</span>
+                  <button type="button" id="btn-clear-csv" style="background: none; border: none; font-size: 0.72rem; color: var(--danger); font-weight: 600; cursor: pointer; text-decoration: underline;">Clear File</button>
+                </div>
+                <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;" id="csv-summary-cost">Estimated Campaign Cost: $0.00</p>
+                
+                <!-- Number list preview -->
+                <div id="csv-preview-list" style="margin-top: 0.75rem; max-height: 90px; overflow-y: auto; background: rgba(0,0,0,0.02); border-radius: 8px; padding: 0.5rem; font-family: monospace; font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.25rem; border: 1px solid var(--border-light);">
+                </div>
+              </div>
+            </div>
+
+            <!-- Template selection fields -->
+            <div class="form-group" style="margin-top: 1rem;">
+              <label for="campaign-template-select">Select Approved Template</label>
+              <select id="campaign-template-select" class="form-input" required style="cursor:pointer;" onchange="updateTemplatePreview(this.value)">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <!-- Dynamic Template Preview Block -->
+            <div class="form-group" id="template-body-preview-container" style="display:none; background: rgba(16,185,129,0.03); border: 1px solid var(--border-light); padding: 1rem; border-radius: 10px; margin-bottom: 1.25rem;">
+              <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight:700; letter-spacing:0.5px;">Message Body Preview</label>
+              <div id="template-body-preview" style="font-size: 0.825rem; color: var(--text-main); margin-top: 0.35rem; white-space: pre-wrap; line-height: 1.45;"></div>
+            </div>
+
+            <!-- Premium Campaign Scheduler Card (Option I) -->
+            <div class="form-group" style="margin-top: 1rem; border: 1px solid var(--border-light); padding: 1rem; border-radius: 12px; background: rgba(15,23,42,0.01); box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+              <div style="display:flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <span style="font-size: 0.8rem; font-weight:700; color: #1e293b; display:flex; align-items:center; gap:0.4rem;">
+                    ⏰ Campaign Scheduling
+                  </span>
+                  <span style="font-size: 0.65rem; color: var(--text-muted); display:block; margin-top:0.1rem;">
+                    Optionally delay execution for a future date & time
+                  </span>
+                </div>
+                <div>
+                  <label class="toggle-switch" style="width:34px; height:18px;">
+                    <input type="checkbox" id="campaign-schedule-toggle">
+                    <span class="toggle-slider" style="border-radius:18px;"></span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- Hidden scheduling input panel that slides open -->
+              <div id="campaign-schedule-panel" style="display: none; margin-top: 1rem; border-top: 1px dashed var(--border-light); padding-top: 0.75rem;">
+                <label for="campaign-scheduled-at" style="font-size:0.7rem; font-weight:700; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:0.5rem;">
+                  Target Release Date & Time
+                </label>
+                <div style="position: relative;">
+                  <input type="datetime-local" id="campaign-scheduled-at" class="form-input" style="border: 1px solid #10b981; outline:none; border-radius:8px; padding:0.6rem; color:#1e293b; font-weight:500; font-size:0.85rem; width:100%; transition: all 0.25s;" onfocus="this.style.borderColor='#059669'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.15)'" onblur="this.style.borderColor='#10b981'; this.style.boxShadow='none'">
+                </div>
+                <div style="font-size:0.68rem; color:#059669; font-weight:600; margin-top:0.4rem; display:flex; align-items:center; gap:0.25rem;">
+                  <span>✨ Release runs automatically in background worker</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="banner" id="modal-campaign-banner"></div>
+
+            <div style="display:flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+              <button type="button" class="btn btn-secondary" id="btn-close-campaign-modal">Cancel</button>
+              <button type="submit" class="btn" id="btn-submit-campaign">Enqueue Campaign</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 4: CREDIT BILLING & TRANSACTION LOGS -->
+      <!-- ---------------------------------------------------- -->
+      <div class="view-pane" id="pane-billing">
+        <div class="billing-view">
+          
+          <div class="billing-overview-card">
+            <div>
+              <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">SaaS Account Credit Billing</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Refill and manage your WhatsApp Business utility tokens securely.</p>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 2rem;">
+              <div style="text-align: right;">
+                <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">Workspace Balance</span>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #10b981; font-family: 'Outfit', sans-serif; margin-top: 0.15rem;" id="billing-wallet-balance">$0.00</div>
+              </div>
+              <button class="btn" id="billing-refill-btn" style="padding: 0.75rem 1.5rem; font-size: 0.85rem; border-radius: 10px;">
+                💳 Refill Wallet (+$100.00)
+              </button>
+            </div>
+          </div>
+
+          <div class="campaign-list-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">Transaction Ledger</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">A real-time database-backed log of your account credit refills and campaign charges.</p>
+              </div>
+            </div>
+            
+            <div style="overflow-x: auto;">
+              <table class="campaign-table">
+                <thead>
+                  <tr>
+                    <th>Reference ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th style="text-align: right;">Invoice</th>
+                  </tr>
+                </thead>
+                <tbody id="billing-logs-table-body">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                      No transactions recorded yet.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PRINTABLE RECEIPT MODAL -->
+      <div class="campaign-modal" id="receipt-modal">
+        <div class="campaign-modal-card" style="max-width:540px; padding:2.5rem; background:#fff; color:#0f172a; border-radius:16px; border:1px solid rgba(0,0,0,0.1);" id="printable-receipt-content">
+          <!-- Populated Dynamically via Javascript -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- APP CLIENT LOGIC -->
+  <script>
+    let workspaceId = '';
+    let socket = null;
+    let activeContactId = null;
+    let contactsMap = {};
+    let transactionsList = [];
+    let currentWorkspace = null;
+    let trafficChart = null;
+    let spendChart = null;
+    let typingTimeout = null;
+
+    const serverUrl = 'http://localhost:3000';
+
+    // Page Elements
+    const portalOverlay = document.getElementById('portal-overlay');
+    const portalIdInput = document.getElementById('portal-id-input');
+    const portalEnterBtn = document.getElementById('portal-enter-btn');
+
+    const sidebarWallet = document.getElementById('sidebar-wallet-balance');
+    const overviewWallet = document.getElementById('overview-wallet-balance');
+    const activeWorkspacePill = document.getElementById('active-workspace-pill');
+    
+    // Status elements
+    const socketDot = document.getElementById('socket-status-dot');
+    const socketText = document.getElementById('socket-status-text');
+
+    // Sidebar refill buttons
+    const sidebarRefillBtn = document.getElementById('sidebar-refill-btn');
+    const overviewRefillBtn = document.getElementById('overview-refill-btn');
+
+    // Navigation and headers
+    const menuItems = document.querySelectorAll('.menu-item');
+    const viewPanes = document.querySelectorAll('.view-pane');
+    const headerTitle = document.getElementById('header-view-title');
+    const headerDesc = document.getElementById('header-view-desc');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    // Tab Descriptors mapping
+    const tabHeaders = {
+      analytics: { title: 'Workspace Overview', desc: 'Monitor pipeline statistics and core KPIs in real-time.' },
+      chat: { title: 'Shared Inbound Support Console', desc: 'Manage incoming customer replies and trigger text responses.' },
+      campaigns: { title: 'Marketing Broadcast Campaigns', desc: 'Enqueue bulk template campaigns and monitor background worker status.' },
+      billing: { title: 'Credit Billing & Transaction Logs', desc: 'Monitor your workspace balance, view transaction ledger records, and print invoice receipts.' }
+    };
+
+    // Tab switcher logic
+    menuItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const tab = item.getAttribute('data-tab');
+        
+        // Update menu items
+        menuItems.forEach(mi => mi.classList.remove('active'));
+        item.classList.add('active');
+
+        // Update view panes
+        viewPanes.forEach(pane => pane.classList.remove('active'));
+        document.getElementById(`pane-${tab}`).classList.add('active');
+
+        // Update headers
+        headerTitle.textContent = tabHeaders[tab].title;
+        headerDesc.textContent = tabHeaders[tab].desc;
+
+        // Load tab data
+        if (tab === 'analytics') loadOverviewData();
+        if (tab === 'chat') loadChatData();
+        if (tab === 'campaigns') loadCampaignsData();
+        if (tab === 'billing') loadBillingData();
+      });
+    });
+
+    // PORTAL GATEWAY INTERACTIONS (Sign In & Sign Up Logic)
+    const portalTabSignIn = document.getElementById('portal-tab-signin');
+    const portalTabSignUp = document.getElementById('portal-tab-signup');
+    const portalPaneSignIn = document.getElementById('portal-pane-signin');
+    const portalPaneSignUp = document.getElementById('portal-pane-signup');
+    
+    const portalSignUpBtn = document.getElementById('portal-signup-btn');
+    const portalSignUpName = document.getElementById('portal-signup-name');
+    const portalSignUpEmail = document.getElementById('portal-signup-email');
+    const portalSignUpPassword = document.getElementById('portal-signup-password');
+    
+    const portalSignUpSuccess = document.getElementById('portal-signup-success');
+    const portalNewIdBadge = document.getElementById('portal-new-id-badge');
+    const portalCopyBtn = document.getElementById('portal-copy-btn');
+    const portalGoBtn = document.getElementById('portal-go-btn');
+
+    // 1. Tab Swapping
+    portalTabSignIn.addEventListener('click', () => {
+      portalTabSignIn.style.background = 'var(--primary)';
+      portalTabSignIn.style.color = '#fff';
+      portalTabSignIn.style.fontWeight = '600';
+      portalTabSignUp.style.background = 'transparent';
+      portalTabSignUp.style.color = 'var(--text-muted)';
+      portalTabSignUp.style.fontWeight = '500';
+
+      portalPaneSignIn.classList.add('active');
+      portalPaneSignUp.classList.remove('active');
+      portalSignUpSuccess.style.display = 'none';
+    });
+
+    portalTabSignUp.addEventListener('click', () => {
+      portalTabSignUp.style.background = 'var(--primary)';
+      portalTabSignUp.style.color = '#fff';
+      portalTabSignUp.style.fontWeight = '600';
+      portalTabSignIn.style.background = 'transparent';
+      portalTabSignIn.style.color = 'var(--text-muted)';
+      portalTabSignIn.style.fontWeight = '500';
+
+      portalPaneSignUp.classList.add('active');
+      portalPaneSignIn.classList.remove('active');
+      portalSignUpSuccess.style.display = 'none';
+    });
+
+    // 2. Portal Sign In Action
+    portalEnterBtn.addEventListener('click', () => {
+      const inputId = portalIdInput.value.trim();
+      const email = document.getElementById('portal-signin-email').value.trim();
+      const password = document.getElementById('portal-signin-password').value.trim();
+
+      if (!email || !email.includes('@')) {
+        alert('Please enter a valid mock administrator email!');
+        return;
+      }
+      if (password.length < 6) {
+        alert('Mock password must be at least 6 characters long!');
+        return;
+      }
+      if (!inputId) {
+        alert('Please enter a valid Workspace ID!');
+        return;
+      }
+      
+      workspaceId = inputId;
+      portalOverlay.style.display = 'none';
+
+      // Load initial workspace data and initialize Socket
+      initializeWorkspace();
+    });
+
+    // 3. Portal Sign Up (Create Account) Action
+    portalSignUpBtn.addEventListener('click', async () => {
+      const name = portalSignUpName.value.trim();
+      const email = portalSignUpEmail.value.trim();
+      const password = portalSignUpPassword.value.trim();
+
+      if (!name) {
+        alert('Please enter a business or workspace name!');
+        return;
+      }
+      if (!email || !email.includes('@')) {
+        alert('Please enter a valid administrator email!');
+        return;
+      }
+      if (password.length < 6) {
+        alert('Security password must be at least 6 characters!');
+        return;
+      }
+
+      portalSignUpBtn.disabled = true;
+      portalSignUpBtn.textContent = 'Registering Workspace...';
+
+      try {
+        const response = await fetch(`${serverUrl}/api/workspaces`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create workspace account.');
+        }
+
+        // Display credentials success subcard
+        portalPaneSignIn.style.display = 'none';
+        portalPaneSignUp.style.display = 'none';
+        document.querySelector('.portal-tabs').style.display = 'none';
+        
+        portalNewIdBadge.textContent = data.id;
+        portalSignUpSuccess.style.display = 'block';
+        
+        // Save the workspace ID
+        workspaceId = data.id;
+
+      } catch (err) {
+        alert(`Failed to create account: ${err.message}`);
+        portalSignUpBtn.disabled = false;
+        portalSignUpBtn.textContent = 'Create Workspace Account';
+      }
+    });
+
+    // 4. Clipboard Copy
+    portalCopyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(portalNewIdBadge.textContent)
+        .then(() => {
+          portalCopyBtn.textContent = '✓ Copied!';
+          setTimeout(() => {
+            portalCopyBtn.textContent = '📋 Copy';
+          }, 2000);
+        })
+        .catch(err => {
+          alert('Failed to copy. Please highlight the text to copy manually.');
+        });
+    });
+
+    // 5. Enter Dashboard after Sign Up
+    portalGoBtn.addEventListener('click', () => {
+      portalOverlay.style.display = 'none';
+      initializeWorkspace();
+    });
+
+    // 6. Logout restores original portal view layout
+    logoutBtn.addEventListener('click', () => {
+      if (socket) socket.disconnect();
+      activeContactId = null;
+      
+      // Reset portal layouts
+      portalPaneSignIn.style.display = 'block';
+      portalPaneSignUp.style.display = 'none';
+      document.querySelector('.portal-tabs').style.display = 'flex';
+      portalSignUpSuccess.style.display = 'none';
+      portalSignUpBtn.disabled = false;
+      portalSignUpBtn.textContent = 'Create Workspace Account';
+      portalSignUpName.value = '';
+      
+      // Default back to sign in tab selection
+      portalTabSignIn.click();
+
+      portalOverlay.style.display = 'flex';
+      document.getElementById('chat-threads-list').innerHTML = '';
+      resetChatArea();
+    });
+
+    async function initializeWorkspace() {
+      // Connect Socket.io
+      connectSocket();
+      
+      // Fetch Workspace information
+      const success = await loadOverviewData();
+      if (!success) {
+        // Fallback or warning
+        console.warn('Workspace load failed. Verify server and ID.');
+      }
+    }
+
+    // Socket Connection Setup
+    function connectSocket() {
+      socketText.textContent = 'Connecting...';
+      socketDot.className = 'status-dot';
+
+      if (socket) socket.disconnect();
+
+      socket = io(serverUrl);
+
+      socket.on('connect', () => {
+        socketText.textContent = 'Online';
+        socketDot.className = 'status-dot active';
+
+        // Join the unique workspace room
+        socket.emit('joinWorkspace', workspaceId);
+      });
+
+      socket.on('disconnect', () => {
+        socketText.textContent = 'Offline';
+        socketDot.className = 'status-dot';
+      });
+
+      socket.on('connect_error', () => {
+        socketText.textContent = 'Err';
+        socketDot.className = 'status-dot';
+      });
+
+      // Listen for incoming and outgoing messages
+      socket.on('newMessage', (message) => {
+        console.log('Real-Time Message Recv:', message);
+        
+        // 1. Refresh analytics if on Overview tab
+        const activeTab = document.querySelector('.menu-item.active').getAttribute('data-tab');
+        if (activeTab === 'analytics') {
+          loadOverviewData();
+        }
+
+        // 2. If chat is active, update
+        if (activeTab === 'chat') {
+          // If the message belongs to the currently active contact thread, append it
+          if (activeContactId === message.contactId) {
+            appendChatBubble(message);
+          }
+          // Refresh thread list to show latest previews and update ordering
+          loadChatThreads(false);
+        }
+      });
+
+      // Listen for real-time Campaign status worker completions (Option E)
+      socket.on('campaignUpdated', (campaign) => {
+        console.log('Real-Time Campaign Completed:', campaign);
+        
+        // Refresh data dynamically
+        const activeTab = document.querySelector('.menu-item.active').getAttribute('data-tab');
+        if (activeTab === 'campaigns') {
+          loadCampaignsData();
+        }
+        if (activeTab === 'analytics') {
+          loadOverviewData();
+        }
+        
+        // Refresh wallet balance display
+        loadOverviewData();
+      });
+
+      // Listen for ticket assignment updates from other agents (Option F)
+      socket.on('contactAssigned', ({ contactId, agentName }) => {
+        console.log('Real-Time Contact Assigned:', contactId, agentName);
+        if (contactsMap[contactId]) {
+          contactsMap[contactId].assignedAgent = agentName;
+        }
+        const activeAssigneeSelect = document.getElementById('chat-assignee-select');
+        if (activeContactId === contactId && activeAssigneeSelect) {
+          activeAssigneeSelect.value = agentName || 'Unassigned';
+        }
+        loadChatThreads(false);
+      });
+
+      // Listen for real-time outbound status checkmark updates (Option B)
+      socket.on('messageStatusUpdated', ({ messageId, contactId, status }) => {
+        console.log('Real-Time Status Recv:', messageId, status);
+        const span = document.getElementById(`status-span-${messageId}`);
+        if (span) {
+          const replacementHTML = getStatusCheckmarkHTML(messageId, status);
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = replacementHTML;
+          const newSpan = tempDiv.firstChild;
+          span.parentNode.replaceChild(newSpan, span);
+        }
+      });
+
+      // Listen for real-time customer typing statuses (Option B)
+      socket.on('typingStatus', ({ contactId, phone, isTyping }) => {
+        const contact = contactsMap[activeContactId];
+        const isMatched = (contactId && contactId === activeContactId) || 
+                          (contact && phone && (contact.phoneNumber === phone || phone.replace('+', '') === contact.phoneNumber));
+
+        if (isMatched) {
+          const typingIndicator = document.getElementById('chat-typing-indicator');
+          if (typingIndicator) {
+            if (isTyping) {
+              if (typingTimeout) clearTimeout(typingTimeout);
+              typingIndicator.style.display = 'inline-block';
+              typingTimeout = setTimeout(() => {
+                typingIndicator.style.display = 'none';
+              }, 4000);
+            } else {
+              if (typingTimeout) clearTimeout(typingTimeout);
+              typingIndicator.style.display = 'none';
+            }
+          }
+        }
+      });
+
+      // Listen for bot enabled/paused handoff toggle updates in real-time (Option A)
+      socket.on('contactBotToggled', ({ contactId, botEnabled }) => {
+        console.log('Real-Time Contact Bot Toggled:', contactId, botEnabled);
+        if (contactsMap[contactId]) {
+          contactsMap[contactId].botEnabled = botEnabled;
+        }
+        if (activeContactId === contactId) {
+          const chatBotToggle = document.getElementById('chat-bot-toggle');
+          const botPausedBanner = document.getElementById('chat-bot-paused-banner');
+          if (chatBotToggle) {
+            chatBotToggle.checked = botEnabled;
+          }
+          if (botPausedBanner) {
+            botPausedBanner.style.display = botEnabled ? 'none' : 'inline-block';
+          }
+        }
+        loadChatThreads(false);
+      });
+
+      // Listen for contact priority and sentiment updates in real-time (Option H)
+      socket.on('contactPriorityUpdated', ({ contactId, sentiment, priority }) => {
+        console.log('Real-Time Contact Priority Updated:', contactId, sentiment, priority);
+        if (contactsMap[contactId]) {
+          contactsMap[contactId].sentiment = sentiment;
+          contactsMap[contactId].priority = priority;
+        }
+        if (activeContactId === contactId) {
+          const priorityUrgentBanner = document.getElementById('chat-priority-urgent-banner');
+          if (priorityUrgentBanner) {
+            priorityUrgentBanner.style.display = priority === 'URGENT' ? 'inline-block' : 'none';
+          }
+        }
+        loadChatThreads(false);
+      });
+    }
+
+    // ----------------------------------------------------
+    /* API REQUEST WRAPPER: Handles Dummy Workspace Authentication Headers */
+    // ----------------------------------------------------
+    async function apiRequest(endpoint, options = {}) {
+      const url = `${serverUrl}${endpoint}`;
+      
+      // Set Workspace ID as the Bearer Token in authorization headers
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${workspaceId}`,
+        ...options.headers
+      };
+
+      const finalOptions = {
+        ...options,
+        headers
+      };
+
+      try {
+        const response = await fetch(url, finalOptions);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP error ${response.status}`);
+        }
+        return data;
+      } catch (err) {
+        console.error(`API Error on ${endpoint}:`, err);
+        throw err;
+      }
+    }
+
+    // ----------------------------------------------------
+    /* TAB 1 LOGIC: OVERVIEW ANALYTICS */
+    // ----------------------------------------------------
+    async function loadOverviewData() {
+      try {
+        const data = await apiRequest('/api/workspace');
+        currentWorkspace = data.workspace;
+        
+        // Update wallet displays
+        const formattedBalance = `$${Number(data.workspace.walletBalance).toFixed(2)}`;
+        sidebarWallet.textContent = formattedBalance;
+        overviewWallet.textContent = formattedBalance;
+        
+        const billingWallet = document.getElementById('billing-wallet-balance');
+        if (billingWallet) {
+          billingWallet.textContent = formattedBalance;
+        }
+        
+        // Update active top header
+        activeWorkspacePill.textContent = `Workspace: ${data.workspace.name}`;
+
+        // Update KPIs
+        document.getElementById('kpi-sent').textContent = data.analytics.totalSent;
+        document.getElementById('kpi-received').textContent = data.analytics.totalReceived;
+        document.getElementById('kpi-contacts').textContent = data.analytics.totalContacts;
+        document.getElementById('kpi-campaigns').textContent = data.analytics.completedCampaigns;
+
+        // Render Inbound vs Outbound message traffic chart
+        drawTrafficChart(data.analytics.totalSent, data.analytics.totalReceived);
+
+        // Fetch transaction history to draw credit spend bar ledger
+        try {
+          const transactions = await apiRequest('/api/billing/transactions');
+          transactionsList = transactions;
+          drawSpendChart(transactions);
+        } catch (txErr) {
+          console.warn('Could not load spend ledger chart:', txErr);
+        }
+
+        return true;
+      } catch (err) {
+        alert(`Failed to load workspace data. Ensure your server is running and the Workspace ID is created in the database!`);
+        logoutBtn.click();
+        return false;
+      }
+    }
+
+    // Refill balance event
+    async function handleRefill() {
+      try {
+        const data = await apiRequest('/api/workspace/refill', { method: 'POST' });
+        currentWorkspace = data.workspace;
+        
+        // Render updated balance
+        const formattedBalance = `$${Number(data.workspace.walletBalance).toFixed(2)}`;
+        sidebarWallet.textContent = formattedBalance;
+        overviewWallet.textContent = formattedBalance;
+        
+        const billingWallet = document.getElementById('billing-wallet-balance');
+        if (billingWallet) {
+          billingWallet.textContent = formattedBalance;
+        }
+        
+        // Trigger alert banner
+        alert(`✓ Wallet successfully credited +$100.00!`);
+
+        // Refresh billing logs if currently on billing tab
+        const activeTab = document.querySelector('.menu-item.active').getAttribute('data-tab');
+        if (activeTab === 'billing') {
+          loadBillingData();
+        }
+      } catch (err) {
+        alert('Failed to refill wallet.');
+      }
+    }
+
+    sidebarRefillBtn.addEventListener('click', handleRefill);
+    overviewRefillBtn.addEventListener('click', handleRefill);
+    
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'billing-refill-btn') {
+        handleRefill();
+      }
+    });
+
+
+    // ----------------------------------------------------
+    /* TAB 2 LOGIC: SHARED INBOUND SUPPORT CHAT CONSOLE */
+    // ----------------------------------------------------
+    async function loadChatData() {
+      await loadChatThreads(true);
+    }
+
+    async function loadChatThreads(selectFirst = false) {
+      try {
+        const contacts = await apiRequest('/api/contacts');
+        const threadsList = document.getElementById('chat-threads-list');
+        
+        // Update total thread count badge
+        document.getElementById('chat-threads-count').textContent = `${contacts.length} threads`;
+
+        if (contacts.length === 0) {
+          threadsList.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.8rem;">No active customer threads</div>`;
+          resetChatArea();
+          return;
+        }
+
+        // Keep track of contacts details locally
+        contactsMap = {};
+        let listHTML = '';
+
+        contacts.forEach(contact => {
+          contactsMap[contact.id] = contact;
+          
+          const isActive = contact.id === activeContactId;
+          const hasMessage = contact.messages && contact.messages.length > 0;
+          
+          // Form previews
+          let preview = 'No messages in this thread';
+          let time = '';
+          
+          if (hasMessage) {
+            const msg = contact.messages[0];
+            const isInbound = msg.direction === 'INBOUND';
+            
+            let bodyPreview = '';
+            if (msg.content.text && msg.content.text.body) {
+              bodyPreview = msg.content.text.body;
+            } else if (msg.content.type === 'image') {
+              bodyPreview = '📷 Image Attachment';
+            } else if (msg.content.type === 'document') {
+              bodyPreview = '📄 Document Attachment';
+            } else if (msg.content.type === 'audio' || msg.content.type === 'voice') {
+              bodyPreview = '🎵 Voice Recording';
+            } else if (msg.content.type === 'location') {
+              bodyPreview = '📍 Location Pin';
+            } else if (msg.content.template && msg.content.template.name) {
+              bodyPreview = `🚀 Broadcast: ${msg.content.template.name}`;
+            } else {
+              bodyPreview = `[Outbound status: ${msg.status}]`;
+            }
+            
+            preview = isInbound ? bodyPreview : `You: ${bodyPreview}`;
+            
+            // Format time
+            time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          }
+
+          const initials = contact.phoneNumber.substr(contact.phoneNumber.length - 4);
+          
+          // Form assignment badge (Option F)
+          let assignedBadge = '';
+          if (contact.assignedAgent) {
+            const isMe = contact.assignedAgent === 'Agent Me';
+            const initials = isMe ? 'Me' : contact.assignedAgent.replace('Agent ', '').substring(0, 5);
+            assignedBadge = `<span style="font-size:0.6rem; font-weight:700; background:${isMe ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.1)'}; color:${isMe ? '#047857' : '#2563eb'}; padding:0.15rem 0.35rem; border-radius:4px; margin-left:0.35rem; border: 1px solid ${isMe ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.2)'}; display:inline-block; vertical-align:middle; text-transform:uppercase;">${initials}</span>`;
+          }
+
+          // Form bot enabled / paused badge (Option A)
+          let botBadge = '';
+          if (contact.botEnabled === false) {
+            botBadge = `<span style="font-size:0.6rem; font-weight:700; background:rgba(239,68,68,0.08); color:#ef4444; padding:0.15rem 0.35rem; border-radius:4px; margin-left:0.35rem; border: 1px solid rgba(239,68,68,0.15); display:inline-block; vertical-align:middle; text-transform:uppercase;">Live</span>`;
+          } else {
+            botBadge = `<span style="font-size:0.6rem; font-weight:700; background:rgba(16,185,129,0.08); color:#10b981; padding:0.15rem 0.35rem; border-radius:4px; margin-left:0.35rem; border: 1px solid rgba(16,185,129,0.15); display:inline-block; vertical-align:middle; text-transform:uppercase;">🤖 Bot</span>`;
+          }
+
+          // Form sentiment & priority badge (Option H)
+          let sentimentBadge = '';
+          const sentiment = contact.sentiment || 'NEUTRAL';
+          const priority = contact.priority || 'STANDARD';
+
+          let emoji = '😐';
+          if (sentiment === 'HAPPY') {
+            emoji = '😊';
+          } else if (sentiment === 'ANGRY') {
+            emoji = '😠';
+          } else if (sentiment === 'URGENT') {
+            emoji = '🚨';
+          }
+
+          let priorityBadge = '';
+          if (priority === 'URGENT') {
+            priorityBadge = `<span style="font-size:0.55rem; font-weight:800; background:#fee2e2; color:#ef4444; padding:0.1rem 0.3rem; border-radius:4px; margin-left:0.35rem; border: 1px solid #fca5a5; display:inline-block; vertical-align:middle; animation: pulseRed 1.5s infinite ease-in-out; text-transform:uppercase;">🚨 URGENT</span>`;
+          } else if (priority === 'HIGH') {
+            priorityBadge = `<span style="font-size:0.55rem; font-weight:800; background:#fef3c7; color:#d97706; padding:0.1rem 0.3rem; border-radius:4px; margin-left:0.35rem; border: 1px solid #fde68a; display:inline-block; vertical-align:middle; text-transform:uppercase;">HIGH</span>`;
+          }
+
+          sentimentBadge = `<span style="font-size:0.75rem; display:inline-flex; align-items:center; justify-content:center; margin-left:0.35rem;" title="Sentiment: ${sentiment}">${emoji}</span>`;
+
+          listHTML += `
+            <div class="thread-item ${isActive ? 'active' : ''}" onclick="selectThread('${contact.id}')">
+              <div class="thread-avatar">${initials}</div>
+              <div class="thread-details">
+                <div class="thread-contact-info" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                  <span class="thread-number" style="display:flex; align-items:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 700; font-size: 0.85rem; color: #0f172a;">
+                    +${contact.phoneNumber}${assignedBadge}${botBadge}${priorityBadge}${sentimentBadge}
+                  </span>
+                  <span class="thread-time" style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${time}</span>
+                </div>
+                <div class="thread-preview" style="font-size:0.775rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${preview}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        threadsList.innerHTML = listHTML;
+
+        // Auto select first thread if requested
+        if (selectFirst && contacts.length > 0 && !activeContactId) {
+          selectThread(contacts[0].id);
+        }
+
+      } catch (err) {
+        console.error('Failed to load chat threads:', err);
+      }
+    }
+
+    async function selectThread(contactId) {
+      activeContactId = contactId;
+      
+      // Update sidebar visual active state
+      const items = document.querySelectorAll('.thread-item');
+      items.forEach(el => el.classList.remove('active'));
+      
+      // Make active contact show in list
+      loadChatThreads(false);
+
+      const contact = contactsMap[contactId];
+      if (!contact) return;
+
+      // Restore ticket assignee selector in the header (Option F)
+      const assigneeSelect = document.getElementById('chat-assignee-select');
+      if (assigneeSelect) {
+        assigneeSelect.value = contact.assignedAgent || 'Unassigned';
+        // Sync permission locked/unlocked state instantly
+        syncAssigneeSelectState();
+      }
+
+      // Restore Auto-Bot Handoff toggle in the header (Option A)
+      const botToggle = document.getElementById('chat-bot-toggle');
+      const botPausedBanner = document.getElementById('chat-bot-paused-banner');
+      if (botToggle) {
+        botToggle.checked = contact.botEnabled !== false;
+      }
+      if (botPausedBanner) {
+        botPausedBanner.style.display = contact.botEnabled === false ? 'inline-block' : 'none';
+      }
+
+      // Restore Urgent Priority banner in the header (Option H)
+      const priorityUrgentBanner = document.getElementById('chat-priority-urgent-banner');
+      if (priorityUrgentBanner) {
+        priorityUrgentBanner.style.display = contact.priority === 'URGENT' ? 'inline-block' : 'none';
+      }
+
+      // Unhide chat windows & input bars
+      document.getElementById('active-chat-header').style.display = 'flex';
+      document.getElementById('active-chat-messages').innerHTML = '';
+      document.getElementById('active-chat-input-bar').style.display = 'flex';
+      document.getElementById('chat-details-sidebar').style.display = 'flex';
+
+      // Load thread inspector info
+      document.getElementById('active-contact-title').textContent = `+${contact.phoneNumber}`;
+      document.getElementById('inspector-phone').textContent = `+${contact.phoneNumber}`;
+      document.getElementById('inspector-opt-in').innerHTML = contact.optInStatus ? '<span style="color:var(--success)">✓ Opted In</span>' : '<span style="color:var(--danger)">✗ Opted Out</span>';
+      document.getElementById('inspector-id').textContent = contact.id;
+
+      // Load conversation history logs
+      try {
+        const messages = await apiRequest(`/api/messages/${contactId}`);
+        const messagesContainer = document.getElementById('active-chat-messages');
+
+        if (messages.length === 0) {
+          messagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.8rem;">Empty support thread</div>`;
+          return;
+        }
+
+        messages.forEach(msg => {
+          appendChatBubble(msg);
+        });
+
+      } catch (err) {
+        console.error('Failed to fetch messages for contact:', err);
+      }
+    }
+
+    function getStatusCheckmarkHTML(messageId, status) {
+      let ticks = '';
+      let style = 'color: #64748b; font-weight: bold; margin-left: 0.35rem; font-size: 0.78rem; transition: all 0.3s ease; display: inline-block;';
+      
+      if (status === 'SENT') {
+        ticks = '✓';
+      } else if (status === 'DELIVERED') {
+        ticks = '✓✓';
+      } else if (status === 'READ') {
+        ticks = '✓✓';
+        style = 'color: #10b981; font-weight: bold; margin-left: 0.35rem; font-size: 0.78rem; transition: all 0.3s ease; display: inline-block; text-shadow: 0 0 4px rgba(16,185,129,0.3);';
+      } else if (status === 'FAILED') {
+        ticks = '✗ Failed';
+        style = 'color: #ef4444; font-weight: bold; margin-left: 0.35rem; font-size: 0.7rem;';
+      } else {
+        ticks = status;
+      }
+      
+      return `<span class="status-check-span" id="status-span-${messageId}" style="${style}">${ticks}</span>`;
+    }
+
+    function appendChatBubble(message) {
+      const messagesContainer = document.getElementById('active-chat-messages');
+      
+      // Remove empty chat placeholder if exists
+      const placeholder = document.getElementById('chat-empty-placeholder');
+      if (placeholder) placeholder.remove();
+
+      const bubbleRow = document.createElement('div');
+      const isInbound = message.direction === 'INBOUND';
+      bubbleRow.className = `chat-bubble-row ${isInbound ? 'inbound' : 'outbound'}`;
+
+      // Extract text content body
+      let bodyText = '';
+      const msgType = message.content.type;
+
+      if (msgType === 'image') {
+        const imageObj = message.content.image;
+        const mediaId = imageObj.id;
+        const caption = imageObj.caption || '';
+        const proxySrc = `${serverUrl}/api/media/${mediaId}?token=${workspaceId}&type=image`;
+        bodyText = `
+          <div style="margin-bottom:0.25rem; display:flex; flex-direction:column; gap:0.25rem; width: 100%;">
+            <img src="${proxySrc}" alt="${caption}" style="max-width:100%; width: 240px; border-radius:12px; border:1px solid var(--border-light); max-height:200px; object-fit:cover; transition: transform 0.25s ease; cursor:pointer;" onclick="window.open('${proxySrc}', '_blank')" onmouseover="this.style.transform='scale(1.015)'" onmouseout="this.style.transform='scale(1)'">
+            ${caption ? `<span style="font-size:0.825rem; color:var(--text-main); margin-top:0.25rem; display:block;">${caption}</span>` : ''}
+          </div>
+        `;
+      } else if (msgType === 'document') {
+        const docObj = message.content.document;
+        const mediaId = docObj.id;
+        const filename = docObj.filename || 'Document.pdf';
+        const caption = docObj.caption || '';
+        const proxySrc = `${serverUrl}/api/media/${mediaId}?token=${workspaceId}&type=pdf`;
+        bodyText = `
+          <div style="background:rgba(0,0,0,0.02); border:1px solid var(--border-light); border-radius:12px; padding:0.85rem; display:flex; flex-direction:column; gap:0.75rem; width: 240px;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:36px; height:36px; background:rgba(16,185,129,0.08); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:1.25rem;">📄</div>
+              <div style="overflow:hidden; flex:1;">
+                <div style="font-weight:600; font-size:0.825rem; color:var(--text-main); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${filename}</div>
+                <div style="font-size:0.7rem; color:var(--text-muted);">PDF/Document Attachment</div>
+              </div>
+            </div>
+            ${caption ? `<span style="font-size:0.8rem; color:var(--text-muted);">${caption}</span>` : ''}
+            <a href="${proxySrc}" target="_blank" class="btn" style="padding:0.45rem; font-size:0.75rem; border-radius:8px; width:100%; text-decoration:none; text-align:center; box-shadow: none;">
+              📥 Download Document
+            </a>
+          </div>
+        `;
+      } else if (msgType === 'audio' || msgType === 'voice') {
+        const audioObj = message.content.audio || message.content.voice;
+        const mediaId = audioObj.id;
+        const proxySrc = `${serverUrl}/api/media/${mediaId}?token=${workspaceId}&type=audio`;
+        bodyText = `
+          <div style="display:flex; flex-direction:column; gap:0.5rem; width: 240px;">
+            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; display:flex; align-items:center; gap:0.25rem;">🎵 Customer Voice Note</span>
+            <audio controls style="width:100%; height:32px;">
+              <source src="${proxySrc}" type="${audioObj.mime_type}">
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        `;
+      } else if (msgType === 'location') {
+        const locObj = message.content.location;
+        const lat = locObj.latitude;
+        const lng = locObj.longitude;
+        const name = locObj.name || 'Pinned Location';
+        const address = locObj.address || '';
+        const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        bodyText = `
+          <div style="background:rgba(0,0,0,0.02); border:1px solid var(--border-light); border-radius:12px; padding:0.85rem; display:flex; flex-direction:column; gap:0.5rem; width: 240px;">
+            <div style="font-weight:600; font-size:0.85rem; color:var(--text-main); display:flex; align-items:center; gap:0.25rem;">📍 ${name}</div>
+            ${address ? `<div style="font-size:0.75rem; color:var(--text-muted); line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${address}</div>` : ''}
+            <div style="font-size:0.7rem; font-family:monospace; color:var(--text-muted);">Coords: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
+            <a href="${mapsLink}" target="_blank" class="btn" style="padding:0.45rem; font-size:0.75rem; border-radius:8px; width:100%; text-decoration:none; text-align:center; box-shadow: none;">
+              🗺️ Open in Google Maps
+            </a>
+          </div>
+        `;
+      } else {
+        if (isInbound) {
+          if (message.content.text && message.content.text.body) {
+            bodyText = message.content.text.body;
+          } else if (message.content.button && message.content.button.text) {
+            bodyText = `[Clicked Button] ${message.content.button.text}`;
+          } else {
+            bodyText = `[Event: ${msgType || 'System Event'}]`;
+          }
+        } else {
+          // Outbound text messages
+          if (message.content.text && message.content.text.body) {
+            bodyText = message.content.text.body;
+          } else if (message.content.template && message.content.template.name) {
+            bodyText = `🚀 Marketing Template Sent: "${message.content.template.name}"`;
+          } else {
+            bodyText = `Outbound message processed.`;
+          }
+        }
+      }
+
+      // Checkmarks or fail indicators
+      let statusIcon = '';
+      if (!isInbound) {
+        statusIcon = getStatusCheckmarkHTML(message.id, message.status);
+      }
+
+      const timeStr = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const metaId = 'meta-' + Math.random().toString(36).substr(2, 9);
+
+      bubbleRow.innerHTML = `
+        <div class="chat-bubble">
+          <div>${bodyText}</div>
+          <span class="bubble-time ${isInbound ? 'inbound' : ''}">
+            ${timeStr} ${statusIcon}
+          </span>
+          <button class="toggle-meta-link" onclick="toggleBubbleMeta('${metaId}')">Inspect Webhook Payload</button>
+          <pre class="bubble-meta" id="${metaId}">${JSON.stringify(message.content, null, 2)}</pre>
+        </div>
+      `;
+
+      messagesContainer.appendChild(bubbleRow);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Toggle meta inspection
+    function toggleBubbleMeta(id) {
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function resetChatArea() {
+      document.getElementById('active-chat-header').style.display = 'none';
+      document.getElementById('active-chat-input-bar').style.display = 'none';
+      document.getElementById('chat-details-sidebar').style.display = 'none';
+      document.getElementById('active-chat-messages').innerHTML = `
+        <div class="empty-chat-placeholder" id="chat-empty-placeholder">
+          <div class="empty-icon">💬</div>
+          <h3>No Thread Selected</h3>
+          <p style="font-size: 0.85rem; margin-top: 0.5rem; max-width: 280px; line-height: 1.45;">
+            Select an active customer thread from the left panel to load their conversation log and send manual replies.
+          </p>
+        </div>
+      `;
+    }
+
+    // Handling Send Support Message Action
+    const chatInput = document.getElementById('chat-message-input');
+    const chatSendBtn = document.getElementById('chat-send-btn');
+
+    async function sendSupportMessage() {
+      const text = chatInput.value.trim();
+      if (!text || !activeContactId) return;
+
+      chatInput.disabled = true;
+      chatSendBtn.disabled = true;
+
+      try {
+        const response = await apiRequest('/api/support/send', {
+          method: 'POST',
+          body: JSON.stringify({
+            contactId: activeContactId,
+            messageText: text
+          })
+        });
+
+        // Clear input console
+        chatInput.value = '';
+        
+        // Refresh sidebar wallet balance
+        loadOverviewData();
+
+      } catch (err) {
+        console.error('Failed to deliver support reply:', err);
+        alert(`Failed to send message: ${err.message}`);
+      } finally {
+        chatInput.disabled = false;
+        chatSendBtn.disabled = false;
+        chatInput.focus();
+      }
+    }
+
+    chatSendBtn.addEventListener('click', sendSupportMessage);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendSupportMessage();
+    });
+
+
+    // ----------------------------------------------------
+    /* TAB 3 LOGIC: MARKETING BROADCASTS */
+    // ----------------------------------------------------
+    const campaignModal = document.getElementById('campaign-modal');
+    const openCampaignModalBtn = document.getElementById('btn-open-campaign-modal');
+    const closeCampaignModalBtn = document.getElementById('btn-close-campaign-modal');
+    const campaignForm = document.getElementById('dashboard-campaign-form');
+    const campaignPhoneInput = document.getElementById('campaign-phone');
+    const campaignTemplateSelect = document.getElementById('campaign-template-select');
+    const modalBanner = document.getElementById('modal-campaign-banner');
+    const submitCampaignBtn = document.getElementById('btn-submit-campaign');
+
+    // Scheduler DOM elements (Option I)
+    const scheduleToggle = document.getElementById('campaign-schedule-toggle');
+    const schedulePanel = document.getElementById('campaign-schedule-panel');
+    const scheduledAtInput = document.getElementById('campaign-scheduled-at');
+
+    scheduleToggle.addEventListener('change', () => {
+      if (scheduleToggle.checked) {
+        schedulePanel.style.display = 'block';
+        scheduledAtInput.setAttribute('required', '');
+      } else {
+        schedulePanel.style.display = 'none';
+        scheduledAtInput.removeAttribute('required');
+        scheduledAtInput.value = '';
+      }
+    });
+
+    openCampaignModalBtn.addEventListener('click', () => {
+      modalBanner.style.display = 'none';
+      campaignForm.reset();
+      
+      // Reset scheduling panel state
+      scheduleToggle.checked = false;
+      schedulePanel.style.display = 'none';
+      scheduledAtInput.removeAttribute('required');
+      scheduledAtInput.value = '';
+
+      loadTemplatesData();
+      campaignModal.classList.add('active');
+    });
+
+    closeCampaignModalBtn.addEventListener('click', () => {
+      campaignModal.classList.remove('active');
+    });
+
+    // Campaign Recipient Mode Toggle & Bulk CSV Parser Variables (Option E)
+    const btnModeSingle = document.getElementById('btn-mode-single');
+    const btnModeBulk = document.getElementById('btn-mode-bulk');
+    const groupSingle = document.getElementById('group-recipient-single');
+    const groupBulk = document.getElementById('group-recipient-bulk');
+    const csvDropzone = document.getElementById('csv-dropzone');
+    const csvFileInput = document.getElementById('csv-file-input');
+    const csvSummaryCard = document.getElementById('csv-summary-card');
+    const csvSummaryTitle = document.getElementById('csv-summary-title');
+    const csvSummaryCost = document.getElementById('csv-summary-cost');
+    const csvPreviewList = document.getElementById('csv-preview-list');
+    const btnClearCsv = document.getElementById('btn-clear-csv');
+
+    let recipientMode = 'single';
+    let parsedBulkPhones = [];
+
+    // Recipient Toggle Event Listeners
+    btnModeSingle.addEventListener('click', () => {
+      recipientMode = 'single';
+      btnModeSingle.style.background = 'var(--primary)';
+      btnModeSingle.style.color = '#fff';
+      btnModeSingle.style.fontWeight = '600';
+      btnModeBulk.style.background = 'transparent';
+      btnModeBulk.style.color = 'var(--text-muted)';
+      btnModeBulk.style.fontWeight = '500';
+
+      groupSingle.style.display = 'block';
+      groupBulk.style.display = 'none';
+      campaignPhoneInput.setAttribute('required', '');
+      
+      modalBanner.style.display = 'none';
+      submitCampaignBtn.disabled = false;
+    });
+
+    btnModeBulk.addEventListener('click', () => {
+      recipientMode = 'bulk';
+      btnModeBulk.style.background = 'var(--primary)';
+      btnModeBulk.style.color = '#fff';
+      btnModeBulk.style.fontWeight = '600';
+      btnModeSingle.style.background = 'transparent';
+      btnModeSingle.style.color = 'var(--text-muted)';
+      btnModeSingle.style.fontWeight = '500';
+
+      groupSingle.style.display = 'none';
+      groupBulk.style.display = 'block';
+      campaignPhoneInput.removeAttribute('required');
+      
+      validateBulkState();
+    });
+
+    // Drag and Drop Uploader Listeners
+    csvDropzone.addEventListener('click', () => csvFileInput.click());
+
+    csvDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      csvDropzone.style.borderColor = 'var(--primary)';
+      csvDropzone.style.background = 'rgba(16, 185, 129, 0.06)';
+    });
+
+    ['dragleave', 'dragend'].forEach(evt => {
+      csvDropzone.addEventListener(evt, () => {
+        csvDropzone.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+        csvDropzone.style.background = 'rgba(16, 185, 129, 0.02)';
+      });
+    });
+
+    csvDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      csvDropzone.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+      csvDropzone.style.background = 'rgba(16, 185, 129, 0.02)';
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.csv')) {
+        handleCsvFile(file);
+      } else {
+        alert('Please upload a valid .csv file!');
+      }
+    });
+
+    csvFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleCsvFile(file);
+      }
+    });
+
+    btnClearCsv.addEventListener('click', () => {
+      clearBulkState();
+    });
+
+    function clearBulkState() {
+      parsedBulkPhones = [];
+      csvFileInput.value = '';
+      csvSummaryCard.style.display = 'none';
+      csvDropzone.style.display = 'block';
+      modalBanner.style.display = 'none';
+      submitCampaignBtn.disabled = false;
+    }
+
+    function validateBulkState() {
+      if (recipientMode === 'bulk') {
+        if (parsedBulkPhones.length === 0) {
+          modalBanner.className = 'banner error';
+          modalBanner.textContent = '✗ Please upload a CSV file with valid phone numbers.';
+          modalBanner.style.display = 'flex';
+          submitCampaignBtn.disabled = true;
+        } else {
+          // Compare estimated cost with current prepaid wallet balance
+          const balance = Number(currentWorkspace ? currentWorkspace.walletBalance : 0);
+          const cost = parsedBulkPhones.length * 0.05;
+          if (balance < cost) {
+            modalBanner.className = 'banner error';
+            modalBanner.textContent = `✗ Insufficient balance: Campaign cost is $${cost.toFixed(2)}, but wallet balance is $${balance.toFixed(2)}. Please refill your wallet.`;
+            modalBanner.style.display = 'flex';
+            submitCampaignBtn.disabled = true;
+          } else {
+            modalBanner.style.display = 'none';
+            submitCampaignBtn.disabled = false;
+          }
+        }
+      }
+    }
+
+    function handleCsvFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        parseCsvData(text);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseCsvData(text) {
+      const lines = text.split(/\r?\n/);
+      const validNumbers = [];
+      
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        
+        // Parse CSV lines (checks columns for valid 7-15 digit phone numbers)
+        const parts = line.split(',');
+        let extractedNum = '';
+        
+        for (let part of parts) {
+          const cleaned = part.trim().replace(/[^\d+]/g, '');
+          const numeric = cleaned.replace(/\+/g, '');
+          if (numeric.length >= 7 && numeric.length <= 15) {
+            extractedNum = numeric;
+            break;
+          }
+        }
+        
+        if (extractedNum) {
+          validNumbers.push(extractedNum);
+        }
+      });
+
+      // Dedup numbers list
+      parsedBulkPhones = [...new Set(validNumbers)];
+      
+      // Update parsed uploader summary cards
+      csvSummaryTitle.textContent = `${parsedBulkPhones.length} Contacts Found`;
+      const cost = parsedBulkPhones.length * 0.05;
+      csvSummaryCost.textContent = `Estimated Campaign Cost: $${cost.toFixed(2)} ($0.05 per recipient)`;
+      
+      // Generate preview list
+      let previewHtml = '';
+      const previewCount = Math.min(parsedBulkPhones.length, 10);
+      for (let i = 0; i < previewCount; i++) {
+        previewHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:0.15rem;"><span>👤 Recipient #${i+1}</span><span style="font-weight:600; color:var(--text-main);">+${parsedBulkPhones[i]}</span></div>`;
+      }
+      if (parsedBulkPhones.length > 10) {
+        previewHtml += `<div style="text-align:center; font-style:italic; font-size:0.65rem; margin-top:0.35rem; color:var(--primary); font-weight:600;">... and ${parsedBulkPhones.length - 10} more recipients</div>`;
+      }
+      csvPreviewList.innerHTML = previewHtml;
+      
+      csvDropzone.style.display = 'none';
+      csvSummaryCard.style.display = 'block';
+      
+      validateBulkState();
+    }
+
+    // Load campaigns logs list
+    async function loadCampaignsData() {
+      try {
+        const campaigns = await apiRequest('/api/campaigns');
+        const tbody = document.getElementById('campaign-logs-table-body');
+
+        if (campaigns.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No campaigns launched yet.</td></tr>`;
+          loadTemplatesData();
+          return;
+        }
+
+        let html = '';
+        campaigns.forEach(camp => {
+          let badgeClass = 'processing';
+          if (camp.status === 'COMPLETED') {
+            badgeClass = 'completed';
+          } else if (camp.status === 'SCHEDULED') {
+            badgeClass = 'scheduled';
+          } else if (camp.status === 'CANCELLED') {
+            badgeClass = 'cancelled';
+          }
+
+          const releaseStr = (camp.status === 'SCHEDULED' && camp.scheduledAt)
+            ? `⏰ Release: ${new Date(camp.scheduledAt).toLocaleString()}`
+            : new Date(camp.createdAt).toLocaleString();
+
+          const actionBtnHtml = camp.status === 'SCHEDULED'
+            ? `<button class="btn" style="background:#ef4444; color:#fff; border:none; padding:0.25rem 0.6rem; font-size:0.7rem; border-radius:6px; font-weight:600; cursor:pointer; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'" onclick="triggerCancelCampaign('${camp.id}', this)">Cancel</button>`
+            : `<span style="color:var(--text-muted); font-size:0.75rem;">—</span>`;
+
+          html += `
+            <tr>
+              <td style="font-family: monospace; font-size: 0.75rem; color:#a78bfa;">${camp.id}</td>
+              <td style="font-weight:600;">${camp.templateName}</td>
+              <td>
+                <span class="badge-status ${badgeClass}">
+                  <span class="badge-status-dot"></span>
+                  ${camp.status}
+                </span>
+              </td>
+              <td style="color:var(--text-muted); font-size:0.78rem;">${releaseStr}</td>
+              <td style="text-align: right;">${actionBtnHtml}</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+        loadTemplatesData();
+      } catch (err) {
+        console.error('Failed to load campaigns list:', err);
+      }
+    }
+
+    // Globally exposed handler for campaign cancellations
+    window.triggerCancelCampaign = async function(campaignId, btnElement) {
+      if (!confirm('Are you sure you want to cancel this scheduled campaign?')) {
+        return;
+      }
+      
+      const originalText = btnElement.textContent;
+      btnElement.disabled = true;
+      btnElement.textContent = 'Cancelling...';
+
+      try {
+        await apiRequest(`/api/campaigns/${campaignId}`, {
+          method: 'DELETE'
+        });
+        loadCampaignsData();
+      } catch (err) {
+        alert(`Failed to cancel campaign: ${err.message}`);
+        btnElement.disabled = false;
+        btnElement.textContent = originalText;
+      }
+    };
+
+    // Trigger Campaign Form Submit (Option E Upgrades)
+    campaignForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const template = campaignTemplateSelect.value;
+      let targetPhones = [];
+
+      if (recipientMode === 'single') {
+        const phone = campaignPhoneInput.value.trim().replace(/[^\d]/g, '');
+        if (!phone) {
+          alert('Please enter a valid recipient phone number.');
+          return;
+        }
+        targetPhones = [phone];
+      } else {
+        if (parsedBulkPhones.length === 0) {
+          alert('Please upload a CSV file with valid contacts first.');
+          return;
+        }
+        targetPhones = parsedBulkPhones;
+      }
+
+      modalBanner.style.display = 'none';
+      submitCampaignBtn.disabled = true;
+      submitCampaignBtn.textContent = 'Enqueuing...';
+
+      try {
+        const payload = {
+          templateName: template,
+          phoneNumbers: targetPhones
+        };
+
+        if (scheduleToggle.checked && scheduledAtInput.value) {
+          payload.scheduledAt = new Date(scheduledAtInput.value).toISOString();
+        }
+
+        const response = await apiRequest('/api/broadcast', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        modalBanner.className = 'banner success';
+        if (response.status === 'SCHEDULED') {
+          modalBanner.innerHTML = `✓ Campaign successfully scheduled!<br><span style="font-size:0.75rem;">Scheduled execution for ${new Date(scheduledAtInput.value).toLocaleString()}.</span>`;
+        } else {
+          modalBanner.innerHTML = `✓ Campaign successfully enqueued!<br><span style="font-size:0.75rem;">Queued ${targetPhones.length} broadcast recipients in BullMQ.</span>`;
+        }
+        modalBanner.style.display = 'flex';
+
+        // Refresh overview metrics & campaigns logs list
+        loadCampaignsData();
+        loadOverviewData();
+
+        setTimeout(() => {
+          campaignModal.classList.remove('active');
+          clearBulkState();
+        }, 2000);
+
+      } catch (err) {
+        modalBanner.className = 'banner error';
+        modalBanner.textContent = `✗ Failed: ${err.message}`;
+        modalBanner.style.display = 'flex';
+      } finally {
+        submitCampaignBtn.disabled = false;
+        submitCampaignBtn.textContent = 'Enqueue Campaign';
+      }
+    });
+
+
+    // ----------------------------------------------------
+    /* TAB 4 LOGIC: CREDIT BILLING & TRANSACTION HISTORY */
+    // ----------------------------------------------------
+    async function loadBillingData() {
+      try {
+        const transactions = await apiRequest('/api/billing/transactions');
+        transactionsList = transactions; // store globally for printing
+        
+        const tbody = document.getElementById('billing-logs-table-body');
+        
+        if (!transactions || transactions.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No transactions recorded yet.</td></tr>`;
+          return;
+        }
+
+        let html = '';
+        transactions.forEach(tx => {
+          const isRefill = tx.type === 'REFILL';
+          const amountNum = Number(tx.amount);
+          const formattedAmount = isRefill ? `+$${amountNum.toFixed(2)}` : `-$${Math.abs(amountNum).toFixed(2)}`;
+          const txBadgeClass = isRefill ? 'badge-tx refill' : 'badge-tx charge';
+          const dateStr = new Date(tx.createdAt).toLocaleString();
+          
+          html += `
+            <tr>
+              <td style="font-family: monospace; font-size: 0.75rem; color: #64748b;">${tx.id.substring(0, 8)}...</td>
+              <td>
+                <span class="${txBadgeClass}">
+                  <span class="badge-status-dot"></span>
+                  ${tx.type}
+                </span>
+              </td>
+              <td style="font-weight: 700; color: ${isRefill ? '#10b981' : '#ef4444'};">${formattedAmount}</td>
+              <td style="color: var(--text-main); font-weight: 500;">${tx.description}</td>
+              <td style="color: var(--text-muted); font-size: 0.8rem;">${dateStr}</td>
+              <td style="text-align: right;">
+                <button class="refill-btn no-print" style="width: auto; display: inline-flex; padding: 0.35rem 0.75rem; font-size: 0.7rem; border-radius: 6px; box-shadow: none;" onclick="triggerReceiptPrint('${tx.id}')">
+                  📄 Receipt
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+      } catch (err) {
+        console.error('Failed to load transaction logs:', err);
+      }
+    }
+
+    function triggerReceiptPrint(txId) {
+      const tx = transactionsList.find(t => t.id === txId);
+      if (!tx) {
+        alert('Transaction details not found.');
+        return;
+      }
+
+      const isRefill = tx.type === 'REFILL';
+      const amountNum = Math.abs(Number(tx.amount));
+      const formattedAmount = `$${amountNum.toFixed(2)}`;
+      const dateStr = new Date(tx.createdAt).toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStr = new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const workspaceName = currentWorkspace ? currentWorkspace.name : 'Active Workspace';
+      const workspaceIdStr = currentWorkspace ? currentWorkspace.id : workspaceId;
+
+      const modalContent = document.getElementById('printable-receipt-content');
+      
+      modalContent.innerHTML = `
+        <!-- RECEIPT BRAND HEADER -->
+        <div class="receipt-header">
+          <div>
+            <div class="receipt-title">CHATMAGAL LTD.</div>
+            <div class="receipt-meta-info" style="margin-top: 0.25rem;">
+              100 Innovation Way, Suite 400<br>
+              London, EC1A 1BB<br>
+              billing@chatmagal.com
+            </div>
+          </div>
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+            <span class="paid-stamp">PAID</span>
+            <div class="receipt-meta-info" style="margin-top: 0.5rem; font-family: monospace; font-size: 0.7rem;">
+              Invoice #: INV-${tx.id.substring(0, 8).toUpperCase()}<br>
+              Date: ${dateStr}<br>
+              Time: ${timeStr}
+            </div>
+          </div>
+        </div>
+
+        <!-- CUSTOMER AND METHOD INFO -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 0.8rem; line-height: 1.5;">
+          <div>
+            <strong style="color: #64748b; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">BILLED TO:</strong>
+            <span style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">${workspaceName}</span><br>
+            <span style="font-family: monospace; color: #64748b; font-size: 0.7rem;">ID: ${workspaceIdStr}</span>
+          </div>
+          <div style="text-align: right;">
+            <strong style="color: #64748b; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">PAYMENT METHOD:</strong>
+            <span style="font-weight: 600; color: #0f172a;">Prepaid Account Credits</span><br>
+            <span style="color: #64748b;">Internal Balance Refill</span>
+          </div>
+        </div>
+
+        <!-- RECEIPT ITEMS TABLE -->
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th>Item / Charge Description</th>
+              <th style="text-align: right;">Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 600; color: #0f172a; text-align: left;">
+                ${tx.description}
+                <div style="font-size: 0.7rem; color: #64748b; font-weight: normal; margin-top: 0.2rem;">
+                  Category: ${isRefill ? 'Prepaid Ledger Top Up' : 'Support Message Charge'}
+                </div>
+              </td>
+              <td style="text-align: right; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                ${formattedAmount}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- TOTALS BLOCK -->
+        <div class="receipt-total-row">
+          <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">Grand Total (Paid)</span>
+          <span style="font-size: 1.4rem; font-weight: 800; color: #10b981; font-family: 'Outfit', sans-serif;">${formattedAmount}</span>
+        </div>
+
+        <!-- TERMS / FOOTER -->
+        <div style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1rem; text-align: center; font-size: 0.7rem; color: #94a3b8; line-height: 1.5;">
+          Thank you for choosing Chatmagal! This receipt serves as proof of prepaid debit matching your account balance.
+          <br><span style="font-family: monospace;">TX-REF-ID: ${tx.id}</span>
+        </div>
+
+        <!-- ACTIONS ROW -->
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 2rem;" class="no-print">
+          <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 8px;" onclick="closeReceiptModal()">Close Receipt</button>
+          <button class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 8px;" onclick="printReceipt()">🖨️ Print Receipt</button>
+        </div>
+      `;
+
+      // Open Modal Overlay
+      document.getElementById('receipt-modal').classList.add('active');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receipt-modal').classList.remove('active');
+    }
+
+    function printReceipt() {
+      window.print();
+    }
+
+    function drawTrafficChart(totalSent, totalReceived) {
+      const ctx = document.getElementById('trafficChart').getContext('2d');
+      
+      if (trafficChart) {
+        trafficChart.destroy();
+      }
+
+      const sent = totalSent || 0;
+      const received = totalReceived || 0;
+      const hasData = sent > 0 || received > 0;
+      
+      trafficChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Outbound Messages', 'Inbound Messages'],
+          datasets: [{
+            data: hasData ? [sent, received] : [1, 1],
+            backgroundColor: hasData ? ['#10b981', '#64748b'] : ['#e2e8f0', '#f1f5f9'],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: {
+                  family: 'Plus Jakarta Sans',
+                  size: 11,
+                  weight: '600'
+                },
+                color: '#64748b'
+              }
+            },
+            tooltip: {
+              enabled: hasData
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    function drawSpendChart(transactions) {
+      const ctx = document.getElementById('spendChart').getContext('2d');
+      
+      if (spendChart) {
+        spendChart.destroy();
+      }
+
+      const displayTxs = [...transactions].slice(0, 10).reverse();
+      
+      const labels = displayTxs.map(tx => {
+        const d = new Date(tx.createdAt);
+        return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      });
+
+      const data = displayTxs.map(tx => Number(tx.amount));
+      const backgroundColors = displayTxs.map(tx => tx.type === 'REFILL' ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)');
+      const borderColors = displayTxs.map(tx => tx.type === 'REFILL' ? '#10b981' : '#ef4444');
+
+      const hasData = displayTxs.length > 0;
+
+      spendChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: hasData ? labels : ['No Data'],
+          datasets: [{
+            label: 'Transaction Amount ($)',
+            data: hasData ? data : [0],
+            backgroundColor: hasData ? backgroundColors : ['#e2e8f0'],
+            borderColor: hasData ? borderColors : ['#cbd5e1'],
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw;
+                  return val >= 0 ? `Refill: +$${val.toFixed(2)}` : `Charge: -$${Math.abs(val).toFixed(2)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: {
+                color: 'rgba(15, 23, 42, 0.04)'
+              },
+              ticks: {
+                color: '#64748b',
+                font: {
+                  family: 'Plus Jakarta Sans',
+                  size: 10
+                },
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#64748b',
+                font: {
+                  family: 'Plus Jakarta Sans',
+                  size: 10
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Approved Meta Templates Dataset (Option D)
+    const APPROVED_TEMPLATES = [
+      {
+        name: 'hello_world',
+        language: 'en_US',
+        category: 'UTILITY',
+        status: 'APPROVED',
+        body: 'Welcome to Chatmagal! Thank you for subscribing. We will keep you updated on all important account activity.'
+      },
+      {
+        name: 'appointment_reminder',
+        language: 'en_US',
+        category: 'UTILITY',
+        status: 'APPROVED',
+        body: 'Hello! This is a reminder that your appointment is scheduled for tomorrow at {{1}}. Please reply with YES to confirm.'
+      },
+      {
+        name: 'shipping_update',
+        language: 'en_US',
+        category: 'UTILITY',
+        status: 'APPROVED',
+        body: 'Good news! Your order {{1}} has shipped and is on its way. Track your delivery here: https://chatmagal.com/track/{{2}}'
+      },
+      {
+        name: 'special_promotion',
+        language: 'en_US',
+        category: 'MARKETING',
+        status: 'APPROVED',
+        body: 'Exclusive Offer! 🎉 Top up your wallet today and get 10% extra credit. Use code TOPUP10 at checkout.'
+      }
+    ];
+
+    function loadTemplatesData() {
+      // 1. Populate Templates table in pane-campaigns
+      const tbody = document.getElementById('meta-templates-table-body');
+      if (!tbody) return;
+
+      let html = '';
+      APPROVED_TEMPLATES.forEach(tmpl => {
+        html += `
+          <tr>
+            <td style="font-weight:700; color:var(--text-main);">${tmpl.name}</td>
+            <td style="font-family:monospace; font-size:0.75rem; color:var(--text-muted);">${tmpl.language}</td>
+            <td>
+              <span class="badge-status" style="background:rgba(100,116,139,0.06); border-color:rgba(100,116,139,0.15); color:#64748b; padding:0.2rem 0.5rem;">
+                ${tmpl.category}
+              </span>
+            </td>
+            <td>
+              <span class="badge-status completed">
+                <span class="badge-status-dot"></span>
+                ${tmpl.status}
+              </span>
+            </td>
+            <td style="font-size:0.8rem; color:var(--text-muted); line-height:1.45; max-width:320px; white-space:normal; overflow:hidden; text-overflow:ellipsis;">
+              ${tmpl.body}
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+
+      // 2. Populate Dropdown Select in Campaign Modal
+      const select = document.getElementById('campaign-template-select');
+      if (select) {
+        select.innerHTML = APPROVED_TEMPLATES.map(tmpl => `<option value="${tmpl.name}">${tmpl.name} (${tmpl.category})</option>`).join('');
+        
+        // Trigger initial preview selection
+        updateTemplatePreview(APPROVED_TEMPLATES[0].name);
+      }
+    }
+
+    function updateTemplatePreview(templateName) {
+      const tmpl = APPROVED_TEMPLATES.find(t => t.name === templateName);
+      const container = document.getElementById('template-body-preview-container');
+      const bodyPreview = document.getElementById('template-body-preview');
+      
+      if (tmpl && container && bodyPreview) {
+        bodyPreview.textContent = tmpl.body;
+        container.style.display = 'block';
+      } else if (container) {
+        container.style.display = 'none';
+      }
+    }
+
+    // ----------------------------------------------------
+    // TAB 2 ADDITIONS: MULTI-AGENT COLLABORATION & QUICK REPLIES (Option F)
+    // ----------------------------------------------------
+    const agentStatusSelect = document.getElementById('agent-status-select');
+    const agentPresenceDot = document.getElementById('agent-presence-dot');
+    const agentPresenceText = document.getElementById('agent-presence-text');
+    const chatAssigneeSelect = document.getElementById('chat-assignee-select');
+    const slashPopup = document.getElementById('slash-commands-popup');
+    const slashList = document.getElementById('slash-commands-list');
+    const supportMessageInput = document.getElementById('chat-message-input');
+    const teamLeaderToggle = document.getElementById('team-leader-toggle');
+
+    // State synchronizer for ticket assignment permissions
+    function syncAssigneeSelectState() {
+      const isTeamLeader = teamLeaderToggle.checked;
+      const lockIcon = document.getElementById('assignee-lock-icon');
+      const roleIcon = document.getElementById('role-icon');
+      
+      if (chatAssigneeSelect) {
+        if (isTeamLeader) {
+          chatAssigneeSelect.disabled = false;
+          chatAssigneeSelect.style.cursor = 'pointer';
+          chatAssigneeSelect.style.background = '#fff';
+          chatAssigneeSelect.style.opacity = '1';
+          if (lockIcon) {
+            lockIcon.textContent = '🔓';
+            lockIcon.style.color = '#10b981';
+          }
+          if (roleIcon) {
+            roleIcon.textContent = '🛡️';
+          }
+        } else {
+          chatAssigneeSelect.disabled = true;
+          chatAssigneeSelect.style.cursor = 'not-allowed';
+          chatAssigneeSelect.style.background = '#f1f5f9';
+          chatAssigneeSelect.style.opacity = '0.6';
+          if (lockIcon) {
+            lockIcon.textContent = '🔒';
+            lockIcon.style.color = '#ef4444';
+          }
+          if (roleIcon) {
+            roleIcon.textContent = '🔒';
+          }
+        }
+      }
+    }
+
+    teamLeaderToggle.addEventListener('change', syncAssigneeSelectState);
+    // Initialize standard state
+    syncAssigneeSelectState();
+
+    // 1. Agent Presence Status Selector
+    agentStatusSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === 'Online') {
+        agentPresenceText.textContent = 'ONLINE';
+        agentPresenceText.style.color = '#047857';
+        agentPresenceDot.style.background = '#10b981';
+      } else if (val === 'Away') {
+        agentPresenceText.textContent = 'AWAY';
+        agentPresenceText.style.color = '#d97706';
+        agentPresenceDot.style.background = '#f59e0b';
+      } else if (val === 'Offline') {
+        agentPresenceText.textContent = 'OFFLINE';
+        agentPresenceText.style.color = '#b91c1c';
+        agentPresenceDot.style.background = '#ef4444';
+      }
+    });
+
+    // 2. Ticket Assignment Selector Change handler
+    chatAssigneeSelect.addEventListener('change', async (e) => {
+      if (!activeContactId) return;
+      const val = e.target.value;
+      const agentName = val === 'Unassigned' ? null : val;
+      const isTeamLeader = teamLeaderToggle.checked;
+
+      try {
+        await apiRequest(`/api/contacts/${activeContactId}/assign`, {
+          method: 'POST',
+          body: JSON.stringify({ 
+            agentName,
+            isTeamLeader
+          })
+        });
+        
+        // Update local state instantly and refresh sidebar
+        if (contactsMap[activeContactId]) {
+          contactsMap[activeContactId].assignedAgent = agentName;
+        }
+        loadChatThreads(false);
+      } catch (err) {
+        alert('Failed to update ticket assignment: Only the Team Leader is authorized to reassign tickets.');
+        chatAssigneeSelect.value = contactsMap[activeContactId]?.assignedAgent || 'Unassigned';
+      }
+    });
+
+    // 3. Bot Handoff Toggle Change handler (Option A)
+    const chatBotToggle = document.getElementById('chat-bot-toggle');
+    chatBotToggle.addEventListener('change', async (e) => {
+      if (!activeContactId) return;
+      const botEnabled = e.target.checked;
+      const botPausedBanner = document.getElementById('chat-bot-paused-banner');
+
+      try {
+        await apiRequest(`/api/contacts/${activeContactId}/bot-toggle`, {
+          method: 'POST',
+          body: JSON.stringify({ botEnabled })
+        });
+
+        // Update local state and banner instantly
+        if (contactsMap[activeContactId]) {
+          contactsMap[activeContactId].botEnabled = botEnabled;
+        }
+        if (botPausedBanner) {
+          botPausedBanner.style.display = botEnabled ? 'none' : 'inline-block';
+        }
+        loadChatThreads(false);
+      } catch (err) {
+        alert('Failed to update bot handoff state.');
+        chatBotToggle.checked = contactsMap[activeContactId]?.botEnabled !== false;
+      }
+    });
+
+    // Canned Canned Replies Dataset
+    const CANNED_REPLIES = [
+      { shortcut: '/greet', label: '👋 Standard Greeting', text: 'Hello! Thank you for contacting Chatmagal. How can I help you today?' },
+      { shortcut: '/hours', label: '🕒 Support Operating Hours', text: '🕒 Our support office hours are Monday to Friday, 9:00 AM - 6:00 PM GMT. Weekends: Closed.' },
+      { shortcut: '/pricing', label: '💳 Wallet Pricing Rates', text: '💳 Prepaid message rates: Outbound replies cost $0.05. Inbound is FREE. Marketing broadcasts are $0.05.' },
+      { shortcut: '/refund', label: '💸 Credit Refund Policy', text: '💸 Standard Refund Policy: Account credit refills are eligible for full refund within 14 days of purchase if unused.' },
+      { shortcut: '/close', label: '✅ Resolve & Close Ticket', text: '✅ This support ticket has been marked as resolved. Thank you for choosing Chatmagal! If you need further assistance, simply reply to this chat.' }
+    ];
+
+    // 3. Slash Command Autocomplete Logic
+    supportMessageInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (val.startsWith('/')) {
+        renderSlashPopup(val.toLowerCase());
+      } else {
+        slashPopup.style.display = 'none';
+      }
+    });
+
+    supportMessageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        slashPopup.style.display = 'none';
+      }
+    });
+
+    // Close popups on clicking outside
+    document.addEventListener('click', (e) => {
+      if (e.target !== supportMessageInput && !slashPopup.contains(e.target)) {
+        slashPopup.style.display = 'none';
+      }
+    });
+
+    function renderSlashPopup(query) {
+      const filtered = CANNED_REPLIES.filter(r => 
+        r.shortcut.startsWith(query) || 
+        r.label.toLowerCase().includes(query) || 
+        r.text.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        slashPopup.style.display = 'none';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach((r) => {
+        html += `
+          <div class="slash-item" style="padding: 0.75rem 1.25rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s ease; display: flex; flex-direction: column; gap: 0.15rem; text-align: left;" data-text="${r.text}" onmouseover="this.style.background=\'#f1fdf4\'" onmouseout="this.style.background=\'transparent\'">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--primary); font-size:0.85rem; font-family:monospace;">${r.shortcut}</strong>
+              <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${r.label}</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:340px; margin-top:0.15rem;">${r.text}</div>
+          </div>
+        `;
+      });
+
+      slashList.innerHTML = html;
+      slashPopup.style.display = 'block';
+
+      // Bind click triggers
+      const items = slashList.querySelectorAll('.slash-item');
+      items.forEach(item => {
+        item.addEventListener('click', () => {
+          supportMessageInput.value = item.getAttribute('data-text');
+          slashPopup.style.display = 'none';
+          supportMessageInput.focus();
+        });
+      });
+    }
+
+  </script>
+</body>
+</html>

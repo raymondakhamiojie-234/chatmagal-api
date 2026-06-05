@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatmagal Integration Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Socket.io Client -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- Custom Styling -->
+  <style>
+    :root {
+      --bg-dark: #090a0f;
+      --card-bg: rgba(17, 18, 27, 0.65);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --primary-glow: rgba(139, 92, 246, 0.35);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.25);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --bubble-in: rgba(31, 41, 55, 0.8);
+      --bubble-out: rgba(124, 58, 237, 0.25);
+      --sidebar-width: 320px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    }
+
+    /* Scrollbars */
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    *::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    }
+
+    /* Header styling */
+    header {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(9, 10, 15, 0.75);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 1.25rem;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #ffffff, #d8b4fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      border: 1px solid var(--card-border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #ef4444;
+      display: inline-block;
+    }
+
+    .status-dot.connected {
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success-glow);
+      animation: pulse 2s infinite;
+    }
+
+    /* Layout structure */
+    .dashboard-container {
+      flex: 1;
+      display: flex;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      height: calc(100vh - 80px);
+      box-sizing: border-box;
+    }
+
+    /* Left Sidebar: Controls & Onboarding */
+    .controls-panel {
+      width: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    /* Central Panel: Live Chat */
+    .chat-panel {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    /* Right Sidebar: Broadcast Trigger */
+    .broadcast-panel {
+      width: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    /* Reusable Card */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #fff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.5rem;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #fff;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+      filter: brightness(1.1);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      box-shadow: none;
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+      transform: none;
+      filter: none;
+    }
+
+    /* Chat Area Styling */
+    .chat-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-active-workspace {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .workspace-name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .workspace-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .no-messages {
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 320px;
+      color: var(--text-muted);
+    }
+
+    .no-messages-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.4;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .message-row {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .message-sender {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      margin-left: 0.5rem;
+      font-weight: 500;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 0.85rem 1.1rem;
+      border-radius: 18px;
+      font-size: 0.925rem;
+      line-height: 1.4;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .message-row.inbound {
+      align-items: flex-start;
+    }
+
+    .message-row.inbound .message-bubble {
+      background-color: var(--bubble-in);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom-left-radius: 4px;
+      color: #fff;
+    }
+
+    .message-row.outbound {
+      align-items: flex-end;
+    }
+
+    .message-row.outbound .message-bubble {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(139, 92, 246, 0.15) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-bottom-right-radius: 4px;
+      color: #e0e7ff;
+    }
+
+    .message-time {
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 0.3rem;
+      text-align: right;
+      display: block;
+    }
+
+    .message-meta {
+      font-size: 0.7rem;
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      color: #a78bfa;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: none;
+    }
+
+    .show-meta-btn {
+      font-size: 0.7rem;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-top: 0.4rem;
+      text-align: left;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .show-meta-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* Notification Banner */
+    .banner {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.825rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      border: 1px solid transparent;
+      display: none;
+    }
+
+    .banner.success {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      display: flex;
+    }
+
+    .banner.error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      display: flex;
+    }
+
+    /* Help card details */
+    .help-item {
+      font-size: 0.825rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    
+    .help-item strong {
+      color: #fff;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .help-code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #a78bfa;
+    }
+
+    /* Keyframes */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-container {
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+      }
+      .controls-panel, .broadcast-panel {
+        width: 100%;
+      }
+      .chat-panel {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">C</div>
+      <div class="brand-title">Chatmagal Dashboard</div>
+    </div>
+    <div class="connection-status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Disconnected</span>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    
+    <!-- LEFT SIDEBAR: Setup & Workspace Connection -->
+    <div class="controls-panel">
+      <div class="card">
+        <div class="card-title">🔌 Connection Setup</div>
+        <div class="form-group">
+          <label for="workspace-id-input">Workspace ID</label>
+          <input type="text" id="workspace-id-input" class="form-input" placeholder="e.g. test-workspace-id" value="test-workspace-id">
+        </div>
+        <button id="connect-btn" class="btn">Connect & Join Room</button>
+        
+        <div class="banner success" id="connection-banner" style="display: none;">
+          ✓ Successfully connected to Socket.io!
+        </div>
+      </div>
+
+      <!-- INBOUND WEBHOOK SIMULATOR -->
+      <div class="card">
+        <div class="card-title">📥 Inbound Webhook Simulator</div>
+        <form id="webhook-simulator-form">
+          <div class="form-group">
+            <label for="sim-sender-phone">Customer Phone Number</label>
+            <input type="text" id="sim-sender-phone" class="form-input" placeholder="e.g. 2348054540828" value="2348054540828" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="sim-media-type">Message Type</label>
+            <select id="sim-media-type" class="form-input" onchange="toggleSimulatedFields(this.value)" style="cursor:pointer; background: #11121b; color:#fff;">
+              <option value="text">💬 Text Message / Bot Keyword</option>
+              <option value="image">📷 Image Attachment</option>
+              <option value="document">📄 Document (PDF) Attachment</option>
+              <option value="audio">🎵 Voice Recording / Audio</option>
+              <option value="location">📍 Location Pin</option>
+            </select>
+          </div>
+
+          <!-- Dynamic Text field -->
+          <div class="form-group" id="sim-group-text">
+            <label for="sim-text-body">Message Text Content</label>
+            <input type="text" id="sim-text-body" class="form-input" placeholder="e.g. #help, #balance, Hello!" value="#help">
+            <span style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+              Tip: Type <span style="font-family:monospace; color:#a78bfa;">#help</span>, <span style="font-family:monospace; color:#a78bfa;">#pricing</span>, or <span style="font-family:monospace; color:#a78bfa;">#balance</span> to trigger credit-charging auto-responses!
+            </span>
+          </div>
+
+          <!-- Dynamic Image field -->
+          <div class="form-group" id="sim-group-image" style="display:none;">
+            <label for="sim-image-caption">Image Caption</label>
+            <input type="text" id="sim-image-caption" class="form-input" placeholder="e.g. Look at this screenshot!" value="Customer Receipt screenshot">
+            <label for="sim-image-id" style="margin-top:0.75rem;">Meta Media ID</label>
+            <input type="text" id="sim-image-id" class="form-input" placeholder="Meta Media ID" value="49445e66-d578-41af-96ce-250adf02fe24">
+          </div>
+
+          <!-- Dynamic Document field -->
+          <div class="form-group" id="sim-group-document" style="display:none;">
+            <label for="sim-doc-filename">PDF Filename</label>
+            <input type="text" id="sim-doc-filename" class="form-input" placeholder="e.g. Invoice_9902.pdf" value="SaaS_Receipt_INV408.pdf">
+            <label for="sim-doc-caption" style="margin-top:0.75rem;">Document Caption</label>
+            <input type="text" id="sim-doc-caption" class="form-input" placeholder="Optional caption" value="My monthly usage report">
+            <label for="sim-doc-id" style="margin-top:0.75rem;">Meta Media ID</label>
+            <input type="text" id="sim-doc-id" class="form-input" placeholder="Meta Media ID" value="49445e66-d578-41af-96ce-250adf02fe24">
+          </div>
+
+          <!-- Dynamic Audio field -->
+          <div class="form-group" id="sim-group-audio" style="display:none;">
+            <label for="sim-audio-mime">Audio Mime Type</label>
+            <input type="text" id="sim-audio-mime" class="form-input" value="audio/ogg; codecs=opus">
+            <label for="sim-audio-id" style="margin-top:0.75rem;">Meta Media ID</label>
+            <input type="text" id="sim-audio-id" class="form-input" placeholder="Meta Media ID" value="49445e66-d578-41af-96ce-250adf02fe24">
+          </div>
+
+          <!-- Dynamic Location fields -->
+          <div class="form-group" id="sim-group-location" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+              <div>
+                <label for="sim-lat">Latitude</label>
+                <input type="number" step="any" id="sim-lat" class="form-input" value="51.5074">
+              </div>
+              <div>
+                <label for="sim-lng">Longitude</label>
+                <input type="number" step="any" id="sim-lng" class="form-input" value="-0.1278">
+              </div>
+            </div>
+            <label for="sim-loc-name" style="margin-top:0.75rem;">Location Name</label>
+            <input type="text" id="sim-loc-name" class="form-input" value="London Head Office">
+            <label for="sim-loc-addr" style="margin-top:0.75rem;">Address</label>
+            <input type="text" id="sim-loc-addr" class="form-input" value="100 Innovation Way, Suite 400, London">
+          </div>
+
+          <button type="submit" class="btn" id="simulate-btn" style="margin-top:0.5rem; background:linear-gradient(135deg, var(--success) 0%, #047857 100%); box-shadow: 0 4px 15px var(--success-glow);">
+            📥 Simulate Inbound Message
+          </button>
+        </form>
+        <div class="banner" id="simulator-banner" style="margin-top: 1rem;"></div>
+      </div>
+
+      <!-- SIMULATE OUTBOUND RECEIPTS CARD (Option B) -->
+      <div class="card" id="receipts-simulator-card" style="border-color: rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.01);">
+        <div class="card-title" style="display:flex; align-items:center; gap:0.35rem; color:#10b981;">
+          <span>⚡ Simulate Outbound Receipts</span>
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.35;">
+          Mock official WhatsApp delivery reports for outbound replies. This updates checkmarks in your workspace dashboard console.
+        </p>
+        <div class="form-group">
+          <label for="sim-receipt-status">Select Webhook Receipt Status</label>
+          <select id="sim-receipt-status" class="form-input" style="cursor:pointer; background:#1e293b; color:#fff; border-color:#334155;">
+            <option value="delivered">✓✓ Delivered</option>
+            <option value="read">🟢 ✓✓ Read (Green Ticks)</option>
+            <option value="failed">✗ Failed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sim-receipt-msgid">Meta Message ID Reference (Optional)</label>
+          <input type="text" id="sim-receipt-msgid" class="form-input" placeholder="Auto-fills with latest outbound reply ID" style="font-family:monospace; background:#1e293b; color:#a78bfa; border-color:#334155;">
+        </div>
+        <button type="button" class="btn" id="simulate-receipt-btn" style="background:#10b981; color:#fff; font-weight:700;">
+          Dispatch Status Webhook
+        </button>
+        <div class="banner" id="receipt-banner" style="margin-top:0.75rem; display:none;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📖 Testing Instructions</div>
+        <div class="help-item">
+          <strong>1. Seed Workspace in DB</strong>
+          Use Prisma Studio (<span class="help-code">npx prisma studio</span>) to add a Workspace record. Match its ID to the Workspace ID above, and set the <span class="help-code">metaPhoneNumberId</span> to your Meta Phone ID.
+        </div>
+        <div class="help-item">
+          <strong>2. Trigger Webhook (Inbound)</strong>
+          Send an inbound WhatsApp message from your phone to your Meta Business number. The webhook will match the phone ID, save it to the DB, and stream it here instantly!
+        </div>
+        <div class="help-item">
+          <strong>3. Run a Broadcast (Outbound)</strong>
+          Use the right-hand panel to trigger a template message campaign. It will queue via BullMQ and push via Meta API.
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTRAL LIVE CHAT WINDOW -->
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="chat-active-workspace">
+          <span class="workspace-name" id="active-workspace-name">Real-Time Event Logs</span>
+          <span class="workspace-sub" id="active-workspace-sub">Waiting for connection...</span>
+        </div>
+        <button id="clear-btn" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 8px;">Clear</button>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <div class="no-messages" id="no-messages-placeholder">
+          <div class="no-messages-icon">💬</div>
+          <h3>No activity stream yet</h3>
+          <p style="font-size: 0.85rem; margin-top: 0.5rem; line-height: 1.4;">Connect to Socket.io and trigger incoming webhook messages to see them populate here in real-time!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: Broadcast Panel -->
+    <div class="broadcast-panel">
+      <div class="card">
+        <div class="card-title">🚀 Trigger Template Broadcast</div>
+        <form id="broadcast-form">
+          <div class="form-group">
+            <label for="broadcast-phone">Recipient Phone Number</label>
+            <input type="text" id="broadcast-phone" class="form-input" placeholder="e.g. 2348030000000" required>
+          </div>
+          <div class="form-group">
+            <label for="broadcast-template">Meta Template Name</label>
+            <input type="text" id="broadcast-template" class="form-input" placeholder="e.g. hello_world" value="hello_world" required>
+          </div>
+          <div class="form-group">
+            <label for="broadcast-auth">Bearer Authorization Token</label>
+            <input type="text" id="broadcast-auth" class="form-input" placeholder="Enter Workspace ID" value="test-workspace-id" required>
+            <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+              Using dummy auth: Enter Workspace ID to sign requests.
+            </span>
+          </div>
+          <button type="submit" class="btn" id="broadcast-btn">
+            Enqueue Broadcast
+          </button>
+        </form>
+
+        <div class="banner" id="broadcast-banner"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let socket = null;
+    let latestOutboundMessageId = '';
+    let simContactId = '';
+    const connectBtn = document.getElementById('connect-btn');
+    const workspaceIdInput = document.getElementById('workspace-id-input');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const connectionBanner = document.getElementById('connection-banner');
+    
+    const activeWorkspaceName = document.getElementById('active-workspace-name');
+    const activeWorkspaceSub = document.getElementById('active-workspace-sub');
+    const chatMessages = document.getElementById('chat-messages');
+    const placeholder = document.getElementById('no-messages-placeholder');
+    const clearBtn = document.getElementById('clear-btn');
+
+    // Broadcast Form Elements
+    const broadcastForm = document.getElementById('broadcast-form');
+    const broadcastBtn = document.getElementById('broadcast-btn');
+    const broadcastBanner = document.getElementById('broadcast-banner');
+    const broadcastAuth = document.getElementById('broadcast-auth');
+
+    // Sync input values to make testing easier
+    workspaceIdInput.addEventListener('input', (e) => {
+      broadcastAuth.value = e.target.value;
+    });
+
+    // Clear message view
+    clearBtn.addEventListener('click', () => {
+      // Remove all messages except the placeholder if no elements are left
+      const messageRows = chatMessages.querySelectorAll('.message-row');
+      messageRows.forEach(row => row.remove());
+      placeholder.style.display = 'flex';
+    });
+
+    // Socket.io Connection Logic
+    connectBtn.addEventListener('click', () => {
+      const workspaceId = workspaceIdInput.value.trim();
+      if (!workspaceId) {
+        alert('Please enter a Workspace ID first!');
+        return;
+      }
+
+      if (socket) {
+        socket.disconnect();
+      }
+
+      // Initialize Socket connection
+      statusText.textContent = 'Connecting...';
+      statusDot.className = 'status-dot';
+      
+      socket = io('http://localhost:3000');
+
+      socket.on('connect', () => {
+        statusText.textContent = 'Connected';
+        statusDot.className = 'status-dot connected';
+        connectionBanner.style.display = 'flex';
+        
+        activeWorkspaceName.textContent = 'Workspace Active Stream';
+        activeWorkspaceSub.textContent = `Room: ${workspaceId} • Connected to Port 3000`;
+
+        // Join Workspace Room
+        socket.emit('joinWorkspace', workspaceId);
+        console.log(`Requested to join room: ${workspaceId}`);
+        
+        setTimeout(() => {
+          connectionBanner.style.display = 'none';
+        }, 4000);
+      });
+
+      socket.on('disconnect', () => {
+        statusText.textContent = 'Disconnected';
+        statusDot.className = 'status-dot';
+        activeWorkspaceName.textContent = 'Real-Time Event Logs';
+        activeWorkspaceSub.textContent = 'Disconnected';
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket Connection Error:', error);
+        statusText.textContent = 'Connection Error';
+        statusDot.className = 'status-dot';
+        alert(`Failed to connect to local server (http://localhost:3000). Make sure 'npm run dev' is running!`);
+      });
+
+      // Handle real-time incoming messages
+      socket.on('newMessage', (message) => {
+        console.log('Received Message:', message);
+        appendMessage(message);
+
+        // Store active contact ID UUID and latest outbound message ID to pre-fill receipts uploader!
+        if (message.contactId) {
+          simContactId = message.contactId;
+        }
+        
+        if (message.direction === 'OUTBOUND') {
+          const metaMsgId = message.content?.meta_response?.messages?.[0]?.id || message.id;
+          latestOutboundMessageId = metaMsgId;
+          const simReceiptInput = document.getElementById('sim-receipt-msgid');
+          if (simReceiptInput) {
+            simReceiptInput.value = metaMsgId;
+          }
+        }
+      });
+    });
+
+    // Append Message UI Element
+    function appendMessage(message) {
+      placeholder.style.display = 'none';
+
+      const row = document.createElement('div');
+      const isInbound = message.direction === 'INBOUND';
+      row.className = `message-row ${isInbound ? 'inbound' : 'outbound'}`;
+
+      // Extract details
+      const sender = isInbound ? (message.content.from || 'Contact') : 'System (Outbound)';
+      const timeStr = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      // Determine what text content to show
+      let messageContent = '';
+      const msgType = message.content.type;
+
+      if (isInbound) {
+        if (msgType === 'image') {
+          const imgObj = message.content.image;
+          messageContent = `
+            <div style="margin-bottom:0.25rem; display:flex; flex-direction:column; gap:0.25rem; width: 100%;">
+              <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">📷 Simulated Image Inbound</div>
+              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=320&q=80" style="width:220px; border-radius:12px; border:1px solid var(--card-border); max-height:150px; object-fit:cover;">
+              ${imgObj.caption ? `<span style="font-size:0.8rem; color:#fff; margin-top:0.25rem; display:block;">${imgObj.caption}</span>` : ''}
+            </div>
+          `;
+        } else if (msgType === 'document') {
+          const docObj = message.content.document;
+          messageContent = `
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--card-border); border-radius:12px; padding:0.75rem; display:flex; flex-direction:column; gap:0.5rem; width: 220px;">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="font-size:1.2rem;">📄</div>
+                <div style="overflow:hidden; flex:1;">
+                  <div style="font-weight:600; font-size:0.8rem; color:#fff; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${docObj.filename || 'invoice.pdf'}</div>
+                  <div style="font-size:0.68rem; color:var(--text-muted);">PDF Document</div>
+                </div>
+              </div>
+              ${docObj.caption ? `<span style="font-size:0.75rem; color:var(--text-muted);">${docObj.caption}</span>` : ''}
+            </div>
+          `;
+        } else if (msgType === 'audio') {
+          messageContent = `
+            <div style="display:flex; flex-direction:column; gap:0.35rem; width: 220px;">
+              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">🎵 Voice Recording</span>
+              <audio controls style="width:100%; height:28px;">
+                <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+          `;
+        } else if (msgType === 'location') {
+          const locObj = message.content.location;
+          messageContent = `
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--card-border); border-radius:12px; padding:0.75rem; display:flex; flex-direction:column; gap:0.4rem; width: 220px;">
+              <div style="font-weight:600; font-size:0.8rem; color:#fff;">📍 ${locObj.name || 'Pinned Location'}</div>
+              ${locObj.address ? `<div style="font-size:0.7rem; color:var(--text-muted); line-height:1.3;">${locObj.address}</div>` : ''}
+              <div style="font-size:0.65rem; font-family:monospace; color:var(--text-muted);">Coords: ${locObj.latitude.toFixed(4)}, ${locObj.longitude.toFixed(4)}</div>
+            </div>
+          `;
+        } else if (message.content.text && message.content.text.body) {
+          messageContent = message.content.text.body;
+        } else if (message.content.button && message.content.button.text) {
+          messageContent = `[Button Clicked] ${message.content.button.text}`;
+        } else {
+          messageContent = `[Payload Type: ${message.content.type || 'Unknown'}]`;
+        }
+      } else {
+        // Outbound templates payload OR outbound auto-responder text
+        if (message.content.text && message.content.text.body) {
+          messageContent = message.content.text.body;
+        } else if (message.content.template && message.content.template.name) {
+          messageContent = `🚀 Outbound template broadcast enqueued: "${message.content.template.name}"`;
+        } else {
+          messageContent = `Template Broadcast Campaign initiated. Status: ${message.status}`;
+        }
+      }
+
+      // Unique random ID for collapsing metadata
+      const metaId = 'meta-' + Math.random().toString(36).substr(2, 9);
+
+      row.innerHTML = `
+        <div class="message-sender">${sender}</div>
+        <div class="message-bubble">
+          <div>${messageContent}</div>
+          <span class="message-time">${timeStr} • Status: ${message.status}</span>
+          <button class="show-meta-btn" onclick="toggleMeta('${metaId}')">Toggle Raw JSON</button>
+          <pre class="message-meta" id="${metaId}">${JSON.stringify(message.content, null, 2)}</pre>
+        </div>
+      `;
+
+      chatMessages.appendChild(row);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Toggle Raw JSON display
+    function toggleMeta(id) {
+      const el = document.getElementById(id);
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+      } else {
+        el.style.display = 'block';
+      }
+    }
+
+    // Handle Broadcast API Submission
+    broadcastForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const phone = document.getElementById('broadcast-phone').value.trim();
+      const template = document.getElementById('broadcast-template').value.trim();
+      const token = broadcastAuth.value.trim();
+
+      broadcastBtn.disabled = true;
+      broadcastBtn.textContent = 'Enqueuing...';
+      broadcastBanner.style.display = 'none';
+
+      try {
+        const response = await fetch('http://localhost:3000/api/broadcast', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            templateName: template,
+            phoneNumbers: [phone]
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          broadcastBanner.className = 'banner success';
+          broadcastBanner.innerHTML = `✓ Broadcast accepted!<br><span style="font-size:0.75rem;">Campaign ID: ${data.campaignId} (Processing)</span>`;
+          broadcastBanner.style.display = 'block';
+        } else {
+          broadcastBanner.className = 'banner error';
+          broadcastBanner.innerHTML = `✗ Error: ${data.error || 'Request failed'}`;
+          broadcastBanner.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Broadcast HTTP Error:', error);
+        broadcastBanner.className = 'banner error';
+        broadcastBanner.textContent = `✗ Connection failed: Make sure server is running on port 3000!`;
+        broadcastBanner.style.display = 'block';
+      } finally {
+        broadcastBtn.disabled = false;
+        broadcastBtn.textContent = 'Enqueue Broadcast';
+      }
+    });
+
+    // Toggle simulated media fields on dropdown changes
+    function toggleSimulatedFields(type) {
+      document.getElementById('sim-group-text').style.display = type === 'text' ? 'block' : 'none';
+      document.getElementById('sim-group-image').style.display = type === 'image' ? 'block' : 'none';
+      document.getElementById('sim-group-document').style.display = type === 'document' ? 'block' : 'none';
+      document.getElementById('sim-group-audio').style.display = type === 'audio' ? 'block' : 'none';
+      document.getElementById('sim-group-location').style.display = type === 'location' ? 'block' : 'none';
+    }
+
+    // Inbound Webhook Simulator Submission
+    const simForm = document.getElementById('webhook-simulator-form');
+    const simBtn = document.getElementById('simulate-btn');
+    const simBanner = document.getElementById('simulator-banner');
+
+    simForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const phone = document.getElementById('sim-sender-phone').value.trim();
+      const type = document.getElementById('sim-media-type').value;
+      const workspaceId = workspaceIdInput.value.trim();
+
+      if (!workspaceId) {
+        alert('Please enter a Workspace ID in Connection Setup first!');
+        return;
+      }
+
+      simBtn.disabled = true;
+      simBtn.textContent = 'Simulating...';
+      simBanner.style.display = 'none';
+
+      // Build simulated Meta message payload matching official schemas
+      let messagePayload = {
+        from: phone,
+        id: 'wamid.' + Math.random().toString(36).substr(2, 15),
+        timestamp: Math.floor(Date.now() / 1000).toString(),
+        type: type
+      };
+
+      if (type === 'text') {
+        messagePayload.text = {
+          body: document.getElementById('sim-text-body').value.trim()
+        };
+      } else if (type === 'image') {
+        messagePayload.image = {
+          caption: document.getElementById('sim-image-caption').value.trim(),
+          mime_type: 'image/jpeg',
+          sha256: 'image_sha256_mock_hash',
+          id: document.getElementById('sim-image-id').value.trim()
+        };
+      } else if (type === 'document') {
+        messagePayload.document = {
+          filename: document.getElementById('sim-doc-filename').value.trim(),
+          caption: document.getElementById('sim-doc-caption').value.trim(),
+          mime_type: 'application/pdf',
+          sha256: 'doc_sha256_mock_hash',
+          id: document.getElementById('sim-doc-id').value.trim()
+        };
+      } else if (type === 'audio') {
+        messagePayload.audio = {
+          mime_type: document.getElementById('sim-audio-mime').value.trim(),
+          sha256: 'audio_sha256_mock_hash',
+          id: document.getElementById('sim-audio-id').value.trim()
+        };
+      } else if (type === 'location') {
+        messagePayload.location = {
+          latitude: parseFloat(document.getElementById('sim-lat').value),
+          longitude: parseFloat(document.getElementById('sim-lng').value),
+          name: document.getElementById('sim-loc-name').value.trim(),
+          address: document.getElementById('sim-loc-addr').value.trim()
+        };
+      }
+
+      const webhookPayload = {
+        object: 'whatsapp_business_account',
+        entry: [
+          {
+            id: 'MOCK_WABA_ID',
+            changes: [
+              {
+                value: {
+                  messaging_product: 'whatsapp',
+                  metadata: {
+                    display_phone_number: '16505553333',
+                    phone_number_id: 'MOCK_PHONE_ID'
+                  },
+                  contacts: [
+                    {
+                      profile: {
+                        name: 'Simulator Guest'
+                      },
+                      wa_id: phone
+                    }
+                  ],
+                  messages: [messagePayload]
+                },
+                field: 'messages'
+              }
+            ]
+          }
+        ]
+      };
+
+      try {
+        // Resolve active workspace metaPhoneNumberId to ensure database upserts match perfectly!
+        let activePhoneId = 'MOCK_PHONE_ID';
+        try {
+          const workspaceResponse = await fetch(`http://localhost:3000/api/workspace`, {
+            headers: {
+              'Authorization': `Bearer ${workspaceId}`
+            }
+          });
+          if (workspaceResponse.ok) {
+            const workspaceData = await workspaceResponse.json();
+            if (workspaceData.workspace && workspaceData.workspace.metaPhoneNumberId) {
+              activePhoneId = workspaceData.workspace.metaPhoneNumberId;
+            }
+          }
+        } catch (err) {
+          console.warn('Could not auto-fetch workspace metadata. Falling back to default mock ID.', err);
+        }
+
+        // Apply resolved phone_number_id to webhook payload
+        webhookPayload.entry[0].changes[0].value.metadata.phone_number_id = activePhoneId;
+
+        const response = await fetch('http://localhost:3000/webhook', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Set local developer bypass signature header!
+            'X-Hub-Signature-256': 'sha256=chatmagal_developer_mock_signature'
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+
+        if (response.ok) {
+          simBanner.className = 'banner success';
+          simBanner.innerHTML = `✓ Webhook simulated successfully!<br><span style="font-size:0.75rem;">Type: ${type} sent to local port 3000.</span>`;
+          simBanner.style.display = 'block';
+        } else {
+          simBanner.className = 'banner error';
+          simBanner.innerHTML = `✗ Webhook rejected (${response.status}): Verify database settings.`;
+          simBanner.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Webhook Simulation Failure:', err);
+        simBanner.className = 'banner error';
+        simBanner.innerHTML = `✗ Connection failed: Is server running on port 3000?`;
+        simBanner.style.display = 'block';
+      } finally {
+        simBtn.disabled = false;
+        simBtn.textContent = '📥 Simulate Inbound Message';
+      }
+    });
+
+    // ----------------------------------------------------
+    // TYPING STATE SIGNAL EMISSION (Option B)
+    // ----------------------------------------------------
+    const simTextBodyInput = document.getElementById('sim-text-body');
+    let simTypingTimer = null;
+    let isSimTyping = false;
+
+    if (simTextBodyInput) {
+      simTextBodyInput.addEventListener('input', () => {
+        const workspaceId = workspaceIdInput.value.trim();
+        const phone = document.getElementById('sim-sender-phone').value.trim();
+        
+        if (!socket || !workspaceId || !phone) return;
+
+        if (!isSimTyping) {
+          isSimTyping = true;
+          socket.emit('typing', { 
+            workspaceId, 
+            contactId: simContactId || null, 
+            phone, 
+            isTyping: true 
+          });
+        }
+
+        if (simTypingTimer) clearTimeout(simTypingTimer);
+        simTypingTimer = setTimeout(() => {
+          isSimTyping = false;
+          socket.emit('typing', { 
+            workspaceId, 
+            contactId: simContactId || null, 
+            phone, 
+            isTyping: false 
+          });
+        }, 2000);
+      });
+    }
+
+    // ----------------------------------------------------
+    // WEBHOOK RECEIPT STATUS SIMULATOR (Option B)
+    // ----------------------------------------------------
+    const simReceiptBtn = document.getElementById('simulate-receipt-btn');
+    const simReceiptStatusSelect = document.getElementById('sim-receipt-status');
+    const simReceiptMsgIdInput = document.getElementById('sim-receipt-msgid');
+    const receiptBanner = document.getElementById('receipt-banner');
+
+    if (simReceiptBtn) {
+      simReceiptBtn.addEventListener('click', async () => {
+        const workspaceId = workspaceIdInput.value.trim();
+        const phone = document.getElementById('sim-sender-phone').value.trim();
+        const status = simReceiptStatusSelect.value;
+        let messageId = simReceiptMsgIdInput.value.trim();
+
+        if (!workspaceId) {
+          alert('Please enter a Workspace ID in Connection Setup first!');
+          return;
+        }
+
+        if (!messageId) {
+          // If no message ID is pre-filled, try to fall back to the stored latest message ID
+          if (latestOutboundMessageId) {
+            messageId = latestOutboundMessageId;
+            simReceiptMsgIdInput.value = latestOutboundMessageId;
+          } else {
+            alert('Please send an outbound message from your dashboard first to capture an ID, or input a custom ID.');
+            return;
+          }
+        }
+
+        simReceiptBtn.disabled = true;
+        simReceiptBtn.textContent = 'Dispatching Status...';
+        receiptBanner.style.display = 'none';
+
+        // Build standard Meta receipt webhook payload
+        const receiptPayload = {
+          object: 'whatsapp_business_account',
+          entry: [
+            {
+              id: 'MOCK_WABA_ID',
+              changes: [
+                {
+                  value: {
+                    messaging_product: 'whatsapp',
+                    metadata: {
+                      display_phone_number: '16505553333',
+                      phone_number_id: 'MOCK_PHONE_ID'
+                    },
+                    statuses: [
+                      {
+                        id: messageId,
+                        status: status,
+                        timestamp: Math.floor(Date.now() / 1000).toString(),
+                        recipient_id: phone
+                      }
+                    ]
+                  },
+                  field: 'messages'
+                }
+              ]
+            }
+          ]
+        };
+
+        try {
+          // Resolve active workspace metaPhoneNumberId to ensure database upserts match perfectly!
+          let activePhoneId = 'MOCK_PHONE_ID';
+          try {
+            const workspaceResponse = await fetch(`http://localhost:3000/api/workspace`, {
+              headers: {
+                'Authorization': `Bearer ${workspaceId}`
+              }
+            });
+            if (workspaceResponse.ok) {
+              const workspaceData = await workspaceResponse.json();
+              if (workspaceData.workspace && workspaceData.workspace.metaPhoneNumberId) {
+                activePhoneId = workspaceData.workspace.metaPhoneNumberId;
+              }
+            }
+          } catch (err) {
+            console.warn('Could not auto-fetch workspace metadata. Falling back to default mock ID.', err);
+          }
+
+          // Apply resolved phone_number_id to webhook payload
+          receiptPayload.entry[0].changes[0].value.metadata.phone_number_id = activePhoneId;
+
+          const response = await fetch('http://localhost:3000/webhook', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Hub-Signature-256': 'sha256=chatmagal_developer_mock_signature'
+            },
+            body: JSON.stringify(receiptPayload)
+          });
+
+          if (response.ok) {
+            receiptBanner.className = 'banner success';
+            receiptBanner.innerHTML = `✓ Status webhook dispatched successfully!<br><span style="font-size:0.75rem;">Simulated "${status}" status for msg ID: ${messageId.substring(0, 16)}...</span>`;
+            receiptBanner.style.display = 'block';
+          } else {
+            receiptBanner.className = 'banner error';
+            receiptBanner.innerHTML = `✗ Status rejected (${response.status}): Verify database settings.`;
+            receiptBanner.style.display = 'block';
+          }
+        } catch (err) {
+          console.error('Status Webhook Simulation Failure:', err);
+          receiptBanner.className = 'banner error';
+          receiptBanner.innerHTML = `✗ Connection failed: Is server running on port 3000?`;
+          receiptBanner.style.display = 'block';
+        } finally {
+          simReceiptBtn.disabled = false;
+          simReceiptBtn.textContent = 'Dispatch Status Webhook';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
