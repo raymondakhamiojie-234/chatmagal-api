@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:Falcusmedialtd%40234@db:5432/chatmagal?schema=public
+      - REDIS_URL=redis://redis:6379
+      - META_APP_ID=1199077289098034
+      - META_APP_SECRET=e68e605a129c7385b4d51bafecfcf869
+      - META_WEBHOOK_VERIFY_TOKEN=my_verify_token
+      - META_SYSTEM_USER_TOKEN=EAARCjeZCfZBzIBRFHE5pQup6uNSquMK81O5a5tI9MQAI6tlbxIuhplMUMuKgMM8YmaJaPX4Cjak4qENLZCeACFyX1tBxZAI0e87hspg8mXISeyoTGGyZB2zZCdznfyCKYC7XX99OybyFuw1RrnZCPfXtCWPBkv86yi29ZA4dPRDJi7ZBZBpycN0WCKZBRVZBhc37sH6wZAwZDZD
+      - GEMINI_API_KEY=AQ.Ab8RN6J25VSqyPFiAQXw90pXyJaU8EvXmXwZ8kPfljlA0k6z2Q
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Falcusmedialtd@234
+      - POSTGRES_DB=chatmagal
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
