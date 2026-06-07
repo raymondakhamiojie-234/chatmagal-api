@@ -1,5 +1,8 @@
-# Use the official Node.js image
+# Use the official Node.js image with Alpine Linux
 FROM node:20-alpine
+
+# Install openssl and libc compatibility libraries needed by Prisma Query Engine
+RUN apk add --no-cache openssl libc6-compat
 
 # Set working directory
 WORKDIR /app
