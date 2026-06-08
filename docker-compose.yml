@@ -1,34 +1,73 @@
 services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=admin@chatmagal.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    restart: unless-stopped
+    networks:
+      - proxy
+
   web:
     build: .
-    ports:
-      - "3000:3000"
+    env_file:
+      - .env
     environment:
       - PORT=3000
       - DATABASE_URL=postgresql://postgres:Falcusmedialtd%40234@db:5432/chatmagal?schema=public
       - REDIS_URL=redis://redis:6379
-      - META_APP_ID=1199077289098034
-      - META_APP_SECRET=e68e605a129c7385b4d51bafecfcf869
-      - META_WEBHOOK_VERIFY_TOKEN=my_verify_token
-      - META_SYSTEM_USER_TOKEN=EAARCjeZCfZBzIBRFHE5pQup6uNSquMK81O5a5tI9MQAI6tlbxIuhplMUMuKgMM8YmaJaPX4Cjak4qENLZCeACFyX1tBxZAI0e87hspg8mXISeyoTGGyZB2zZCdznfyCKYC7XX99OybyFuw1RrnZCPfXtCWPBkv86yi29ZA4dPRDJi7ZBZBpycN0WCKZBRVZBhc37sH6wZAwZDZD
-      - GEMINI_API_KEY=AQ.Ab8RN6J25VSqyPFiAQXw90pXyJaU8EvXmXwZ8kPfljlA0k6z2Q
     depends_on:
       - db
       - redis
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.chatmagal223.rule=Host(`chatmagal.com`) || Host(`www.chatmagal.com`)
+      - traefik.http.routers.chatmagal223.entrypoints=websecure
+      - traefik.http.routers.chatmagal223.tls=true
+      - traefik.http.routers.chatmagal223.tls.certresolver=letsencrypt
+      - traefik.http.services.chatmagal223.loadbalancer.server.port=3000
+    restart: unless-stopped
+    networks:
+      - proxy
+      - internal
 
   db:
     image: postgres:15-alpine
-    restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Falcusmedialtd@234
-      - POSTGRES_DB=chatmagal
+      POSTGRES_DB: chatmagal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Falcusmedialtd@234
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - internal
 
   redis:
     image: redis:alpine
-    restart: always
+    restart: unless-stopped
+    networks:
+      - internal
 
 volumes:
-  pgdata:
+  letsencrypt:
+  db_data:
+
+networks:
+  proxy:
+    external: true
+  internal:
+    internal: true
