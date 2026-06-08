@@ -38,6 +38,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve frontend console, uploader and simulator statically to prevent browser CORS/file origin restrictions
 app.use(express.static(process.cwd()));
 
+// Redirect root / to dashboard.html for better user experience
+app.get('/', (req, res) => {
+  res.redirect('/dashboard.html');
+});
+
 // Mount Routes
 app.use('/webhook', webhookRoutes);
 app.use('/api', apiRoutes);
