@@ -1470,6 +1470,9 @@
       <div class="menu-item" data-tab="billing">
         💳 Credit Billing & Logs
       </div>
+      <div class="menu-item" data-tab="settings">
+        ⚙️ WhatsApp Settings
+      </div>
     </nav>
 
     <!-- Sidebar footer (Socket connection status) -->
@@ -1932,6 +1935,83 @@
         </div>
       </div>
 
+      <!-- SETTINGS PANE -->
+      <div class="view-pane" id="pane-settings">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          
+          <!-- LEFT COLUMN: CURRENT CREDENTIALS & MANUAL FORM -->
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- CURRENT CONNECTION STATUS CARD -->
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">📡 Active WhatsApp Connection</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                  <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta Phone Number ID</span>
+                  <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #10b981;" id="settings-display-phone-id">Loading...</code>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                  <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta WABA ID (WhatsApp Business Account)</span>
+                  <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #3b82f6;" id="settings-display-waba-id">Loading...</code>
+                </div>
+              </div>
+            </div>
+
+            <!-- MANUAL CONFIGURATION FORM -->
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">📝 Manual Credentials Configuration</h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; margin-bottom: 1.25rem;">Manually link your WhatsApp API Phone Number ID and WABA ID credentials to your active database workspace.</p>
+              
+              <form id="settings-manual-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                  <label for="settings-input-phone-id" class="form-label">Phone Number ID</label>
+                  <input type="text" id="settings-input-phone-id" class="form-input" placeholder="e.g. 915932988281109" style="font-family: monospace;" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="settings-input-waba-id" class="form-label">WABA ID</label>
+                  <input type="text" id="settings-input-waba-id" class="form-input" placeholder="e.g. 1269214828418249" style="font-family: monospace;" required>
+                </div>
+                
+                <button type="submit" class="btn" id="settings-manual-submit-btn" style="margin-top: 0.5rem; padding: 0.75rem;">
+                  💾 Save WhatsApp Credentials
+                </button>
+              </form>
+            </div>
+            
+          </div>
+
+          <!-- RIGHT COLUMN: EMBEDDED ONBOARDING SIMULATOR -->
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">🔗 Meta Embedded Signup Onboarding</h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; margin-bottom: 1.25rem;">Resolve and configure WABA ID and Phone Number ID parameters automatically using a Meta System/User Access Token.</p>
+              
+              <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); padding: 1rem; border-radius: 10px; margin-bottom: 1.25rem;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #60a5fa; display: block; margin-bottom: 0.25rem;">ℹ️ How it works in Production</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">In a production scenario, clicking "Embedded Signup" opens Meta's login popup to retrieve a user access token. For this self-service setup, paste the Meta User Access Token below to trigger the automatic backend registration process.</span>
+              </div>
+              
+              <form id="settings-onboard-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                  <label for="settings-input-token" class="form-label">Meta User Access Token</label>
+                  <textarea id="settings-input-token" class="form-input" placeholder="Paste your Facebook Access Token here..." style="font-family: monospace; min-height: 90px; resize: vertical;" required></textarea>
+                </div>
+                
+                <button type="submit" class="btn" id="settings-onboard-submit-btn" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; padding: 0.75rem;">
+                  🚀 Retrieve and Onboard WABA Account
+                </button>
+              </form>
+            </div>
+            
+          </div>
+          
+        </div>
+      </div>
+
       <!-- PRINTABLE RECEIPT MODAL -->
       <div class="campaign-modal" id="receipt-modal">
         <div class="campaign-modal-card" style="max-width:540px; padding:2.5rem; background:#fff; color:#0f172a; border-radius:16px; border:1px solid rgba(0,0,0,0.1);" id="printable-receipt-content">
@@ -1987,7 +2067,8 @@
       analytics: { title: 'Workspace Overview', desc: 'Monitor pipeline statistics and core KPIs in real-time.' },
       chat: { title: 'Shared Inbound Support Console', desc: 'Manage incoming customer replies and trigger text responses.' },
       campaigns: { title: 'Marketing Broadcast Campaigns', desc: 'Enqueue bulk template campaigns and monitor background worker status.' },
-      billing: { title: 'Credit Billing & Transaction Logs', desc: 'Monitor your workspace balance, view transaction ledger records, and print invoice receipts.' }
+      billing: { title: 'Credit Billing & Transaction Logs', desc: 'Monitor your workspace balance, view transaction ledger records, and print invoice receipts.' },
+      settings: { title: 'WhatsApp API Settings', desc: 'Configure your Meta Cloud API connection credentials or onboard another business number.' }
     };
 
     // Tab switcher logic
@@ -2012,6 +2093,7 @@
         if (tab === 'chat') loadChatData();
         if (tab === 'campaigns') loadCampaignsData();
         if (tab === 'billing') loadBillingData();
+        if (tab === 'settings') loadSettingsData();
       });
     });
 
@@ -3799,6 +3881,126 @@
           slashPopup.style.display = 'none';
           supportMessageInput.focus();
         });
+      });
+    }
+
+    // ----------------------------------------------------
+    /* TAB 5 LOGIC: WHATSAPP SETTINGS & ONBOARDING */
+    // ----------------------------------------------------
+    function loadSettingsData() {
+      if (!currentWorkspace) return;
+      
+      const phoneIdDisplay = document.getElementById('settings-display-phone-id');
+      const wabaIdDisplay = document.getElementById('settings-display-waba-id');
+      
+      const phoneIdInput = document.getElementById('settings-input-phone-id');
+      const wabaIdInput = document.getElementById('settings-input-waba-id');
+      
+      if (phoneIdDisplay) {
+        phoneIdDisplay.textContent = currentWorkspace.metaPhoneNumberId || 'Not Configured';
+      }
+      if (wabaIdDisplay) {
+        wabaIdDisplay.textContent = currentWorkspace.metaWabaId || 'Not Configured';
+      }
+      
+      if (phoneIdInput && !phoneIdInput.value) {
+        phoneIdInput.value = currentWorkspace.metaPhoneNumberId || '';
+      }
+      if (wabaIdInput && !wabaIdInput.value) {
+        wabaIdInput.value = currentWorkspace.metaWabaId || '';
+      }
+    }
+
+    // Manual Settings Form Submission
+    const settingsManualForm = document.getElementById('settings-manual-form');
+    const settingsManualBtn = document.getElementById('settings-manual-submit-btn');
+
+    if (settingsManualForm) {
+      settingsManualForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const phoneNumberId = document.getElementById('settings-input-phone-id').value.trim();
+        const wabaId = document.getElementById('settings-input-waba-id').value.trim();
+
+        if (!phoneNumberId || !wabaId) {
+          alert('Please provide both Phone Number ID and WABA ID.');
+          return;
+        }
+
+        settingsManualBtn.disabled = true;
+        settingsManualBtn.textContent = 'Saving Credentials...';
+
+        try {
+          const response = await apiRequest('/api/workspace/update-meta', {
+            method: 'POST',
+            body: JSON.stringify({ phoneNumberId, wabaId })
+          });
+
+          if (response.workspace) {
+            currentWorkspace = response.workspace;
+            alert('✓ Success! WhatsApp API credentials updated successfully.');
+            loadSettingsData();
+            loadOverviewData();
+          } else {
+            alert('✗ Error: Failed to update credentials.');
+          }
+        } catch (err) {
+          console.error('Manual settings update failure:', err);
+          alert(`✗ Connection failed: ${err.message || 'Verification Error'}`);
+        } finally {
+          settingsManualBtn.disabled = false;
+          settingsManualBtn.textContent = '💾 Save WhatsApp Credentials';
+        }
+      });
+    }
+
+    // Meta Embedded Onboarding Form Submission
+    const settingsOnboardForm = document.getElementById('settings-onboard-form');
+    const settingsOnboardBtn = document.getElementById('settings-onboard-submit-btn');
+
+    if (settingsOnboardForm) {
+      settingsOnboardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const accessToken = document.getElementById('settings-input-token').value.trim();
+
+        if (!accessToken) {
+          alert('Please enter your Meta Access Token.');
+          return;
+        }
+
+        if (!workspaceId) {
+          alert('Session error: No active Workspace ID found.');
+          return;
+        }
+
+        settingsOnboardBtn.disabled = true;
+        settingsOnboardBtn.textContent = 'Resolving WABA Account...';
+
+        try {
+          // Send request to onboarding endpoint (POST /api/whatsapp/onboard)
+          const response = await apiRequest('/api/whatsapp/onboard', {
+            method: 'POST',
+            body: JSON.stringify({ accessToken, workspaceId })
+          });
+
+          if (response.workspace) {
+            currentWorkspace = response.workspace;
+            alert('✓ Success! WhatsApp Account onboarded successfully.');
+            // Clear token input on success
+            document.getElementById('settings-input-token').value = '';
+            loadSettingsData();
+            loadOverviewData();
+          } else {
+            alert('✗ Onboarding failed: Check your token permissions.');
+          }
+        } catch (err) {
+          console.error('Onboarding simulation failure:', err);
+          alert(`✗ Onboarding failed: ${err.message || 'Verification Error'}`);
+        } finally {
+          settingsOnboardBtn.disabled = false;
+          settingsOnboardBtn.textContent = '🚀 Retrieve and Onboard WABA Account';
+        }
       });
     }
 
