@@ -17,44 +17,57 @@ async function main() {
 
   if (!workspace) {
     console.log('⚠️ No workspace found in database. Seeding default "test-workspace-id" workspace...');
+    
+    // 1. Create Workspace
     workspace = await prisma.workspace.create({
       data: {
         id: 'test-workspace-id',
         name: 'Chatmagal Demo Workspace',
         walletBalance: 100.00,
         metaPhoneNumberId: phoneNumberId.trim(),
-        metaWabaId: wabaId.trim(),
-        transactions: {
-          create: {
-            type: TransactionType.REFILL,
-            amount: 100.00,
-            description: 'Welcome Sign Up Bonus Credits!'
-          }
-        },
-        contacts: {
-          create: {
-            phoneNumber: '15550109999',
-            botEnabled: true,
-            sentiment: 'NEUTRAL',
-            priority: 'STANDARD',
-            messages: {
-              create: {
-                direction: MessageDirection.INBOUND,
-                lane: MessageLane.SUPPORT,
-                content: {
-                  messaging_product: 'whatsapp',
-                  type: 'text',
-                  text: {
-                    body: 'Hello! Welcome to your new Chatmagal workspace. Try typing a reply below!'
-                  }
-                },
-                status: MessageStatus.READ
-              }
-            }
-          }
-        }
+        metaWabaId: wabaId.trim()
       }
     });
+
+    // 2. Create welcome transaction
+    await prisma.transaction.create({
+      data: {
+        workspaceId: 'test-workspace-id',
+        type: TransactionType.REFILL,
+        amount: 100.00,
+        description: 'Welcome Sign Up Bonus Credits!'
+      }
+    });
+
+    // 3. Create welcome contact
+    const contact = await prisma.contact.create({
+      data: {
+        workspaceId: 'test-workspace-id',
+        phoneNumber: '15550109999',
+        botEnabled: true,
+        sentiment: 'NEUTRAL',
+        priority: 'STANDARD'
+      }
+    });
+
+    // 4. Create welcome inbound message
+    await prisma.message.create({
+      data: {
+        workspaceId: 'test-workspace-id',
+        contactId: contact.id,
+        direction: MessageDirection.INBOUND,
+        lane: MessageLane.SUPPORT,
+        content: {
+          messaging_product: 'whatsapp',
+          type: 'text',
+          text: {
+            body: 'Hello! Welcome to your new Chatmagal workspace. Try typing a reply below!'
+          }
+        },
+        status: MessageStatus.READ
+      }
+    });
+
     console.log('✅ Success! Default Workspace ID "test-workspace-id" has been seeded and updated with Meta credentials.');
     return;
   }
