@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, MessageDirection, MessageLane, MessageStatus, TransactionType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -26,7 +26,7 @@ async function main() {
         metaWabaId: wabaId.trim(),
         transactions: {
           create: {
-            type: 'REFILL',
+            type: TransactionType.REFILL,
             amount: 100.00,
             description: 'Welcome Sign Up Bonus Credits!'
           }
@@ -39,8 +39,8 @@ async function main() {
             priority: 'STANDARD',
             messages: {
               create: {
-                direction: 'INBOUND',
-                lane: 'SUPPORT',
+                direction: MessageDirection.INBOUND,
+                lane: MessageLane.SUPPORT,
                 content: {
                   messaging_product: 'whatsapp',
                   type: 'text',
@@ -48,7 +48,7 @@ async function main() {
                     body: 'Hello! Welcome to your new Chatmagal workspace. Try typing a reply below!'
                   }
                 },
-                status: 'READ'
+                status: MessageStatus.READ
               }
             }
           }
