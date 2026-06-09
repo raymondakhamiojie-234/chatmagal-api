@@ -715,6 +715,9 @@
     let socket = null;
     let latestOutboundMessageId = '';
     let simContactId = '';
+    const serverUrl = (window.location.protocol === 'http:' || window.location.protocol === 'https:') 
+      ? window.location.origin 
+      : 'http://localhost:3000';
     const connectBtn = document.getElementById('connect-btn');
     const workspaceIdInput = document.getElementById('workspace-id-input');
     const statusDot = document.getElementById('status-dot');
@@ -762,7 +765,7 @@
       statusText.textContent = 'Connecting...';
       statusDot.className = 'status-dot';
       
-      socket = io('http://localhost:3000');
+      socket = io(serverUrl);
 
       socket.on('connect', () => {
         statusText.textContent = 'Connected';
@@ -792,7 +795,7 @@
         console.error('Socket Connection Error:', error);
         statusText.textContent = 'Connection Error';
         statusDot.className = 'status-dot';
-        alert(`Failed to connect to local server (http://localhost:3000). Make sure 'npm run dev' is running!`);
+        alert(`Failed to connect to local server (${serverUrl}). Make sure 'npm run dev' is running!`);
       });
 
       // Handle real-time incoming messages
@@ -932,7 +935,7 @@
       broadcastBanner.style.display = 'none';
 
       try {
-        const response = await fetch('http://localhost:3000/api/broadcast', {
+        const response = await fetch(`${serverUrl}/api/broadcast`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1072,7 +1075,7 @@
         // Resolve active workspace metaPhoneNumberId to ensure database upserts match perfectly!
         let activePhoneId = 'MOCK_PHONE_ID';
         try {
-          const workspaceResponse = await fetch(`http://localhost:3000/api/workspace`, {
+          const workspaceResponse = await fetch(`${serverUrl}/api/workspace`, {
             headers: {
               'Authorization': `Bearer ${workspaceId}`
             }
@@ -1090,7 +1093,7 @@
         // Apply resolved phone_number_id to webhook payload
         webhookPayload.entry[0].changes[0].value.metadata.phone_number_id = activePhoneId;
 
-        const response = await fetch('http://localhost:3000/webhook', {
+        const response = await fetch(`${serverUrl}/webhook`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1226,7 +1229,7 @@
           // Resolve active workspace metaPhoneNumberId to ensure database upserts match perfectly!
           let activePhoneId = 'MOCK_PHONE_ID';
           try {
-            const workspaceResponse = await fetch(`http://localhost:3000/api/workspace`, {
+            const workspaceResponse = await fetch(`${serverUrl}/api/workspace`, {
               headers: {
                 'Authorization': `Bearer ${workspaceId}`
               }
@@ -1244,7 +1247,7 @@
           // Apply resolved phone_number_id to webhook payload
           receiptPayload.entry[0].changes[0].value.metadata.phone_number_id = activePhoneId;
 
-          const response = await fetch('http://localhost:3000/webhook', {
+          const response = await fetch(`${serverUrl}/webhook`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

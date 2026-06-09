@@ -1954,7 +1954,9 @@
     let spendChart = null;
     let typingTimeout = null;
 
-    const serverUrl = 'http://localhost:3000';
+    const serverUrl = (window.location.protocol === 'http:' || window.location.protocol === 'https:') 
+      ? window.location.origin 
+      : 'http://localhost:3000';
 
     // Page Elements
     const portalOverlay = document.getElementById('portal-overlay');
