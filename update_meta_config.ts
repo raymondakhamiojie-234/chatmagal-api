@@ -13,11 +13,50 @@ async function main() {
   }
 
   // Get the first workspace (usually test-workspace-id or your custom workspace)
-  const workspace = await prisma.workspace.findFirst();
+  let workspace = await prisma.workspace.findFirst();
 
   if (!workspace) {
-    console.error('❌ Error: No workspace found in database.');
-    process.exit(1);
+    console.log('⚠️ No workspace found in database. Seeding default "test-workspace-id" workspace...');
+    workspace = await prisma.workspace.create({
+      data: {
+        id: 'test-workspace-id',
+        name: 'Chatmagal Demo Workspace',
+        walletBalance: 100.00,
+        metaPhoneNumberId: phoneNumberId.trim(),
+        metaWabaId: wabaId.trim(),
+        transactions: {
+          create: {
+            type: 'REFILL',
+            amount: 100.00,
+            description: 'Welcome Sign Up Bonus Credits!'
+          }
+        },
+        contacts: {
+          create: {
+            phoneNumber: '15550109999',
+            botEnabled: true,
+            sentiment: 'NEUTRAL',
+            priority: 'STANDARD',
+            messages: {
+              create: {
+                direction: 'INBOUND',
+                lane: 'SUPPORT',
+                content: {
+                  messaging_product: 'whatsapp',
+                  type: 'text',
+                  text: {
+                    body: 'Hello! Welcome to your new Chatmagal workspace. Try typing a reply below!'
+                  }
+                },
+                status: 'READ'
+              }
+            }
+          }
+        }
+      }
+    });
+    console.log('✅ Success! Default Workspace ID "test-workspace-id" has been seeded and updated with Meta credentials.');
+    return;
   }
 
   const updated = await prisma.workspace.update({
