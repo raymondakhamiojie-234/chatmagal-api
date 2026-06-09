@@ -473,7 +473,12 @@ export const handleStatusUpdate = async (statusData: any, metaPhoneNumberId: str
       case 'SENT': newStatus = MessageStatus.SENT; break;
       case 'DELIVERED': newStatus = MessageStatus.DELIVERED; break;
       case 'READ': newStatus = MessageStatus.READ; break;
-      case 'FAILED': newStatus = MessageStatus.FAILED; break;
+      case 'FAILED': 
+        newStatus = MessageStatus.FAILED; 
+        if (statusData.errors) {
+          console.error(`❌ [Status Webhook Error] Message ${messageId} delivery failed:`, JSON.stringify(statusData.errors, null, 2));
+        }
+        break;
       default: return; // Ignore unknown statuses
     }
 
