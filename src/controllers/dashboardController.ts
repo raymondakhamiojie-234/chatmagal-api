@@ -626,3 +626,35 @@ export const createWorkspace = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// POST /api/workspace/update-meta (Update Meta credentials via API)
+export const updateWorkspaceMeta = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    const { phoneNumberId, wabaId } = req.body;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    if (!phoneNumberId || !wabaId) {
+      return res.status(400).json({ error: 'Missing phoneNumberId or wabaId' });
+    }
+
+    const updatedWorkspace = await prisma.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        metaPhoneNumberId: phoneNumberId.trim(),
+        metaWabaId: wabaId.trim()
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Workspace Meta credentials updated successfully',
+      workspace: updatedWorkspace
+    });
+  } catch (error) {
+    console.error('Error updating workspace meta:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
