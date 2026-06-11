@@ -9,9 +9,11 @@ datasource db {
 
 model Workspace {
   id                String     @id @default(uuid())
-  name              String
+  name              String     @unique
+  password          String     @default("password123")
   metaWabaId        String?
   metaPhoneNumberId String?
+  metaAccessToken   String?
   walletBalance     Decimal    @default(0.0)
   createdAt         DateTime   @default(now())
 

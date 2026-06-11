@@ -266,7 +266,7 @@ Your current prepaid credit balance is: *$${Number(workspace.walletBalance).toFi
       return;
     }
 
-    const token = process.env.META_SYSTEM_USER_TOKEN;
+    const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
     const payload = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',

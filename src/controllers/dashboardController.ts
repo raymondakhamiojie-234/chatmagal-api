@@ -204,7 +204,7 @@ export const sendSupportReply = async (req: Request, res: Response) => {
       });
     }
 
-    const token = process.env.META_SYSTEM_USER_TOKEN;
+    const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
 
     // 2. Prepare WhatsApp Text Payload (Option F: Append assigned agent signature)
     const finalBodyText = contact.assignedAgent
@@ -391,7 +391,10 @@ export const getMediaProxy = async (req: Request, res: Response) => {
       }
     }
 
-    const token = process.env.META_SYSTEM_USER_TOKEN;
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+    });
+    const token = workspace?.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
 
     // 1. Fetch lookaside metadata from Meta Graph API
     const metaResponse = await metaApi.get(`/${mediaId}`, {
@@ -566,16 +569,27 @@ export const cancelCampaign = async (req: Request, res: Response) => {
 // POST /api/workspaces (Register a new SaaS Workspace)
 export const createWorkspace = async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, password } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Business or Workspace name is required.' });
     }
 
+    const trimmedName = name.trim();
+
+    // Check if name is already registered
+    const existing = await prisma.workspace.findUnique({
+      where: { name: trimmedName }
+    });
+    if (existing) {
+      return res.status(400).json({ error: 'A workspace with this business name already exists. Please choose a unique name.' });
+    }
+
     // 1. Create a brand new workspace in the PostgreSQL database
     const workspace = await prisma.workspace.create({
       data: {
-        name: name.trim(),
+        name: trimmedName,
+        password: password ? password.trim() : 'secretPass123',
         walletBalance: 100.00, // Pre-funded with starting credits!
         metaPhoneNumberId: "106574929348123", // default/mock phone ID for immediate testing
         metaWabaId: "2094838294829" // default mock WABA ID
@@ -623,6 +637,34 @@ export const createWorkspace = async (req: Request, res: Response) => {
     return res.status(201).json(workspace);
   } catch (error) {
     console.error('Error creating workspace:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// POST /api/workspaces/login (Authenticate Workspace by name and password)
+export const loginWorkspace = async (req: Request, res: Response) => {
+  try {
+    const { name, password } = req.body;
+
+    if (!name || !password) {
+      return res.status(400).json({ error: 'Business name and password are required.' });
+    }
+
+    const workspace = await prisma.workspace.findUnique({
+      where: { name: name.trim() }
+    });
+
+    if (!workspace || workspace.password !== password.trim()) {
+      return res.status(401).json({ error: 'Invalid business name or password.' });
+    }
+
+    return res.status(200).json({
+      message: 'Authentication successful',
+      workspaceId: workspace.id,
+      workspace
+    });
+  } catch (error) {
+    console.error('Error in loginWorkspace:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

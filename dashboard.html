@@ -1354,16 +1354,12 @@
         </p>
         
         <div class="form-group" style="text-align: left;">
-          <label for="portal-signin-email">Admin Email (Mock)</label>
-          <input type="email" id="portal-signin-email" class="form-input" placeholder="e.g. admin@business.com" value="admin@business.com">
+          <label for="portal-signin-name">Business Name</label>
+          <input type="text" id="portal-signin-name" class="form-input" placeholder="e.g. Chatmagal Demo Workspace" value="Chatmagal Demo Workspace">
         </div>
         <div class="form-group" style="text-align: left;">
-          <label for="portal-signin-password">Password (Mock)</label>
+          <label for="portal-signin-password">Password</label>
           <input type="password" id="portal-signin-password" class="form-input" placeholder="••••••••" value="password123">
-        </div>
-        <div class="form-group" style="text-align: left;">
-          <label for="portal-id-input">Workspace ID</label>
-          <input type="text" id="portal-id-input" class="form-input" placeholder="e.g. test-workspace-id" value="test-workspace-id" style="font-family: monospace; font-weight: 600; color: #047857;">
         </div>
         <button class="btn" id="portal-enter-btn" style="width: 100%; margin-top: 0.5rem;">Authorize Session</button>
       </div>
@@ -1950,6 +1946,14 @@
               
               <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                  <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Workspace ID</span>
+                  <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #f59e0b; flex: 1; overflow: hidden; text-overflow: ellipsis;" id="settings-display-workspace-id">Loading...</code>
+                    <button type="button" id="settings-copy-workspace-id-btn" class="refill-btn" style="width:auto; margin:0; padding:0.25rem 0.5rem; font-size:0.68rem; border-radius:6px; box-shadow:none;">📋 Copy</button>
+                  </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
                   <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta Phone Number ID</span>
                   <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #10b981;" id="settings-display-phone-id">Loading...</code>
                 </div>
@@ -2073,7 +2077,6 @@
 
     // Page Elements
     const portalOverlay = document.getElementById('portal-overlay');
-    const portalIdInput = document.getElementById('portal-id-input');
     const portalEnterBtn = document.getElementById('portal-enter-btn');
 
     const sidebarWallet = document.getElementById('sidebar-wallet-balance');
@@ -2174,29 +2177,49 @@
     });
 
     // 2. Portal Sign In Action
-    portalEnterBtn.addEventListener('click', () => {
-      const inputId = portalIdInput.value.trim();
-      const email = document.getElementById('portal-signin-email').value.trim();
+    portalEnterBtn.addEventListener('click', async () => {
+      const name = document.getElementById('portal-signin-name').value.trim();
       const password = document.getElementById('portal-signin-password').value.trim();
 
-      if (!email || !email.includes('@')) {
-        alert('Please enter a valid mock administrator email!');
+      if (!name) {
+        alert('Please enter your Business Name!');
         return;
       }
       if (password.length < 6) {
-        alert('Mock password must be at least 6 characters long!');
+        alert('Password must be at least 6 characters long!');
         return;
       }
-      if (!inputId) {
-        alert('Please enter a valid Workspace ID!');
-        return;
-      }
-      
-      workspaceId = inputId;
-      portalOverlay.style.display = 'none';
 
-      // Load initial workspace data and initialize Socket
-      initializeWorkspace();
+      portalEnterBtn.disabled = true;
+      portalEnterBtn.textContent = 'Authorizing...';
+
+      try {
+        const response = await fetch(`${serverUrl}/api/workspaces/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to authorize session.');
+        }
+
+        workspaceId = data.workspaceId;
+        portalOverlay.style.display = 'none';
+
+        // Load initial workspace data and initialize Socket
+        initializeWorkspace();
+      } catch (err) {
+        console.error('Login failure:', err);
+        alert(`✗ Authentication failed: ${err.message}`);
+      } finally {
+        portalEnterBtn.disabled = false;
+        portalEnterBtn.textContent = 'Authorize Session';
+      }
     });
 
     // 3. Portal Sign Up (Create Account) Action
@@ -2227,7 +2250,7 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name })
+          body: JSON.stringify({ name, password })
         });
 
         const data = await response.json();
@@ -3923,12 +3946,16 @@
     function loadSettingsData() {
       if (!currentWorkspace) return;
       
+      const workspaceIdDisplay = document.getElementById('settings-display-workspace-id');
       const phoneIdDisplay = document.getElementById('settings-display-phone-id');
       const wabaIdDisplay = document.getElementById('settings-display-waba-id');
       
       const phoneIdInput = document.getElementById('settings-input-phone-id');
       const wabaIdInput = document.getElementById('settings-input-waba-id');
       
+      if (workspaceIdDisplay) {
+        workspaceIdDisplay.textContent = currentWorkspace.id || workspaceId;
+      }
       if (phoneIdDisplay) {
         phoneIdDisplay.textContent = currentWorkspace.metaPhoneNumberId || 'Not Configured';
       }
@@ -3942,6 +3969,24 @@
       if (wabaIdInput && !wabaIdInput.value) {
         wabaIdInput.value = currentWorkspace.metaWabaId || '';
       }
+    }
+
+    // Workspace ID Copy Action
+    const settingsCopyWorkspaceBtn = document.getElementById('settings-copy-workspace-id-btn');
+    if (settingsCopyWorkspaceBtn) {
+      settingsCopyWorkspaceBtn.addEventListener('click', () => {
+        const idText = document.getElementById('settings-display-workspace-id').textContent;
+        navigator.clipboard.writeText(idText)
+          .then(() => {
+            settingsCopyWorkspaceBtn.textContent = '✓ Copied!';
+            setTimeout(() => {
+              settingsCopyWorkspaceBtn.textContent = '📋 Copy';
+            }, 2000);
+          })
+          .catch(err => {
+            alert('Failed to copy. Workspace ID: ' + idText);
+          });
+      });
     }
 
     // Manual Settings Form Submission

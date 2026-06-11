@@ -60,6 +60,7 @@ export const onboardWhatsApp = async (req: Request, res: Response) => {
       data: {
         metaWabaId: wabaId,
         metaPhoneNumberId: phoneNumberId,
+        metaAccessToken: accessToken.trim(),
       },
     });
 

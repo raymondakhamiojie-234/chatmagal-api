@@ -12,6 +12,7 @@ import {
   getTransactions,
   assignContact,
   createWorkspace,
+  loginWorkspace,
   toggleContactBot,
   cancelCampaign,
   updateWorkspaceMeta
@@ -21,6 +22,7 @@ const router = Router();
 
 // Public onboarding / registration route
 router.post('/workspaces', createWorkspace);
+router.post('/workspaces/login', loginWorkspace);
 
 // Public API Config route (used by frontend to retrieve META_APP_ID for Facebook Login SDK)
 router.get('/config', (req, res) => {

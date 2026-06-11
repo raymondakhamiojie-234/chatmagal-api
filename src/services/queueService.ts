@@ -69,7 +69,7 @@ export const worker = new Worker(
       throw new Error(`Invalid workspace or missing metaPhoneNumberId for workspace ${workspaceId}`);
     }
 
-    const token = process.env.META_SYSTEM_USER_TOKEN;
+    const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
 
     // Calculate campaign cost and deduct from workspace wallet
     const cost = phoneNumbers.length * 0.05;
