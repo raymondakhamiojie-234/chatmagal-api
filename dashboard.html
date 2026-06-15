@@ -2054,12 +2054,15 @@
       ? window.location.origin 
       : 'http://localhost:3000';
 
+    let metaConfigId = null;
+
     // Initialize Facebook SDK dynamically on page load
     window.fbAsyncInit = async function() {
       try {
         const res = await fetch(`${serverUrl}/api/config`);
         const data = await res.json();
         if (data && data.metaAppId) {
+          metaConfigId = data.metaConfigId;
           FB.init({
             appId: data.metaAppId,
             cookie: true,
@@ -2067,6 +2070,9 @@
             version: 'v20.0'
           });
           console.log('✓ Meta Facebook SDK initialized successfully with App ID:', data.metaAppId);
+          if (metaConfigId) {
+            console.log('✓ Meta Configuration ID resolved:', metaConfigId);
+          }
         } else {
           console.warn('⚠️ Meta App ID is not configured on the server. Embedded Signup may not function.');
         }
@@ -4100,6 +4106,17 @@
         const originalHtml = settingsFbBtn.innerHTML;
         settingsFbBtn.innerHTML = 'Connecting with Facebook...';
 
+        const loginOptions = {
+          scope: 'whatsapp_business_management,whatsapp_business_messaging',
+          extras: {
+            feature: 'whatsapp_embedded_signup'
+          }
+        };
+
+        if (metaConfigId) {
+          loginOptions.extras.config_id = metaConfigId;
+        }
+
         FB.login(function(response) {
           if (response.authResponse) {
             const accessToken = response.authResponse.accessToken;
@@ -4110,12 +4127,7 @@
             settingsFbBtn.disabled = false;
             settingsFbBtn.innerHTML = originalHtml;
           }
-        }, {
-          scope: 'whatsapp_business_management,whatsapp_business_messaging',
-          extras: {
-            feature: 'whatsapp_embedded_signup'
-          }
-        });
+        }, loginOptions);
       });
     }
 

@@ -24,10 +24,11 @@ const router = Router();
 router.post('/workspaces', createWorkspace);
 router.post('/workspaces/login', loginWorkspace);
 
-// Public API Config route (used by frontend to retrieve META_APP_ID for Facebook Login SDK)
+// Public API Config route (used by frontend to retrieve META_APP_ID and META_CONFIG_ID for Facebook Login SDK)
 router.get('/config', (req, res) => {
   res.json({
-    metaAppId: process.env.META_APP_ID || null
+    metaAppId: process.env.META_APP_ID || null,
+    metaConfigId: process.env.META_CONFIG_ID || null
   });
 });
 
