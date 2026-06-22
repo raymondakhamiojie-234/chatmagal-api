@@ -527,8 +527,21 @@
     <div class="controls-panel">
       <div class="card">
         <div class="card-title">🔌 Connection Setup</div>
+        
         <div class="form-group">
-          <label for="workspace-id-input">Workspace ID</label>
+          <label for="workspace-name-input">Business Name</label>
+          <input type="text" id="workspace-name-input" class="form-input" placeholder="e.g. My WhatsApp Workspace" value="">
+        </div>
+        
+        <div class="form-group">
+          <label for="workspace-password-input">Password (Leader/Member)</label>
+          <input type="password" id="workspace-password-input" class="form-input" placeholder="••••••••" value="">
+        </div>
+
+        <div style="font-size: 0.65rem; color: var(--text-muted); text-align: center; margin: 0.5rem 0; font-weight: bold; letter-spacing: 0.05em;">— OR BYPASS WITH ID —</div>
+
+        <div class="form-group">
+          <label for="workspace-id-input">Workspace ID / Token</label>
           <input type="text" id="workspace-id-input" class="form-input" placeholder="e.g. test-workspace-id" value="test-workspace-id">
         </div>
         <button id="connect-btn" class="btn">Connect & Join Room</button>
@@ -750,10 +763,43 @@
     });
 
     // Socket.io Connection Logic
-    connectBtn.addEventListener('click', () => {
-      const workspaceId = workspaceIdInput.value.trim();
+    connectBtn.addEventListener('click', async () => {
+      let workspaceId = workspaceIdInput.value.trim();
+      const bizName = document.getElementById('workspace-name-input').value.trim();
+      const password = document.getElementById('workspace-password-input').value.trim();
+
+      // If name/password are provided, attempt authentication first
+      if (bizName && password) {
+        connectBtn.disabled = true;
+        connectBtn.textContent = 'Authenticating...';
+        try {
+          const response = await fetch(`${serverUrl}/api/workspaces/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: bizName, password })
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to authenticate.');
+          }
+          // Successfully logged in! Use the token as the workspace ID / authorization token
+          workspaceId = data.token;
+          workspaceIdInput.value = workspaceId;
+          broadcastAuth.value = workspaceId;
+        } catch (err) {
+          alert(`✗ Authentication failed: ${err.message}`);
+          connectBtn.disabled = false;
+          connectBtn.textContent = 'Connect & Join Room';
+          return;
+        }
+      }
+
       if (!workspaceId) {
-        alert('Please enter a Workspace ID first!');
+        alert('Please enter either a Workspace ID/Token or your Business Name & Password!');
+        connectBtn.disabled = false;
+        connectBtn.textContent = 'Connect & Join Room';
         return;
       }
 
@@ -773,11 +819,12 @@
         connectionBanner.style.display = 'flex';
         
         activeWorkspaceName.textContent = 'Workspace Active Stream';
-        activeWorkspaceSub.textContent = `Room: ${workspaceId} • Connected to Port 3000`;
+        const cleanWorkspaceId = workspaceId.includes(':') ? workspaceId.split(':')[0] : workspaceId;
+        activeWorkspaceSub.textContent = `Room: ${cleanWorkspaceId} • Connected to Port 3000`;
 
-        // Join Workspace Room
-        socket.emit('joinWorkspace', workspaceId);
-        console.log(`Requested to join room: ${workspaceId}`);
+        // Join Workspace Room (with clean ID)
+        socket.emit('joinWorkspace', cleanWorkspaceId);
+        console.log(`Requested to join room: ${cleanWorkspaceId}`);
         
         setTimeout(() => {
           connectionBanner.style.display = 'none';
@@ -797,6 +844,11 @@
         statusDot.className = 'status-dot';
         alert(`Failed to connect to local server (${serverUrl}). Make sure 'npm run dev' is running!`);
       });
+
+      // Re-enable button
+      connectBtn.disabled = false;
+      connectBtn.textContent = 'Connect & Join Room';
+    });
 
       // Handle real-time incoming messages
       socket.on('newMessage', (message) => {

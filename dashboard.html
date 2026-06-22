@@ -2360,8 +2360,9 @@
         socketText.textContent = 'Online';
         socketDot.className = 'status-dot active';
 
-        // Join the unique workspace room
-        socket.emit('joinWorkspace', workspaceId);
+        // Join the unique workspace room (use clean workspaceId without the :role suffix)
+        const cleanWorkspaceId = workspaceId.includes(':') ? workspaceId.split(':')[0] : workspaceId;
+        socket.emit('joinWorkspace', cleanWorkspaceId);
       });
 
       socket.on('disconnect', () => {
