@@ -23,6 +23,8 @@ async function main() {
       data: {
         id: 'test-workspace-id',
         name: 'Chatmagal Demo Workspace',
+        leaderPassword: 'leader123',
+        memberPassword: 'member123',
         walletBalance: 100.00,
         metaPhoneNumberId: phoneNumberId.trim(),
         metaWabaId: wabaId.trim()

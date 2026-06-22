@@ -10,7 +10,8 @@ datasource db {
 model Workspace {
   id                String     @id @default(uuid())
   name              String     @unique
-  password          String     @default("password123")
+  leaderPassword    String     @default("leader123")
+  memberPassword    String     @default("member123")
   metaWabaId        String?
   metaPhoneNumberId String?
   metaAccessToken   String?

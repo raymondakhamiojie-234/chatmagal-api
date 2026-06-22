@@ -1380,8 +1380,12 @@
           <input type="email" id="portal-signup-email" class="form-input" placeholder="e.g. contact@acme.com" value="ceo@acme.com">
         </div>
         <div class="form-group" style="text-align: left;">
-          <label for="portal-signup-password">Secure Password (Mock)</label>
-          <input type="password" id="portal-signup-password" class="form-input" placeholder="••••••••" value="secretPass123">
+          <label for="portal-signup-leader-pass">Team Leader Password</label>
+          <input type="password" id="portal-signup-leader-pass" class="form-input" placeholder="••••••••" value="leader123">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="portal-signup-member-pass">Team Member Password</label>
+          <input type="password" id="portal-signup-member-pass" class="form-input" placeholder="••••••••" value="member123">
         </div>
         <button class="btn" id="portal-signup-btn" style="width: 100%; margin-top: 0.5rem;">Create Workspace Account</button>
       </div>
@@ -1441,15 +1445,14 @@
             <option value="Offline">🔴 Offline</option>
           </select>
         </div>
-        <!-- Team Leader Mode (Option F Extra Security) -->
-        <div class="toggle-switch-container">
-          <span class="toggle-switch-label">
-            <span id="role-icon">🔒</span> Team Leader Mode
+        <!-- Role Display Indicator (Option F Security Upgrade) -->
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-light); display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem;">
+            <span id="role-icon">🔒</span> Role:
           </span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="team-leader-toggle">
-            <span class="toggle-slider"></span>
-          </label>
+          <span id="role-badge" style="font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 6px; background: #f1f5f9; color: #475569;">
+            Team Member
+          </span>
         </div>
       </div>
     </div>
@@ -2041,6 +2044,7 @@
   <!-- APP CLIENT LOGIC -->
   <script>
     let workspaceId = '';
+    let isTeamLeader = false;
     let socket = null;
     let activeContactId = null;
     let contactsMap = {};
@@ -2214,7 +2218,8 @@
           throw new Error(data.error || 'Failed to authorize session.');
         }
 
-        workspaceId = data.workspaceId;
+        workspaceId = data.token; // Split token `<workspaceId>:<role>` is used for Bearer auth headers
+        isTeamLeader = data.isTeamLeader; // Global role state
         portalOverlay.style.display = 'none';
 
         // Load initial workspace data and initialize Socket
@@ -2232,7 +2237,8 @@
     portalSignUpBtn.addEventListener('click', async () => {
       const name = portalSignUpName.value.trim();
       const email = portalSignUpEmail.value.trim();
-      const password = portalSignUpPassword.value.trim();
+      const leaderPassword = document.getElementById('portal-signup-leader-pass').value.trim();
+      const memberPassword = document.getElementById('portal-signup-member-pass').value.trim();
 
       if (!name) {
         alert('Please enter a business or workspace name!');
@@ -2242,8 +2248,8 @@
         alert('Please enter a valid administrator email!');
         return;
       }
-      if (password.length < 6) {
-        alert('Security password must be at least 6 characters!');
+      if (leaderPassword.length < 6 || memberPassword.length < 6) {
+        alert('Passwords must be at least 6 characters!');
         return;
       }
 
@@ -2256,7 +2262,7 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name, password })
+          body: JSON.stringify({ name, leaderPassword, memberPassword })
         });
 
         const data = await response.json();
@@ -2273,8 +2279,9 @@
         portalNewIdBadge.textContent = data.id;
         portalSignUpSuccess.style.display = 'block';
         
-        // Save the workspace ID
-        workspaceId = data.id;
+        // Save the workspace ID and default to leader access for the creator
+        workspaceId = `${data.id}:leader`;
+        isTeamLeader = true;
 
       } catch (err) {
         alert(`Failed to create account: ${err.message}`);
@@ -2335,6 +2342,9 @@
         // Fallback or warning
         console.warn('Workspace load failed. Verify server and ID.');
       }
+
+      // Sync UI role states
+      syncAssigneeSelectState();
     }
 
     // Socket Connection Setup
@@ -3762,14 +3772,28 @@
     const slashPopup = document.getElementById('slash-commands-popup');
     const slashList = document.getElementById('slash-commands-list');
     const supportMessageInput = document.getElementById('chat-message-input');
-    const teamLeaderToggle = document.getElementById('team-leader-toggle');
-
     // State synchronizer for ticket assignment permissions
     function syncAssigneeSelectState() {
-      const isTeamLeader = teamLeaderToggle.checked;
       const lockIcon = document.getElementById('assignee-lock-icon');
       const roleIcon = document.getElementById('role-icon');
+      const roleBadge = document.getElementById('role-badge');
       
+      if (isTeamLeader) {
+        if (roleIcon) roleIcon.textContent = '🛡️';
+        if (roleBadge) {
+          roleBadge.textContent = 'Team Leader';
+          roleBadge.style.background = 'rgba(16,185,129,0.1)';
+          roleBadge.style.color = '#047857';
+        }
+      } else {
+        if (roleIcon) roleIcon.textContent = '🔒';
+        if (roleBadge) {
+          roleBadge.textContent = 'Team Member';
+          roleBadge.style.background = '#f1f5f9';
+          roleBadge.style.color = '#475569';
+        }
+      }
+
       if (chatAssigneeSelect) {
         if (isTeamLeader) {
           chatAssigneeSelect.disabled = false;
@@ -3780,9 +3804,6 @@
             lockIcon.textContent = '🔓';
             lockIcon.style.color = '#10b981';
           }
-          if (roleIcon) {
-            roleIcon.textContent = '🛡️';
-          }
         } else {
           chatAssigneeSelect.disabled = true;
           chatAssigneeSelect.style.cursor = 'not-allowed';
@@ -3792,14 +3813,10 @@
             lockIcon.textContent = '🔒';
             lockIcon.style.color = '#ef4444';
           }
-          if (roleIcon) {
-            roleIcon.textContent = '🔒';
-          }
         }
       }
     }
 
-    teamLeaderToggle.addEventListener('change', syncAssigneeSelectState);
     // Initialize standard state
     syncAssigneeSelectState();
 
@@ -3826,14 +3843,12 @@
       if (!activeContactId) return;
       const val = e.target.value;
       const agentName = val === 'Unassigned' ? null : val;
-      const isTeamLeader = teamLeaderToggle.checked;
 
       try {
         await apiRequest(`/api/contacts/${activeContactId}/assign`, {
           method: 'POST',
           body: JSON.stringify({ 
-            agentName,
-            isTeamLeader
+            agentName
           })
         });
         

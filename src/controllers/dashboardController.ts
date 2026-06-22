@@ -459,7 +459,8 @@ export const assignContact = async (req: Request, res: Response) => {
   try {
     const workspaceId = req.user?.workspaceId;
     const { contactId } = req.params;
-    const { agentName, isTeamLeader } = req.body; // e.g. "Agent Me" or "Unassigned"
+    const { agentName } = req.body; // e.g. "Agent Me" or "Unassigned"
+    const isTeamLeader = req.user?.isTeamLeader;
 
     if (!workspaceId) {
       return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
@@ -569,7 +570,7 @@ export const cancelCampaign = async (req: Request, res: Response) => {
 // POST /api/workspaces (Register a new SaaS Workspace)
 export const createWorkspace = async (req: Request, res: Response) => {
   try {
-    const { name, password } = req.body;
+    const { name, leaderPassword, memberPassword } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Business or Workspace name is required.' });
@@ -589,7 +590,8 @@ export const createWorkspace = async (req: Request, res: Response) => {
     const workspace = await prisma.workspace.create({
       data: {
         name: trimmedName,
-        password: password ? password.trim() : 'secretPass123',
+        leaderPassword: leaderPassword ? leaderPassword.trim() : 'leader123',
+        memberPassword: memberPassword ? memberPassword.trim() : 'member123',
         walletBalance: 100.00, // Pre-funded with starting credits!
         metaPhoneNumberId: "106574929348123", // default/mock phone ID for immediate testing
         metaWabaId: "2094838294829" // default mock WABA ID
@@ -654,12 +656,25 @@ export const loginWorkspace = async (req: Request, res: Response) => {
       where: { name: name.trim() }
     });
 
-    if (!workspace || workspace.password !== password.trim()) {
+    if (!workspace) {
+      return res.status(401).json({ error: 'Invalid business name or password.' });
+    }
+
+    const trimmedPassword = password.trim();
+    let role = '';
+
+    if (workspace.leaderPassword === trimmedPassword) {
+      role = 'leader';
+    } else if (workspace.memberPassword === trimmedPassword) {
+      role = 'member';
+    } else {
       return res.status(401).json({ error: 'Invalid business name or password.' });
     }
 
     return res.status(200).json({
       message: 'Authentication successful',
+      token: `${workspace.id}:${role}`,
+      isTeamLeader: role === 'leader',
       workspaceId: workspace.id,
       workspace
     });

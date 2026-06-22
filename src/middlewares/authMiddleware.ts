@@ -6,6 +6,7 @@ declare global {
     interface Request {
       user?: {
         workspaceId: string;
+        isTeamLeader: boolean;
       };
     }
   }
@@ -24,19 +25,23 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
   }
 
-  // DUMMY IMPLEMENTATION: In production, verify the JWT properly.
-  // Here we assume the token is a simple string for demonstration,
-  // or we just decode it mockingly. Let's assume the token IS the workspace ID for testing.
-  // Or we decode a fake JWT structure. Let's fake it.
-
   try {
-    // Fake JWT verification logic
-    // We'll mock that the verified payload has a workspaceId.
-    // Replace this with `jwt.verify(token, secret)`
-    const decoded = { workspaceId: token === 'dummy-token' ? 'test-workspace-id' : token };
+    let workspaceId = token;
+    let isTeamLeader = false;
+
+    // Handle dummy/test keys and split credentials
+    if (token === 'dummy-token' || token === 'test-workspace-id') {
+      workspaceId = 'test-workspace-id';
+      isTeamLeader = true; // Default test environment workspace defaults to leader access
+    } else if (token.includes(':')) {
+      const parts = token.split(':');
+      workspaceId = parts[0];
+      isTeamLeader = parts[1] === 'leader';
+    }
 
     req.user = {
-      workspaceId: decoded.workspaceId,
+      workspaceId,
+      isTeamLeader,
     };
 
     next();
