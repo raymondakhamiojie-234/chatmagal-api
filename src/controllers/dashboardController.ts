@@ -715,3 +715,95 @@ export const updateWorkspaceMeta = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// GET /api/workspace/training (Fetch all custom training Q&A pairs for the workspace)
+export const getBotTraining = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    const trainings = await prisma.botTraining.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.status(200).json(trainings);
+  } catch (error) {
+    console.error('Error fetching bot training rules:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// POST /api/workspace/training/upload (Batch upload custom Q&A training rules)
+export const uploadBotTraining = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    const { rules } = req.body; // Expects rules: { question: string, answer: string }[]
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    if (!rules || !Array.isArray(rules)) {
+      return res.status(400).json({ error: 'Missing or invalid training rules list' });
+    }
+
+    // 1. Delete all existing training rules for this workspace to replace them cleanly
+    await prisma.botTraining.deleteMany({
+      where: { workspaceId }
+    });
+
+    // 2. Batch insert the new parsed rules
+    if (rules.length > 0) {
+      const dataToInsert = rules.map((r: any) => ({
+        workspaceId,
+        question: r.question.trim(),
+        answer: r.answer.trim()
+      }));
+
+      await prisma.botTraining.createMany({
+        data: dataToInsert
+      });
+    }
+
+    // 3. Fetch the newly saved rules to return to the client
+    const updatedTrainings = await prisma.botTraining.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.status(200).json({
+      message: `Successfully uploaded and saved ${rules.length} AI training rules!`,
+      trainings: updatedTrainings
+    });
+  } catch (error) {
+    console.error('Error uploading bot training rules:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// DELETE /api/workspace/training (Clear all custom training Q&A rules for the workspace)
+export const clearBotTraining = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    await prisma.botTraining.deleteMany({
+      where: { workspaceId }
+    });
+
+    return res.status(200).json({
+      message: 'Successfully cleared all AI training knowledge base rules!',
+      trainings: []
+    });
+  } catch (error) {
+    console.error('Error clearing bot training rules:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

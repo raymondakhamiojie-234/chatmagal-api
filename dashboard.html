@@ -2100,6 +2100,63 @@
           </div>
           
         </div>
+
+        <!-- 🤖 AI AUTO-RESPONDENT TRAINING & KNOWLEDGE BASE -->
+        <div class="campaign-list-card" style="padding: 1.5rem; margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                🤖 AI Auto-Respondent Training & Knowledge Base
+              </h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                Train your AI Bot by uploading a CSV file of Question & Answer pairs. The bot will strictly prioritize this custom knowledge base when answering customer queries.
+              </p>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+              <!-- DOWNLOAD TEMPLATE LINK -->
+              <button type="button" id="settings-download-training-template-btn" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.75rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                📥 Download CSV Template
+              </button>
+              <button type="button" id="settings-clear-training-btn" class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); padding: 0.45rem 0.85rem; font-size: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: none;">
+                🗑️ Clear Knowledge Base
+              </button>
+            </div>
+          </div>
+
+          <!-- DRAG-AND-DROP CSV UPLOADER ZONE -->
+          <div id="training-csv-uploader" style="border: 2px dashed var(--border-light); border-radius: 12px; padding: 2rem; text-align: center; background: rgba(15, 23, 42, 0.01); cursor: pointer; transition: all 0.2s ease; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+            <div style="font-size: 2rem;">📊</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);" id="training-csv-status-title">Drag & Drop Training CSV here, or click to browse</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Supports standard CSV files with columns: "Question" and "Answer"</div>
+            <input type="file" id="training-csv-file-input" style="display: none;" accept=".csv">
+          </div>
+
+          <!-- ACTIVE TRAINING RULES TABLE -->
+          <div id="settings-training-ledger-container" style="display: none;">
+            <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+              <span>📋 Active Q&A Rules (<span id="settings-training-rules-count">0</span>)</span>
+            </h4>
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.78rem;">
+                <thead>
+                  <tr style="background: rgba(15, 23, 42, 0.03); border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-weight: 600;">
+                    <th style="padding: 0.6rem 1rem; width: 40%;">User Question</th>
+                    <th style="padding: 0.6rem 1rem; width: 60%;">Bot Response</th>
+                  </tr>
+                </thead>
+                <tbody id="settings-training-rules-tbody">
+                  <!-- Populated Dynamically via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div id="settings-training-empty-state" style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.78rem; background: rgba(15, 23, 42, 0.02); border-radius: 8px; border: 1px dashed var(--border-light);">
+            ℹ️ No custom training data uploaded yet. The AI uses the default Chatmagal instructions.
+          </div>
+        </div>
+
       </div>
 
       <!-- PRINTABLE RECEIPT MODAL -->
@@ -4098,6 +4155,9 @@
       if (wabaIdInput && !wabaIdInput.value) {
         wabaIdInput.value = currentWorkspace.metaWabaId || '';
       }
+
+      // Load custom AI training rules in background
+      loadBotTrainingRules();
     }
 
     // Workspace ID Copy Action
@@ -4282,6 +4342,232 @@
         settingsFbBtn.disabled = false;
         settingsFbBtn.innerHTML = originalHtml;
       }
+    // ----------------------------------------------------
+    /* AI AUTO-RESPONDENT TRAINING & KNOWLEDGE BASE LOGIC */
+    // ----------------------------------------------------
+    async function loadBotTrainingRules() {
+      try {
+        const trainings = await apiRequest('/api/workspace/training');
+        const tbody = document.getElementById('settings-training-rules-tbody');
+        const countSpan = document.getElementById('settings-training-rules-count');
+        const container = document.getElementById('settings-training-ledger-container');
+        const emptyState = document.getElementById('settings-training-empty-state');
+        const clearBtn = document.getElementById('settings-clear-training-btn');
+
+        if (!tbody || !countSpan || !container || !emptyState || !clearBtn) return;
+
+        tbody.innerHTML = '';
+        countSpan.textContent = trainings.length;
+
+        if (trainings.length > 0) {
+          trainings.forEach(rule => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border-light)';
+            tr.innerHTML = `
+              <td style="padding: 0.65rem 1rem; font-weight: 600; color: var(--text-main); vertical-align: top; word-break: break-word;">${escapeHTML(rule.question)}</td>
+              <td style="padding: 0.65rem 1rem; color: #475569; vertical-align: top; word-break: break-word;">${escapeHTML(rule.answer)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          container.style.display = 'block';
+          emptyState.style.display = 'none';
+          clearBtn.style.display = 'inline-flex';
+        } else {
+          container.style.display = 'none';
+          emptyState.style.display = 'block';
+          clearBtn.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Failed to load bot training rules:', err);
+      }
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+    }
+
+    // Download Training Template CSV
+    const downloadTrainingTemplateBtn = document.getElementById('settings-download-training-template-btn');
+    if (downloadTrainingTemplateBtn) {
+      downloadTrainingTemplateBtn.addEventListener('click', () => {
+        const csvContent = 'data:text/csv;charset=utf-8,' 
+          + 'Question,Answer\n'
+          + '"What are your working hours?","Our working hours are Monday to Friday from 9 AM to 6 PM."\n'
+          + '"Where is your office located?","Our headquarters is located at 123 Tech Avenue, London."\n'
+          + '"Do you offer refunds?","Yes, we offer a 14-day money-back guarantee on all plans."\n'
+          + '"How much does a message cost?","Outbound messages and auto-replies cost $0.05. Inbound is free."\n'
+          + '"Can I talk to a human?","Yes, type \\"talk to human\\" or click the Live Handoff switch to pause the bot."';
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'chatmagal_bot_training_template.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
+    // Clear Bot Training Knowledge Base
+    const clearTrainingBtn = document.getElementById('settings-clear-training-btn');
+    if (clearTrainingBtn) {
+      clearTrainingBtn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear your custom AI training knowledge base? This will reset the bot to default instructions.')) return;
+        try {
+          await apiRequest('/api/workspace/training', { method: 'DELETE' });
+          alert('✓ AI Bot training knowledge base cleared successfully!');
+          await loadBotTrainingRules();
+        } catch (err) {
+          alert(`Failed to clear knowledge base: ${err.message}`);
+        }
+      });
+    }
+
+    // Drag-and-Drop CSV Uploader for Training Q&A
+    const trainingUploader = document.getElementById('training-csv-uploader');
+    const trainingFileInput = document.getElementById('training-csv-file-input');
+    const trainingUploaderTitle = document.getElementById('training-csv-status-title');
+
+    if (trainingUploader && trainingFileInput) {
+      trainingUploader.addEventListener('click', () => trainingFileInput.click());
+      
+      // Highlight drag area
+      ['dragenter', 'dragover'].forEach(eventName => {
+        trainingUploader.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          trainingUploader.style.borderColor = 'var(--primary)';
+          trainingUploader.style.background = 'rgba(16, 185, 129, 0.02)';
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        trainingUploader.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          trainingUploader.style.borderColor = 'var(--border-light)';
+          trainingUploader.style.background = 'rgba(15, 23, 42, 0.01)';
+        }, false);
+      });
+
+      trainingUploader.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+          handleTrainingCSV(files[0]);
+        }
+      });
+
+      trainingFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleTrainingCSV(e.target.files[0]);
+        }
+      });
+    }
+
+    function handleTrainingCSV(file) {
+      if (!file.name.endsWith('.csv')) {
+        alert('Please upload a valid .csv file!');
+        return;
+      }
+
+      if (!trainingUploaderTitle) return;
+
+      trainingUploaderTitle.textContent = `Reading ${file.name}...`;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const text = e.target.result;
+          const rules = parseTrainingCSVText(text);
+          
+          if (rules.length === 0) {
+            throw new Error('No valid Q&A rules found in the CSV. Make sure you have "Question" and "Answer" columns.');
+          }
+
+          trainingUploaderTitle.textContent = `Uploading ${rules.length} training rules...`;
+          
+          const response = await apiRequest('/api/workspace/training/upload', {
+            method: 'POST',
+            body: JSON.stringify({ rules })
+          });
+
+          alert(`✓ AI Bot successfully trained with ${rules.length} new Q&A rules!`);
+          trainingUploaderTitle.textContent = 'Drag & Drop Training CSV here, or click to browse';
+          trainingFileInput.value = '';
+          
+          await loadBotTrainingRules();
+        } catch (err) {
+          alert(`Failed to parse/upload training CSV: ${err.message}`);
+          trainingUploaderTitle.textContent = 'Drag & Drop Training CSV here, or click to browse';
+          trainingFileInput.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Robust CSV Parser supporting quotes and escaped values
+    function parseTrainingCSVText(text) {
+      const lines = [];
+      let row = [""];
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i+1];
+
+        if (c === '"') {
+          if (inQuotes && next === '"') {
+            row[row.length - 1] += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          row.push("");
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+          if (c === '\r' && next === '\n') {
+            i++;
+          }
+          if (row.length > 1 || row[0] !== "") {
+            lines.push(row);
+          }
+          row = [""];
+        } else {
+          row[row.length - 1] += c;
+        }
+      }
+      if (row.length > 1 || row[0] !== "") {
+        lines.push(row);
+      }
+
+      if (lines.length === 0) return [];
+
+      const headers = lines[0].map(h => h.trim().toLowerCase());
+      const qIdx = headers.indexOf('question');
+      const aIdx = headers.indexOf('answer');
+
+      if (qIdx === -1 || aIdx === -1) {
+        throw new Error('CSV headers must include both "Question" and "Answer" columns.');
+      }
+
+      const rules = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const question = line[qIdx];
+        const answer = line[aIdx];
+        
+        if (question && answer && question.trim() && answer.trim()) {
+          rules.push({
+            question: question.trim(),
+            answer: answer.trim()
+          });
+        }
+      }
+      return rules;
     }
 
   </script>

@@ -15,7 +15,10 @@ import {
   loginWorkspace,
   toggleContactBot,
   cancelCampaign,
-  updateWorkspaceMeta
+  updateWorkspaceMeta,
+  getBotTraining,
+  uploadBotTraining,
+  clearBotTraining
 } from '../controllers/dashboardController';
 
 const router = Router();
@@ -46,5 +49,8 @@ router.get('/media/:mediaId', authMiddleware, getMediaProxy);
 router.get('/billing/transactions', authMiddleware, getTransactions);
 router.post('/contacts/:contactId/assign', authMiddleware, assignContact);
 router.post('/contacts/:contactId/bot-toggle', authMiddleware, toggleContactBot);
+router.get('/workspace/training', authMiddleware, getBotTraining);
+router.post('/workspace/training/upload', authMiddleware, uploadBotTraining);
+router.delete('/workspace/training', authMiddleware, clearBotTraining);
 
 export default router;

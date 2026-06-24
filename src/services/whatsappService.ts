@@ -46,9 +46,42 @@ function extractMessageText(msg: any): string {
 }
 
 // Conversational Gemini AI Generator & Intelligent Sandbox Fallback (Option G)
-async function generateGeminiResponse(contactId: string, prompt: string): Promise<string> {
+export async function generateGeminiResponse(contactId: string, prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const hasLiveKey = apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.trim() !== '';
+
+  // 1. Resolve contact's workspaceId to fetch corresponding custom Q&A training rules
+  let workspaceId = '';
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: { id: contactId },
+      select: { workspaceId: true }
+    });
+    if (contact) {
+      workspaceId = contact.workspaceId;
+    }
+  } catch (err) {
+    console.warn('Could not load contact workspaceId context for AI respondent:', err);
+  }
+
+  // 2. Fetch custom bot training Q&A knowledge base rules
+  let trainingContextText = '';
+  let botTrainings: any[] = [];
+  if (workspaceId) {
+    try {
+      botTrainings = await prisma.botTraining.findMany({
+        where: { workspaceId }
+      });
+      if (botTrainings.length > 0) {
+        trainingContextText = 'Custom Business Q&A Reference (Ground-Truth Knowledge Base):\n';
+        for (const rule of botTrainings) {
+          trainingContextText += `- User Question: "${rule.question}"\n  Your Prepared Answer: "${rule.answer}"\n`;
+        }
+      }
+    } catch (trainErr) {
+      console.warn('Could not load custom bot training rules for AI respondent:', trainErr);
+    }
+  }
 
   // Fetch recent message history context for multi-turn conversational memory (Option G Upgrades)
   let historyText = '';
@@ -78,6 +111,11 @@ async function generateGeminiResponse(contactId: string, prompt: string): Promis
 Provide exceptionally helpful, natural, human-like, concise, and professional responses to the customer. 
 You are having a continuous multi-turn conversation with the customer. Leverage the provided conversation history context to maintain context, remember previous statements, and reply naturally to standard conversational questions.
 If they ask about rates, explain that manual messages and auto-replies cost $0.05. Keep answers under 3-4 sentences and format them with clean markdown/emojis suitable for WhatsApp text messages.
+
+${trainingContextText ? `CRITICAL REQUIREMENT: You have been provided with a custom business Q&A reference knowledge base below. If the customer's question matches or is closely related to any of the questions in this reference, you MUST strictly use the corresponding "Your Prepared Answer" to formulate your response. Do not invent details or contradict the provided reference answers.
+
+${trainingContextText}
+` : ''}
 
 Conversation History Context:
 ${historyText}
@@ -109,6 +147,21 @@ Bot:`;
 
   // Premium Local AI Fallback Engine
   console.log(`🤖 [Local AI Engine] Generating friendly conversational reply for: "${prompt}"`);
+  
+  // Try to find a custom training match first
+  if (botTrainings.length > 0) {
+    const queryNormalized = prompt.toLowerCase().trim();
+    const matched = botTrainings.find(t => {
+      const q = t.question.toLowerCase().trim();
+      // Match if the prompt contains the question, or if they are very close
+      return queryNormalized.includes(q) || q.includes(queryNormalized);
+    });
+    if (matched) {
+      console.log(`🎯 [Local AI Engine] Custom training match found: Question: "${matched.question}" -> Answer: "${matched.answer}"`);
+      return matched.answer;
+    }
+  }
+
   const query = prompt.toLowerCase();
   
   if (query.includes('hello') || query.includes('hi') || query.includes('hey')) {
