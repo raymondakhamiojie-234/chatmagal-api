@@ -377,7 +377,7 @@ export const getMediaProxy = async (req: Request, res: Response) => {
     // Support local developer testing in sandbox simulator (mock media IDs)
     // If the mediaId is a dummy UUID (like the workspace ID), contains dashes, is non-numeric, or starts with 'mock-', 
     // we bypass Meta and redirect directly to beautiful, reliable sample assets!
-    const isMockMedia = mediaId.startsWith('mock-') || mediaId.includes('-') || isNaN(Number(mediaId));
+    const isMockMedia = mediaId.startsWith('mock-') || mediaId.includes('-') || isNaN(Number(mediaId)) || workspaceId === 'test-workspace-id';
     
     if (isMockMedia) {
       console.log(`⚡ Serving mock development asset for mediaId: ${mediaId}`);
