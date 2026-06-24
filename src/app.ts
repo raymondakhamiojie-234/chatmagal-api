@@ -43,6 +43,11 @@ app.get('/', (req, res) => {
   res.redirect('/dashboard.html');
 });
 
+// Serve the privacy policy page
+app.get('/privacy', (req, res) => {
+  res.sendFile(process.cwd() + '/privacy.html');
+});
+
 // Mount Routes
 app.use('/webhook', webhookRoutes);
 app.use('/api', apiRoutes);
