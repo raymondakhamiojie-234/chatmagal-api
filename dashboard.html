@@ -1328,6 +1328,49 @@
       50% { opacity: 1; }
       100% { opacity: 0.75; }
     }
+
+    /* Password input visibility toggle styles */
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 0.75rem;
+      cursor: pointer;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: color 0.2s ease;
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+    .password-toggle:hover {
+      color: #475569;
+    }
+
+    /* Sidebar collapse transitions */
+    .app-sidebar {
+      overflow: hidden;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
+    }
+    body.sidebar-collapsed .app-sidebar {
+      width: 0px !important;
+      opacity: 0 !important;
+      border-right-color: transparent !important;
+      pointer-events: none !important;
+      padding: 0 !important;
+    }
+    #sidebar-toggle-btn:hover {
+      background: var(--bg-hover) !important;
+      color: var(--text-main) !important;
+      border-color: rgba(15, 23, 42, 0.15) !important;
+    }
   </style>
 </head>
 <body>
@@ -1359,7 +1402,14 @@
         </div>
         <div class="form-group" style="text-align: left;">
           <label for="portal-signin-password">Password</label>
-          <input type="password" id="portal-signin-password" class="form-input" placeholder="••••••••" value="password123">
+          <div class="password-wrapper">
+            <input type="password" id="portal-signin-password" class="form-input" placeholder="••••••••" value="password123" style="padding-right: 2.5rem;">
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('portal-signin-password', this)" title="Show Password">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </button>
+          </div>
         </div>
         <button class="btn" id="portal-enter-btn" style="width: 100%; margin-top: 0.5rem;">Authorize Session</button>
       </div>
@@ -1381,11 +1431,25 @@
         </div>
         <div class="form-group" style="text-align: left;">
           <label for="portal-signup-leader-pass">Team Leader Password</label>
-          <input type="password" id="portal-signup-leader-pass" class="form-input" placeholder="••••••••" value="leader123">
+          <div class="password-wrapper">
+            <input type="password" id="portal-signup-leader-pass" class="form-input" placeholder="••••••••" value="leader123" style="padding-right: 2.5rem;">
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('portal-signup-leader-pass', this)" title="Show Password">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="form-group" style="text-align: left;">
           <label for="portal-signup-member-pass">Team Member Password</label>
-          <input type="password" id="portal-signup-member-pass" class="form-input" placeholder="••••••••" value="member123">
+          <div class="password-wrapper">
+            <input type="password" id="portal-signup-member-pass" class="form-input" placeholder="••••••••" value="member123" style="padding-right: 2.5rem;">
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('portal-signup-member-pass', this)" title="Show Password">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </button>
+          </div>
         </div>
         <button class="btn" id="portal-signup-btn" style="width: 100%; margin-top: 0.5rem;">Create Workspace Account</button>
       </div>
@@ -1489,9 +1553,16 @@
   <!-- MAIN VIEWPORT -->
   <main class="app-main">
     <header class="app-header">
-      <div class="header-title-container">
-        <h1 id="header-view-title">Workspace Overview</h1>
-        <p id="header-view-desc">Monitor pipeline statistics and core KPIs in real-time.</p>
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <button id="sidebar-toggle-btn" title="Toggle Navigation Sidebar" style="background: none; border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; padding: 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.2rem; height: 1.2rem;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+        <div class="header-title-container">
+          <h1 id="header-view-title">Workspace Overview</h1>
+          <p id="header-view-desc">Monitor pipeline statistics and core KPIs in real-time.</p>
+        </div>
       </div>
       <div class="header-actions">
         <span class="workspace-pill" id="active-workspace-pill">Workspace: ...</span>
@@ -2043,6 +2114,29 @@
 
   <!-- APP CLIENT LOGIC -->
   <script>
+    // Password visibility toggle helper
+    function togglePasswordVisibility(inputId, toggleEl) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        toggleEl.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+        `;
+      } else {
+        input.type = 'password';
+        toggleEl.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+          </svg>
+        `;
+      }
+    }
+
     let workspaceId = '';
     let isTeamLeader = false;
     let socket = null;
@@ -2116,6 +2210,19 @@
       billing: { title: 'Credit Billing & Transaction Logs', desc: 'Monitor your workspace balance, view transaction ledger records, and print invoice receipts.' },
       settings: { title: 'WhatsApp API Settings', desc: 'Configure your Meta Cloud API connection credentials or onboard another business number.' }
     };
+
+    // Sidebar toggle initialization
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    if (sidebarToggleBtn) {
+      const collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+      if (collapsed) {
+        document.body.classList.add('sidebar-collapsed');
+      }
+      sidebarToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed'));
+      });
+    }
 
     // Tab switcher logic
     menuItems.forEach(item => {
