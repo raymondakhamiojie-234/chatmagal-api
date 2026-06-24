@@ -2384,6 +2384,7 @@
 
         workspaceId = data.token; // Split token `<workspaceId>:<role>` is used for Bearer auth headers
         isTeamLeader = data.isTeamLeader; // Global role state
+        localStorage.setItem('workspaceToken', workspaceId); // PERSIST TOKEN
         portalOverlay.style.display = 'none';
 
         // Load initial workspace data and initialize Socket
@@ -2446,6 +2447,7 @@
         // Save the workspace ID and default to leader access for the creator
         workspaceId = `${data.id}:leader`;
         isTeamLeader = true;
+        localStorage.setItem('workspaceToken', workspaceId); // PERSIST TOKEN
 
       } catch (err) {
         alert(`Failed to create account: ${err.message}`);
@@ -2476,6 +2478,7 @@
 
     // 6. Logout restores original portal view layout
     logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('workspaceToken'); // CLEAR PERSISTED TOKEN
       if (socket) socket.disconnect();
       activeContactId = null;
       
@@ -2495,6 +2498,15 @@
       document.getElementById('chat-threads-list').innerHTML = '';
       resetChatArea();
     });
+
+    // 7. Auto login check if token is stored in localStorage
+    const savedToken = localStorage.getItem('workspaceToken');
+    if (savedToken) {
+      workspaceId = savedToken;
+      isTeamLeader = savedToken.includes(':') ? savedToken.split(':')[1] === 'leader' : true;
+      portalOverlay.style.display = 'none';
+      initializeWorkspace();
+    }
 
     async function initializeWorkspace() {
       // Connect Socket.io

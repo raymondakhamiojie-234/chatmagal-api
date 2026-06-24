@@ -652,12 +652,17 @@ export const loginWorkspace = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Business name and password are required.' });
     }
 
-    const workspace = await prisma.workspace.findUnique({
-      where: { name: name.trim() }
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        OR: [
+          { name: { equals: name.trim(), mode: 'insensitive' } },
+          { id: name.trim() }
+        ]
+      }
     });
 
     if (!workspace) {
-      return res.status(401).json({ error: 'Invalid business name or password.' });
+      return res.status(401).json({ error: 'Invalid business name, workspace ID, or password.' });
     }
 
     const trimmedPassword = password.trim();
