@@ -197,9 +197,12 @@ If you have any other questions, feel free to text. Have a wonderful day ahead!`
   return `🤖 *Chatmagal AI Assistant*
 I received your inquiry: "${prompt}". 
 
-We are currently in a developer sandbox session. To unlock full real-time Gemini AI generative chat answers, please add a valid \`GEMINI_API_KEY\` to your \`.env\` file! 
+If you have any questions about our features, pricing, or setting up your account, feel free to ask! 
 
-If you need operating hours, please type *#hours*. For pricing details, type *#pricing*.`;
+For specific details, you can also use these quick shortcuts:
+- Type *#hours* to check our operating hours.
+- Type *#pricing* to view our current plans.
+- Type *talk to human* to speak with a live support agent.`;
 }
 
 interface SentimentResult {
