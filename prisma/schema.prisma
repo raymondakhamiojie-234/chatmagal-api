@@ -23,6 +23,7 @@ model Workspace {
   campaigns         Campaign[]
   transactions      Transaction[]
   botTrainings      BotTraining[]
+  teamMembers       TeamMember[]
 }
 
 model Contact {
@@ -115,6 +116,18 @@ model BotTraining {
   createdAt   DateTime  @default(now())
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model TeamMember {
+  id          String    @id @default(uuid())
+  workspaceId String
+  name        String
+  role        String
+  createdAt   DateTime  @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
 }

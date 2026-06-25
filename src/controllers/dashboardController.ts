@@ -812,3 +812,70 @@ export const clearBotTraining = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// GET /api/workspace/team-members (Fetch all team members for the workspace)
+export const getTeamMembers = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    const members = await prisma.teamMember.findMany({
+      where: { workspaceId },
+      orderBy: { name: 'asc' }
+    });
+
+    return res.status(200).json(members);
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// POST /api/workspace/team-members (Add a new team member to the workspace - Team Leader Only)
+export const addTeamMember = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    const isTeamLeader = req.user?.isTeamLeader;
+    const { name, role } = req.body;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    // Strict Access Guard: Only Team Leader can add new team members
+    if (isTeamLeader !== true) {
+      return res.status(403).json({
+        error: 'Forbidden: Only the Team Leader is authorized to add new team members.'
+      });
+    }
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Team member name is required.' });
+    }
+
+    const trimmedName = name.trim();
+    const trimmedRole = role ? role.trim() : 'Agent';
+
+    const newMember = await prisma.teamMember.create({
+      data: {
+        workspaceId,
+        name: trimmedName,
+        role: trimmedRole
+      }
+    });
+
+    // Real-Time Socket.io Broadcast: sync the new team member to all logged in agents
+    try {
+      const io = getIo();
+      io.to(workspaceId).emit('teamMemberAdded', newMember);
+    } catch (wsErr) {}
+
+    return res.status(201).json(newMember);
+  } catch (error) {
+    console.error('Error adding team member:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

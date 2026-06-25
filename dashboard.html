@@ -1699,7 +1699,7 @@
                 </div>
 
                 <!-- Ticket Assignment Selector (Option F) -->
-                <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="display:flex; align-items:center; gap:0.5rem; position:relative;">
                   <span id="assignee-lock-icon" style="font-size: 0.85rem; color: #ef4444; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: -0.15rem;">🔒</span>
                   <span style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Assignee:</span>
                   <select id="chat-assignee-select" class="form-input" disabled style="padding:0.25rem 0.5rem; font-size:0.75rem; height:28px; width:130px; border-radius:6px; cursor:not-allowed; font-weight:600; background:#f1f5f9; border:1px solid var(--border-light); outline:none; opacity: 0.6; transition: all 0.3s ease;">
@@ -1709,6 +1709,20 @@
                     <option value="Technical Ray">🛠️ Technical Ray</option>
                     <option value="CEO Praise">👑 CEO Praise</option>
                   </select>
+                  
+                  <!-- Add Team Member Button (Only visible to Team Leader) -->
+                  <button id="add-team-member-btn" style="display: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: #10b981; color: white; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(16,185,129,0.2);" title="Add New Team Member">+</button>
+
+                  <!-- Popover Form (Absolute Positioned, glassmorphic styled, modern theme) -->
+                  <div id="add-team-member-popover" style="display: none; position: absolute; top: 34px; right: 0; width: 220px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15), 0 0 15px rgba(16, 185, 129, 0.1); z-index: 200; padding: 0.75rem; flex-direction: column; gap: 0.5rem;">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                      <span>👥 Add Team Member</span>
+                      <button id="close-team-member-popover" style="background: none; border: none; font-size: 0.85rem; cursor: pointer; color: #94a3b8; margin-left: auto;">✕</button>
+                    </div>
+                    <input type="text" id="new-member-name" placeholder="Full Name (e.g. Agent John)" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(15,23,42,0.1); border-radius: 6px; outline: none; background: #fff; color: #0f172a;" />
+                    <input type="text" id="new-member-role" placeholder="Role/Position (e.g. Support)" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(15,23,42,0.1); border-radius: 6px; outline: none; background: #fff; color: #0f172a;" />
+                    <button id="submit-team-member-btn" style="width: 100%; padding: 0.4rem; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: background 0.2s;">Assign</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2517,6 +2531,9 @@
         console.warn('Workspace load failed. Verify server and ID.');
       }
 
+      // Load dynamic team members
+      await loadTeamMembers();
+
       // Sync UI role states
       syncAssigneeSelectState();
     }
@@ -2669,6 +2686,15 @@
           }
         }
         loadChatThreads(false);
+      });
+
+      // Listen for real-time team member additions
+      socket.on('teamMemberAdded', (newMember) => {
+        console.log('Real-Time Team Member Added:', newMember);
+        if (!teamMembers.some(m => m.id === newMember.id)) {
+          teamMembers.push(newMember);
+          renderTeamMembersInSelect();
+        }
       });
     }
 
@@ -3948,10 +3974,45 @@
     const slashList = document.getElementById('slash-commands-list');
     const supportMessageInput = document.getElementById('chat-message-input');
     // State synchronizer for ticket assignment permissions
+    let teamMembers = [];
+
+    async function loadTeamMembers() {
+      try {
+        const members = await apiRequest('/api/workspace/team-members');
+        teamMembers = members || [];
+        renderTeamMembersInSelect();
+      } catch (err) {
+        console.error('Failed to load team members:', err);
+      }
+    }
+
+    function renderTeamMembersInSelect() {
+      const select = document.getElementById('chat-assignee-select');
+      if (!select) return;
+      
+      // Keep only the initial options or reset to a clean state
+      select.innerHTML = `
+        <option value="Unassigned">👤 Unassigned</option>
+        <option value="Agent Me">🟢 Agent Me</option>
+        <option value="Agent Alice">👩‍💼 Agent Alice</option>
+        <option value="Technical Ray">🛠️ Technical Ray</option>
+        <option value="CEO Praise">👑 CEO Praise</option>
+      `;
+      
+      teamMembers.forEach(member => {
+        const option = document.createElement('option');
+        option.value = member.name;
+        option.textContent = `👥 ${member.name} (${member.role})`;
+        select.appendChild(option);
+      });
+    }
+
+    // State synchronizer for ticket assignment permissions
     function syncAssigneeSelectState() {
       const lockIcon = document.getElementById('assignee-lock-icon');
       const roleIcon = document.getElementById('role-icon');
       const roleBadge = document.getElementById('role-badge');
+      const addMemberBtn = document.getElementById('add-team-member-btn');
       
       if (isTeamLeader) {
         if (roleIcon) roleIcon.textContent = '🛡️';
@@ -3979,6 +4040,9 @@
             lockIcon.textContent = '🔓';
             lockIcon.style.color = '#10b981';
           }
+          if (addMemberBtn) {
+            addMemberBtn.style.display = 'flex';
+          }
         } else {
           chatAssigneeSelect.disabled = true;
           chatAssigneeSelect.style.cursor = 'not-allowed';
@@ -3988,12 +4052,97 @@
             lockIcon.textContent = '🔒';
             lockIcon.style.color = '#ef4444';
           }
+          if (addMemberBtn) {
+            addMemberBtn.style.display = 'none';
+          }
+          const addMemberPopover = document.getElementById('add-team-member-popover');
+          if (addMemberPopover) {
+            addMemberPopover.style.display = 'none';
+          }
         }
       }
     }
 
     // Initialize standard state
     syncAssigneeSelectState();
+
+    // Add Team Member Form Listeners
+    const addTeamMemberBtn = document.getElementById('add-team-member-btn');
+    const addTeamMemberPopover = document.getElementById('add-team-member-popover');
+    const closeTeamMemberPopover = document.getElementById('close-team-member-popover');
+    const submitTeamMemberBtn = document.getElementById('submit-team-member-btn');
+    const newMemberNameInput = document.getElementById('new-member-name');
+    const newMemberRoleInput = document.getElementById('new-member-role');
+
+    if (addTeamMemberBtn && addTeamMemberPopover) {
+      addTeamMemberBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = addTeamMemberPopover.style.display === 'flex';
+        addTeamMemberPopover.style.display = isOpen ? 'none' : 'flex';
+      });
+
+      if (closeTeamMemberPopover) {
+        closeTeamMemberPopover.addEventListener('click', (e) => {
+          e.stopPropagation();
+          addTeamMemberPopover.style.display = 'none';
+        });
+      }
+
+      addTeamMemberPopover.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      document.addEventListener('click', () => {
+        addTeamMemberPopover.style.display = 'none';
+      });
+    }
+
+    if (submitTeamMemberBtn) {
+      submitTeamMemberBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const name = newMemberNameInput.value.trim();
+        const role = newMemberRoleInput.value.trim();
+
+        if (!name) {
+          alert('Please enter a team member name.');
+          return;
+        }
+
+        submitTeamMemberBtn.disabled = true;
+        submitTeamMemberBtn.textContent = 'Adding...';
+
+        try {
+          const newMember = await apiRequest('/api/workspace/team-members', {
+            method: 'POST',
+            body: JSON.stringify({ name, role: role || 'Agent' })
+          });
+
+          newMemberNameInput.value = '';
+          newMemberRoleInput.value = '';
+          addTeamMemberPopover.style.display = 'none';
+
+          if (!teamMembers.some(m => m.id === newMember.id)) {
+            teamMembers.push(newMember);
+            renderTeamMembersInSelect();
+          }
+
+          // Automatically select and assign the current active chat to this new member!
+          if (activeContactId) {
+            const chatAssigneeSelect = document.getElementById('chat-assignee-select');
+            if (chatAssigneeSelect) {
+              chatAssigneeSelect.value = newMember.name;
+              chatAssigneeSelect.dispatchEvent(new Event('change'));
+            }
+          }
+        } catch (err) {
+          console.error('Error adding team member:', err);
+          alert(err.message || 'Failed to add team member.');
+        } finally {
+          submitTeamMemberBtn.disabled = false;
+          submitTeamMemberBtn.textContent = 'Assign';
+        }
+      });
+    }
 
     // 1. Agent Presence Status Selector
     agentStatusSelect.addEventListener('change', (e) => {

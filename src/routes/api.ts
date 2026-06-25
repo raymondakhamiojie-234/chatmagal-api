@@ -18,7 +18,9 @@ import {
   updateWorkspaceMeta,
   getBotTraining,
   uploadBotTraining,
-  clearBotTraining
+  clearBotTraining,
+  getTeamMembers,
+  addTeamMember
 } from '../controllers/dashboardController';
 
 const router = Router();
@@ -52,5 +54,7 @@ router.post('/contacts/:contactId/bot-toggle', authMiddleware, toggleContactBot)
 router.get('/workspace/training', authMiddleware, getBotTraining);
 router.post('/workspace/training/upload', authMiddleware, uploadBotTraining);
 router.delete('/workspace/training', authMiddleware, clearBotTraining);
+router.get('/workspace/team-members', authMiddleware, getTeamMembers);
+router.post('/workspace/team-members', authMiddleware, addTeamMember);
 
 export default router;
