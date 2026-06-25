@@ -2223,39 +2223,49 @@
     let metaConfigId = null;
 
     // Initialize Facebook SDK dynamically on page load
-    window.fbAsyncInit = async function() {
+    async function initFacebookSDK() {
       try {
         const res = await fetch(`${serverUrl}/api/config`);
         const data = await res.json();
         if (data && data.metaAppId) {
+          const metaAppId = data.metaAppId;
           metaConfigId = data.metaConfigId;
-          FB.init({
-            appId: data.metaAppId,
-            cookie: true,
-            xfbml: true,
-            version: 'v20.0'
-          });
-          console.log('✓ Meta Facebook SDK initialized successfully with App ID:', data.metaAppId);
-          if (metaConfigId) {
-            console.log('✓ Meta Configuration ID resolved:', metaConfigId);
-          }
-          FB.AppEvents.logPageView();
+
+          // Define fbAsyncInit synchronously using the fetched data
+          window.fbAsyncInit = function() {
+            FB.init({
+              appId            : metaAppId,
+              cookie           : true,
+              autoLogAppEvents : true,
+              xfbml            : true,
+              version          : 'v25.0'
+            });
+            FB.AppEvents.logPageView();
+            console.log('✓ Meta Facebook SDK initialized successfully with App ID:', metaAppId);
+            if (metaConfigId) {
+              console.log('✓ Meta Configuration ID resolved:', metaConfigId);
+            }
+          };
+
+          // Load the Facebook SDK asynchronously using dynamic IIFE injection
+          (function(d, s, id){
+             var js, fjs = d.getElementsByTagName(s)[0];
+             if (d.getElementById(id)) {return;}
+             js = d.createElement(s); js.id = id;
+             js.src = "https://connect.facebook.net/en_US/sdk.js";
+             fjs.parentNode.insertBefore(js, fjs);
+           }(document, 'script', 'facebook-jssdk'));
+
         } else {
           console.warn('⚠️ Meta App ID is not configured on the server. Embedded Signup may not function.');
         }
       } catch (err) {
         console.error('Failed to load Meta App ID config for FB SDK:', err);
       }
-    };
+    }
 
-    // Load the Facebook SDK asynchronously using dynamic IIFE injection
-    (function(d, s, id){
-       var js, fjs = d.getElementsByTagName(s)[0];
-       if (d.getElementById(id)) {return;}
-       js = d.createElement(s); js.id = id;
-       js.src = "https://connect.facebook.net/en_US/sdk.js";
-       fjs.parentNode.insertBefore(js, fjs);
-     }(document, 'script', 'facebook-jssdk'));
+    // Initialize the SDK flow
+    initFacebookSDK();
 
     // Page Elements
     const portalOverlay = document.getElementById('portal-overlay');
