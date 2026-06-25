@@ -48,6 +48,11 @@ app.get('/privacy', (req, res) => {
   res.sendFile(process.cwd() + '/privacy.html');
 });
 
+// Serve the terms of service page
+app.get('/terms', (req, res) => {
+  res.sendFile(process.cwd() + '/terms.html');
+});
+
 // Mount Routes
 app.use('/webhook', webhookRoutes);
 app.use('/api', apiRoutes);

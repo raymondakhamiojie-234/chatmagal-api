@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms and Conditions - Chatmagal Enterprise WhatsApp SaaS</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Premium Styles -->
+  <style>
+    :root {
+      --primary: #10b981; /* Emerald green theme matching Chatmagal */
+      --primary-glow: rgba(16, 185, 129, 0.15);
+      --primary-border: rgba(16, 185, 129, 0.3);
+      --bg-gradient: radial-gradient(circle at top, #090d16 0%, #05070b 100%);
+      --card-bg: rgba(15, 23, 42, 0.6);
+      --card-border: rgba(255, 255, 255, 0.05);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-highlight: #34d399;
+      --font-display: 'Outfit', 'Inter', sans-serif;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #05070b;
+      background-image: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Glow backdrop elements for premium ambient look */
+    .glow-sphere {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    .glow-sphere-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.04) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: 200px;
+      right: -100px;
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(30px);
+    }
+
+    /* Floating Navigation Header */
+    .header {
+      width: 100%;
+      padding: 1.25rem 2rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      background: rgba(5, 7, 11, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      color: #fff;
+      font-size: 1.15rem;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .back-btn:hover {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--primary-border);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* Container */
+    .container {
+      max-width: 850px;
+      margin: 120px auto 80px;
+      padding: 0 1.5rem;
+    }
+
+    /* Title Card Banner */
+    .title-card {
+      text-align: center;
+      margin-bottom: 3.5rem;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 0.35rem 0.85rem;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid var(--primary-border);
+      color: var(--text-highlight);
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.05);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 2.8rem;
+      color: #fff;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .updated-date {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* Elegant Section Panels */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2rem 2.25rem;
+      margin-bottom: 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .section-card:hover {
+      border-color: rgba(16, 185, 129, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: #fff;
+      margin-bottom: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    h2 .section-num {
+      color: var(--text-highlight);
+      font-size: 1.2rem;
+      font-weight: 800;
+      opacity: 0.9;
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.65;
+      margin-bottom: 1.15rem;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Customized Bullet Lists */
+    ul {
+      list-style: none;
+      margin-bottom: 1.25rem;
+    }
+
+    ul:last-child {
+      margin-bottom: 0;
+    }
+
+    li {
+      position: relative;
+      padding-left: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-bottom: 0.85rem;
+      line-height: 1.6;
+    }
+
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    li::before {
+      content: "";
+      position: absolute;
+      left: 0.25rem;
+      top: 0.6rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+
+    /* Highlight Block: Strict Terms Notice */
+    .highlight-block {
+      background: rgba(239, 68, 68, 0.03);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-top: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .highlight-block::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: #ef4444; /* red notice border */
+    }
+
+    .highlight-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #f87171;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .highlight-text {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* DPO Officer Details Card */
+    .dpo-card {
+      background: rgba(5, 7, 11, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .dpo-field {
+      display: flex;
+      margin-bottom: 0.75rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      padding-bottom: 0.75rem;
+    }
+
+    .dpo-field:last-child {
+      margin-bottom: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .dpo-label {
+      width: 140px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .dpo-value {
+      flex: 1;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    /* Footer styles */
+    .footer {
+      width: 100%;
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      background: #040609;
+      text-align: center;
+      margin-top: 5rem;
+    }
+
+    .footer-content {
+      max-width: 850px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .footer-copyright {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .meta-tech-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.01);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Utility Interactive Elements */
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .control-btn.active {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--primary-border);
+      color: var(--text-highlight);
+    }
+
+    /* Back to Top Button */
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 99;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .back-to-top:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    /* Keyframe Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .header {
+        padding: 1rem 1.25rem;
+      }
+      .container {
+        margin-top: 100px;
+      }
+      h1 {
+        font-size: 2.1rem;
+      }
+      .section-card {
+        padding: 1.5rem 1.5rem;
+      }
+      .dpo-field {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .dpo-label {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="selection:bg-emerald-500/20 selection:text-emerald-200 antialiased">
+
+  <!-- Glow Backgrounds -->
+  <div class="glow-sphere"></div>
+  <div class="glow-sphere-2"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo-container">
+      <div class="logo-badge">C</div>
+      <span class="logo-text">Chatmagal</span>
+    </a>
+    <a href="/" class="back-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 0.9rem; height: 0.9rem;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+      Back to Console
+    </a>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    
+    <!-- Accessibility Controls -->
+    <div class="controls">
+      <button class="control-btn" id="font-dec-btn" title="Decrease Font Size">A-</button>
+      <button class="control-btn" id="font-inc-btn" title="Increase Font Size">A+</button>
+      <button class="control-btn" id="readable-btn" title="Toggle Dyslexic/High Readability Font">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 0.85rem; height: 0.85rem;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+        Readability
+      </button>
+    </div>
+
+    <!-- Title Card -->
+    <div class="title-card">
+      <span class="badge">Legal Terms</span>
+      <h1>Terms and Conditions</h1>
+      <p class="updated-date">Last Updated: May 22, 2026</p>
+    </div>
+
+    <!-- Article Sections -->
+    <article id="policy-content">
+      
+      <!-- Section 1 -->
+      <section class="section-card">
+        <h2><span class="section-num">1.</span> ACCEPTANCE OF TERMS & SERVICE DESCRIPTION</h2>
+        <p>
+          Welcome to Chatmagal ("we," "our," or "us"). Chatmagal is a Business-to-Business (B2B) software provider that facilitates communication, automation, and dashboard management via the WhatsApp Business API.
+        </p>
+        <p>
+          By accessing, registering for, or using the Chatmagal platform, you ("Client," "you," or "your") agree to be bound by these Terms and Conditions. Furthermore, because our services integrate directly with Meta Platforms, Inc., you also explicitly agree to comply with <strong>Meta's WhatsApp Business Terms of Service and Commerce Policies</strong>. If you do not agree to these terms, you may not use our services.
+        </p>
+      </section>
+
+      <!-- Section 2 -->
+      <section class="section-card">
+        <h2><span class="section-num">2.</span> ACCOUNT REGISTRATION & META VERIFICATION</h2>
+        <p>
+          To utilize Chatmagal, Clients must maintain a valid, verified Facebook Business Manager account and dedicate a specific phone number for the WhatsApp Business API.
+        </p>
+        <p>
+          Chatmagal streamlines the integration process; however, <strong>we are not responsible</strong> if Meta rejects your business verification, restricts your account, or denies your requested WhatsApp Display Name. All Meta approvals are solely at the discretion of Meta Platforms, Inc.
+        </p>
+      </section>
+
+      <!-- Section 3 -->
+      <section class="section-card">
+        <h2><span class="section-num">3.</span> ACCEPTABLE USE & STRICT MESSAGING RULES</h2>
+        <p>
+          As a Client of Chatmagal, you must adhere strictly to the following messaging rules:
+        </p>
+        <ul>
+          <li>
+            <strong>Opt-In Requirement:</strong> Clients bear sole responsibility for obtaining explicit, legally valid opt-in consent from end-users prior to initiating any outbound messages.
+          </li>
+          <li>
+            <strong>Spam & Banned Content:</strong> Absolutely no spam, unsolicited outbound promotions, or content violating Meta's Commerce Policies (e.g., restricted goods, adult content, illicit services) is permitted on the platform.
+          </li>
+          <li>
+            <strong>AI Policy Compliance:</strong> In accordance with Meta's 2026 AI policies, any automated chatbots or AI agents deployed via Chatmagal must serve specific business functions (such as customer support workflows, appointment booking, or lead filtering). Bots cannot function as general-purpose, open-domain AI assistants.
+          </li>
+        </ul>
+      </section>
+
+      <!-- Section 4 -->
+      <section class="section-card">
+        <h2><span class="section-num">4.</span> BILLING, SUBSCRIPTIONS, & META FEES</h2>
+        <p>
+          The use of Chatmagal incurs two separate types of charges:
+        </p>
+        <ul>
+          <li>
+            <strong>Chatmagal SaaS Subscription:</strong> Fees paid directly to Chatmagal for access to our dashboard, automations, and routing software.
+          </li>
+          <li>
+            <strong>Meta Usage Fees:</strong> Separate per-message or conversation-based costs dictated by Meta Platforms, Inc. The Client is entirely responsible for paying Meta's usage fees, whether billed directly by Meta via your business manager or passed through Chatmagal.
+          </li>
+        </ul>
+        
+        <div class="highlight-block">
+          <div class="highlight-title">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            Strict No-Refund Policy
+          </div>
+          <div class="highlight-text">
+            Subscription fees and setup costs paid to Chatmagal are strictly non-refundable. This includes, without limitation, situations where your account is suspended, restricted, or permanently banned by Meta for policy violations.
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5 -->
+      <section class="section-card">
+        <h2><span class="section-num">5.</span> SERVICE AVAILABILITY & INFRASTRUCTURE DISCLAIMERS</h2>
+        <p>
+          Chatmagal's infrastructure utilizes self-managed Virtual Private Servers (VPS) and Google Cloud Firestore/Firebase for database management, heavily relying on the Meta WhatsApp Cloud API to function.
+        </p>
+        <p>
+          While we strive for high reliability, we do not guarantee 100% service uptime. <strong>Chatmagal is not liable</strong> for any messaging disruptions, loss of revenue, or service downtime caused by Meta API outages, rate limits imposed by Meta, or unexpected underlying third-party server infrastructure downtime.
+        </p>
+      </section>
+
+      <!-- Section 6 -->
+      <section class="section-card">
+        <h2><span class="section-num">6.</span> SUSPENSION & TERMINATION OF SERVICE</h2>
+        <p>
+          Chatmagal reserves the right to immediately suspend or permanently terminate your access to the service, <strong>without notice or refund</strong>, if:
+        </p>
+        <ul>
+          <li>You violate Meta's WhatsApp messaging or commerce policies.</li>
+          <li>Your messaging campaigns generate abnormally high block or report rates from end-users.</li>
+          <li>You fail to pay Chatmagal subscription invoices or accrued Meta conversation fees on time.</li>
+          <li>You violate any of the acceptable use terms outlined in Section 3.</li>
+        </ul>
+      </section>
+
+      <!-- Section 7 -->
+      <section class="section-card">
+        <h2><span class="section-num">7.</span> LIMITATION OF LIABILITY & INDEMNIFICATION</h2>
+        <p>
+          <strong>Indemnification:</strong> Clients agree to fully indemnify, defend, and hold Chatmagal (and its officers, directors, and employees) harmless against any claims, fines, damages, or legal actions arising from their messaging behavior, data breaches occurring on their local endpoint, or their failure to secure valid end-user consent.
+        </p>
+        <p>
+          <strong>Limitation of Liability:</strong> Under no circumstances shall Chatmagal's aggregate financial liability regarding any claims arising out of this agreement exceed the total amount the Client paid to Chatmagal for the software in the 12 months immediately preceding the event giving rise to the claim.
+        </p>
+      </section>
+
+      <!-- Section 8 -->
+      <section class="section-card">
+        <h2><span class="section-num">8.</span> GOVERNING LAW & DISPUTE RESOLUTION</h2>
+        <p>
+          These Terms and Conditions, and any disputes arising out of or related to the use of Chatmagal, shall be governed by, construed, and enforced in accordance with the <strong>laws of the Federal Republic of Nigeria</strong>, without regard to its conflict of law principles.
+        </p>
+        <p>
+          Any legal proceedings shall be exclusively resolved in the competent courts located within Nigeria.
+        </p>
+      </section>
+
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="logo-container" style="justify-content: center; margin-bottom: 0.5rem;">
+        <div class="logo-badge">C</div>
+        <span class="logo-text">Chatmagal</span>
+      </div>
+      <p class="footer-copyright">
+        &copy; 2026 Chatmagal SaaS Inc. All rights reserved. Not affiliated with WhatsApp Inc. or Meta Platforms Inc.
+      </p>
+      <span class="meta-tech-badge">Meta Independent Tech Provider</span>
+    </div>
+  </footer>
+
+  <!-- Floating Back to Top -->
+  <div class="back-to-top" id="scroll-top-btn" title="Scroll to Top">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 1.2rem; height: 1.2rem;">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+    </svg>
+  </div>
+
+  <!-- Interactive Logic -->
+  <script>
+    // Scroll to Top Button visibility
+    const scrollTopBtn = document.getElementById('scroll-top-btn');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        scrollTopBtn.classList.add('visible');
+      } else {
+        scrollTopBtn.classList.remove('visible');
+      }
+    });
+
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Font size modifiers
+    const contentArea = document.getElementById('policy-content');
+    const fontIncBtn = document.getElementById('font-inc-btn');
+    const fontDecBtn = document.getElementById('font-dec-btn');
+    let currentFontSize = 0.92; // rem value matches standard style
+
+    fontIncBtn.addEventListener('click', () => {
+      if (currentFontSize < 1.2) {
+        currentFontSize += 0.05;
+        const paragraphs = contentArea.querySelectorAll('p, li, .dpo-value, .dpo-label');
+        paragraphs.forEach(p => p.style.fontSize = `${currentFontSize}rem`);
+      }
+    });
+
+    fontDecBtn.addEventListener('click', () => {
+      if (currentFontSize > 0.8) {
+        currentFontSize -= 0.05;
+        const paragraphs = contentArea.querySelectorAll('p, li, .dpo-value, .dpo-label');
+        paragraphs.forEach(p => p.style.fontSize = `${currentFontSize}rem`);
+      }
+    });
+
+    // Readability Font Toggle (Dyslexic / clean high-readability)
+    const readableBtn = document.getElementById('readable-btn');
+    readableBtn.addEventListener('click', () => {
+      readableBtn.classList.toggle('active');
+      if (readableBtn.classList.contains('active')) {
+        document.body.style.fontFamily = '"Comic Sans MS", "Comic Sans", cursive, sans-serif';
+        document.body.style.letterSpacing = '0.05em';
+        document.body.style.wordSpacing = '0.1em';
+      } else {
+        document.body.style.fontFamily = 'var(--font-sans)';
+        document.body.style.letterSpacing = 'normal';
+        document.body.style.wordSpacing = 'normal';
+      }
+    });
+  </script>
+</body>
+</html>
