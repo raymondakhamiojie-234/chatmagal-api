@@ -4468,18 +4468,13 @@
         settingsFbBtn.innerHTML = 'Connecting with Facebook...';
 
         const loginOptions = {
-          scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management',
+          config_id: metaConfigId || '1660089798568100',
           response_type: 'code',
           override_default_response_type: true,
           extras: {
-            setup: {},
-            featureType: 'whatsapp_business_messaging'
+            featureType: 'whatsapp_business_app_onboarding'
           }
         };
-
-        if (metaConfigId) {
-          loginOptions.config_id = metaConfigId;
-        }
 
         FB.login(function(response) {
           if (response.authResponse) {

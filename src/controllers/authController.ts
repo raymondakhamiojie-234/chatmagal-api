@@ -34,7 +34,7 @@ export const onboardWhatsApp = async (req: Request, res: Response) => {
             client_id: appId,
             client_secret: appSecret,
             code: code,
-            redirect_uri: redirectUri || ''
+            redirect_uri: process.env.META_REDIRECT_URI || redirectUri || ''
           }
         });
 
