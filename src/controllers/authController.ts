@@ -11,10 +11,45 @@ const metaApi = axios.create({
 
 export const onboardWhatsApp = async (req: Request, res: Response) => {
   try {
-    const { accessToken, workspaceId } = req.body;
+    const { accessToken, code, redirectUri, workspaceId } = req.body;
 
-    if (!accessToken || !workspaceId) {
-      return res.status(400).json({ error: 'Missing accessToken or workspaceId' });
+    if (!workspaceId) {
+      return res.status(400).json({ error: 'Missing workspaceId' });
+    }
+
+    let tokenToUse = accessToken;
+
+    // Server-to-server code exchange for access token
+    if (code) {
+      const appId = process.env.META_APP_ID;
+      const appSecret = process.env.META_APP_SECRET;
+
+      if (!appId || !appSecret) {
+        return res.status(500).json({ error: 'Meta App ID or App Secret is not configured on the server.' });
+      }
+
+      try {
+        const tokenExchangeResponse = await axios.get('https://graph.facebook.com/v25.0/oauth/access_token', {
+          params: {
+            client_id: appId,
+            client_secret: appSecret,
+            code: code,
+            redirect_uri: redirectUri || ''
+          }
+        });
+
+        tokenToUse = tokenExchangeResponse.data.access_token;
+      } catch (exchangeErr: any) {
+        console.error('Error exchanging code for access token:', exchangeErr.response?.data || exchangeErr.message);
+        return res.status(400).json({
+          error: 'Failed to exchange authorization code for access token.',
+          details: exchangeErr.response?.data || exchangeErr.message
+        });
+      }
+    }
+
+    if (!tokenToUse) {
+      return res.status(400).json({ error: 'Missing accessToken or authorization code' });
     }
 
     // Verify workspace exists
@@ -29,7 +64,7 @@ export const onboardWhatsApp = async (req: Request, res: Response) => {
     // 1. Isolate the client's waba_id
     const wabaResponse = await metaApi.get('/me/whatsapp_business_accounts', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${tokenToUse}`,
       },
     });
 
@@ -43,7 +78,7 @@ export const onboardWhatsApp = async (req: Request, res: Response) => {
     // 2. Fetch their verified phone_number_id
     const phoneResponse = await metaApi.get(`/${wabaId}/phone_numbers`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${tokenToUse}`,
       },
     });
 
@@ -60,7 +95,7 @@ export const onboardWhatsApp = async (req: Request, res: Response) => {
       data: {
         metaWabaId: wabaId,
         metaPhoneNumberId: phoneNumberId,
-        metaAccessToken: accessToken.trim(),
+        metaAccessToken: tokenToUse.trim(),
       },
     });
 

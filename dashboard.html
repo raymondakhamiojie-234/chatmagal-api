@@ -12,8 +12,7 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <!-- Chart.js for Premium Visual Reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Meta Facebook Login SDK -->
-  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+  <!-- Meta Facebook Login SDK dynamically loaded below -->
   <!-- Custom Premium Vanilla CSS -->
   <style>
     :root {
@@ -2240,6 +2239,7 @@
           if (metaConfigId) {
             console.log('✓ Meta Configuration ID resolved:', metaConfigId);
           }
+          FB.AppEvents.logPageView();
         } else {
           console.warn('⚠️ Meta App ID is not configured on the server. Embedded Signup may not function.');
         }
@@ -2247,6 +2247,15 @@
         console.error('Failed to load Meta App ID config for FB SDK:', err);
       }
     };
+
+    // Load the Facebook SDK asynchronously using dynamic IIFE injection
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
 
     // Page Elements
     const portalOverlay = document.getElementById('portal-overlay');
@@ -4449,20 +4458,23 @@
         settingsFbBtn.innerHTML = 'Connecting with Facebook...';
 
         const loginOptions = {
-          scope: 'whatsapp_business_management,whatsapp_business_messaging',
+          scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management',
+          response_type: 'code',
+          override_default_response_type: true,
           extras: {
-            feature: 'whatsapp_embedded_signup'
+            setup: {},
+            featureType: 'whatsapp_business_messaging'
           }
         };
 
         if (metaConfigId) {
-          loginOptions.extras.config_id = metaConfigId;
+          loginOptions.config_id = metaConfigId;
         }
 
         FB.login(function(response) {
           if (response.authResponse) {
-            const accessToken = response.authResponse.accessToken;
-            onboardWithToken(accessToken);
+            const code = response.authResponse.code;
+            onboardWithCode(code);
           } else {
             console.log('User cancelled login or did not fully authorize.');
             alert('✗ Login cancelled or WABA authorization failed.');
@@ -4473,7 +4485,7 @@
       });
     }
 
-    async function onboardWithToken(accessToken) {
+    async function onboardWithCode(code) {
       const settingsFbBtn = document.getElementById('settings-fb-login-btn');
       if (!settingsFbBtn) return;
       const originalHtml = settingsFbBtn.innerHTML;
@@ -4483,7 +4495,11 @@
       try {
         const response = await apiRequest('/api/whatsapp/onboard', {
           method: 'POST',
-          body: JSON.stringify({ accessToken, workspaceId })
+          body: JSON.stringify({ 
+            code, 
+            redirectUri: window.location.origin, 
+            workspaceId 
+          })
         });
 
         if (response.workspace) {
@@ -4492,7 +4508,7 @@
           loadSettingsData();
           loadOverviewData();
         } else {
-          alert('✗ Onboarding failed: Check your token permissions.');
+          alert('✗ Onboarding failed: ' + (response.error || 'Check your token permissions.'));
         }
       } catch (err) {
         console.error('Onboarding failure:', err);
