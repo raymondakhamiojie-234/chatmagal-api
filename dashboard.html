@@ -1400,6 +1400,12 @@
       gap: 1.5rem;
     }
 
+    @media (max-width: 1200px) {
+      #header-view-desc {
+        display: none !important;
+      }
+    }
+
     @media (max-width: 1024px) {
       body {
         overflow: auto;
@@ -1496,6 +1502,19 @@
       }
       .active-chat-input-bar {
         padding: 0.75rem !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .app-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+        padding: 0.85rem 1rem !important;
+      }
+      .header-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
       }
     }
   </style>
