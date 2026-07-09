@@ -1396,13 +1396,17 @@
     }
     .settings-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 1.5rem;
+      width: 100%;
     }
 
     @media (max-width: 1200px) {
       #header-view-desc {
         display: none !important;
+      }
+      .header-title-container h1 {
+        font-size: 1.05rem !important;
       }
     }
 
@@ -1699,7 +1703,7 @@
   <main class="app-main">
     <header class="app-header">
       <div style="display: flex; align-items: center; gap: 0.85rem;">
-        <button id="sidebar-toggle-btn" title="Toggle Navigation Sidebar" style="background: none; border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; padding: 0;">
+        <button id="sidebar-toggle-btn" title="Toggle Navigation Sidebar" style="background: none; border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; padding: 0; flex-shrink: 0;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.2rem; height: 1.2rem;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
@@ -1711,7 +1715,7 @@
       </div>
       <div class="header-actions">
         <span class="workspace-pill" id="active-workspace-pill">Workspace: ...</span>
-        <button class="btn btn-secondary" id="logout-btn" style="padding: 0.4rem 0.85rem; font-size: 0.75rem; border-radius: 8px;">Switch Workspace</button>
+        <button class="btn btn-secondary" id="logout-btn" style="padding: 0.4rem 0.85rem; font-size: 0.75rem; border-radius: 8px;">🔄 Switch Workspace</button>
       </div>
     </header>
 
@@ -2449,11 +2453,11 @@
 
     // Tab Descriptors mapping
     const tabHeaders = {
-      analytics: { title: 'Workspace Overview', desc: 'Monitor pipeline statistics and core KPIs in real-time.' },
-      chat: { title: 'Shared Inbound Support Console', desc: 'Manage incoming customer replies and trigger text responses.' },
-      campaigns: { title: 'Marketing Broadcast Campaigns', desc: 'Enqueue bulk template campaigns and monitor background worker status.' },
-      billing: { title: 'Credit Billing & Transaction Logs', desc: 'Monitor your workspace balance, view transaction ledger records, and print invoice receipts.' },
-      settings: { title: 'WhatsApp API Settings', desc: 'Configure your Meta Cloud API connection credentials or onboard another business number.' }
+      analytics: { title: '📊 Workspace Overview', desc: 'Monitor pipeline statistics and core KPIs in real-time.' },
+      chat: { title: '💬 Shared Inbound Support Console', desc: 'Manage incoming customer replies and trigger text responses.' },
+      campaigns: { title: '🚀 Marketing Broadcast Campaigns', desc: 'Enqueue bulk template campaigns and monitor background worker status.' },
+      billing: { title: '💳 Credit Billing & Transaction Logs', desc: 'Monitor your workspace balance, view transaction ledger records, and print invoice receipts.' },
+      settings: { title: '⚙️ WhatsApp API Settings', desc: 'Configure your Meta Cloud API connection credentials or onboard another business number.' }
     };
 
     // Sidebar toggle initialization
