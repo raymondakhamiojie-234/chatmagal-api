@@ -943,11 +943,13 @@
     /* VIEW PANE 4: SETTINGS */
     /* ---------------------------------------------------- */
     .settings-view {
-      padding: 2rem;
-      overflow-y: auto;
+      display: flex;
       flex-direction: column;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 2rem;
       gap: 1.5rem;
-      max-width: 720px;
     }
 
     /* General Form fields */
@@ -1398,9 +1400,17 @@
       gap: 1.5rem;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       body {
         overflow: auto;
+      }
+      #header-view-desc {
+        display: none !important;
+      }
+      #logout-btn {
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap;
       }
       .app-sidebar {
         position: fixed !important;
@@ -2146,7 +2156,8 @@
 
       <!-- SETTINGS PANE -->
       <div class="view-pane" id="pane-settings">
-        <div class="settings-grid">
+        <div class="settings-view">
+          <div class="settings-grid">
           
           <!-- LEFT COLUMN: CURRENT CREDENTIALS & MANUAL FORM -->
           <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -2295,6 +2306,7 @@
         </div>
 
       </div>
+    </div>
 
       <!-- PRINTABLE RECEIPT MODAL -->
       <div class="campaign-modal" id="receipt-modal">
@@ -2429,12 +2441,12 @@
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
     if (sidebarToggleBtn) {
       const collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-      if (collapsed && window.innerWidth > 768) {
+      if (collapsed && window.innerWidth > 1024) {
         document.body.classList.add('sidebar-collapsed');
       }
       sidebarToggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= 1024) {
           const sidebar = document.querySelector('.app-sidebar');
           const backdrop = document.getElementById('sidebar-backdrop');
           if (sidebar) sidebar.classList.toggle('open');
@@ -2474,7 +2486,7 @@
         headerDesc.textContent = tabHeaders[tab].desc;
 
         // Close sidebar on mobile when switching tabs
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= 1024) {
           const sidebar = document.querySelector('.app-sidebar');
           if (sidebar) sidebar.classList.remove('open');
           if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
