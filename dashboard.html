@@ -1370,9 +1370,128 @@
       color: var(--text-main) !important;
       border-color: rgba(15, 23, 42, 0.15) !important;
     }
+
+    /* Mobile Responsive Styles */
+    .sidebar-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 9998;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+    .mobile-only {
+      display: none !important;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        overflow: auto;
+      }
+      .app-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -265px !important;
+        height: 100vh !important;
+        width: 260px !important;
+        z-index: 9999 !important;
+        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
+        transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+      .app-sidebar.open {
+        left: 0 !important;
+      }
+      .app-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+      }
+      .app-header {
+        padding: 1rem !important;
+      }
+      .header-actions {
+        gap: 0.5rem !important;
+      }
+      .workspace-pill {
+        display: none !important;
+      }
+      .view-content {
+        overflow-y: auto;
+      }
+      .analytics-view, .campaigns-view, .billing-view, .settings-view {
+        padding: 1rem !important;
+        gap: 1.25rem !important;
+      }
+      .kpi-row {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+        gap: 1rem !important;
+      }
+      .charts-grid, .dashboard-bottom-grid, .settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+      }
+      .campaign-header-row, .billing-top-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+      }
+      .campaign-header-row button, .billing-top-row button {
+        width: 100% !important;
+      }
+      
+      /* Single-pane chat drawer navigation on mobile */
+      .mobile-only {
+        display: flex !important;
+      }
+      .chat-view .chat-threads-sidebar {
+        width: 100% !important;
+        display: flex !important;
+        border-right: none !important;
+      }
+      .chat-view .active-chat-container {
+        display: none !important;
+      }
+      .chat-view .chat-details-sidebar {
+        display: none !important;
+      }
+      .chat-view.active-chat-open .chat-threads-sidebar {
+        display: none !important;
+      }
+      .chat-view.active-chat-open .active-chat-container {
+        display: flex !important;
+        width: 100% !important;
+      }
+      #mobile-chat-back-btn {
+        display: flex !important;
+      }
+      .active-chat-header {
+        padding: 1rem !important;
+      }
+      .active-chat-messages {
+        padding: 1rem !important;
+      }
+      .active-chat-input-bar {
+        padding: 0.75rem !important;
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- PORTAL GATEWAY: Sign In / Register Portal -->
   <div class="portal-overlay" id="portal-overlay">
@@ -1676,8 +1795,15 @@
           <!-- Active Conversation -->
           <div class="active-chat-container">
             <div class="active-chat-header" id="active-chat-header" style="display: none; align-items: center; justify-content: space-between;">
-              <div>
-                <div class="active-contact-title" id="active-contact-title">+2348054540828</div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <!-- Back Button for Mobile View -->
+                <button id="mobile-chat-back-btn" class="mobile-only" style="background: none; border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 6px; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; padding: 0;" title="Back to Chats list">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <div>
+                  <div class="active-contact-title" id="active-contact-title">+2348054540828</div>
                 <div style="font-size:0.7rem; color:var(--success); font-weight:600; display:flex; align-items:center; gap:0.25rem;">
                   <span class="status-dot active" style="width:5px; height:5px; background:var(--success);"></span>
                   Customer Care Session Active
@@ -2020,7 +2146,7 @@
 
       <!-- SETTINGS PANE -->
       <div class="view-pane" id="pane-settings">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="settings-grid">
           
           <!-- LEFT COLUMN: CURRENT CREDENTIALS & MANUAL FORM -->
           <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -2303,12 +2429,30 @@
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
     if (sidebarToggleBtn) {
       const collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-      if (collapsed) {
+      if (collapsed && window.innerWidth > 768) {
         document.body.classList.add('sidebar-collapsed');
       }
-      sidebarToggleBtn.addEventListener('click', () => {
-        document.body.classList.toggle('sidebar-collapsed');
-        localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed'));
+      sidebarToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.innerWidth <= 768) {
+          const sidebar = document.querySelector('.app-sidebar');
+          const backdrop = document.getElementById('sidebar-backdrop');
+          if (sidebar) sidebar.classList.toggle('open');
+          if (backdrop) backdrop.classList.toggle('active');
+        } else {
+          document.body.classList.toggle('sidebar-collapsed');
+          localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed'));
+        }
+      });
+    }
+
+    // Close sidebar on backdrop click (mobile)
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener('click', () => {
+        const sidebar = document.querySelector('.app-sidebar');
+        if (sidebar) sidebar.classList.remove('open');
+        sidebarBackdrop.classList.remove('active');
       });
     }
 
@@ -2329,6 +2473,13 @@
         headerTitle.textContent = tabHeaders[tab].title;
         headerDesc.textContent = tabHeaders[tab].desc;
 
+        // Close sidebar on mobile when switching tabs
+        if (window.innerWidth <= 768) {
+          const sidebar = document.querySelector('.app-sidebar');
+          if (sidebar) sidebar.classList.remove('open');
+          if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+        }
+
         // Load tab data
         if (tab === 'analytics') loadOverviewData();
         if (tab === 'chat') loadChatData();
@@ -2337,6 +2488,16 @@
         if (tab === 'settings') loadSettingsData();
       });
     });
+
+    // Mobile active chat back button listener
+    const mobileChatBackBtn = document.getElementById('mobile-chat-back-btn');
+    if (mobileChatBackBtn) {
+      mobileChatBackBtn.addEventListener('click', () => {
+        const chatView = document.querySelector('.chat-view');
+        if (chatView) chatView.classList.remove('active-chat-open');
+        activeContactId = null;
+      });
+    }
 
     // PORTAL GATEWAY INTERACTIONS (Sign In & Sign Up Logic)
     const portalTabSignIn = document.getElementById('portal-tab-signin');
@@ -3009,6 +3170,12 @@
       document.getElementById('active-chat-input-bar').style.display = 'flex';
       document.getElementById('chat-details-sidebar').style.display = 'flex';
 
+      // Mobile slide-over active chat window
+      const chatView = document.querySelector('.chat-view');
+      if (chatView) {
+        chatView.classList.add('active-chat-open');
+      }
+
       // Load thread inspector info
       document.getElementById('active-contact-title').textContent = `+${contact.phoneNumber}`;
       document.getElementById('inspector-phone').textContent = `+${contact.phoneNumber}`;
@@ -3187,6 +3354,10 @@
       document.getElementById('active-chat-header').style.display = 'none';
       document.getElementById('active-chat-input-bar').style.display = 'none';
       document.getElementById('chat-details-sidebar').style.display = 'none';
+      const chatView = document.querySelector('.chat-view');
+      if (chatView) {
+        chatView.classList.remove('active-chat-open');
+      }
       document.getElementById('active-chat-messages').innerHTML = `
         <div class="empty-chat-placeholder" id="chat-empty-placeholder">
           <div class="empty-icon">💬</div>
