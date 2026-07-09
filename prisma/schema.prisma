@@ -18,6 +18,14 @@ model Workspace {
   walletBalance     Decimal    @default(0.0)
   createdAt         DateTime   @default(now())
 
+  // Premium Tenant Settings
+  subscriptionPlan  String     @default("Pro Plan")
+  businessName      String     @default("")
+  autoDraft         Boolean    @default(true)
+  systemTone        String     @default("Friendly & Outgoing (Casual, polite)")
+  systemPrompt      String     @default("")
+  maskSubscribers   Boolean    @default(false)
+
   contacts          Contact[]
   messages          Message[]
   campaigns         Campaign[]

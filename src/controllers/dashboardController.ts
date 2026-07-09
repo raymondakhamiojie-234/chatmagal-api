@@ -721,6 +721,38 @@ export const updateWorkspaceMeta = async (req: Request, res: Response) => {
   }
 };
 
+// POST /api/workspace/settings (Update dynamic premium settings fields)
+export const updateWorkspaceSettings = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    const { businessName, autoDraft, systemTone, systemPrompt, maskSubscribers } = req.body;
+
+    const updatedWorkspace = await prisma.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        businessName: businessName !== undefined ? businessName : undefined,
+        autoDraft: autoDraft !== undefined ? autoDraft : undefined,
+        systemTone: systemTone !== undefined ? systemTone : undefined,
+        systemPrompt: systemPrompt !== undefined ? systemPrompt : undefined,
+        maskSubscribers: maskSubscribers !== undefined ? maskSubscribers : undefined,
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Workspace settings updated successfully',
+      workspace: updatedWorkspace
+    });
+  } catch (error) {
+    console.error('Error updating workspace settings:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
 // GET /api/workspace/training (Fetch all custom training Q&A pairs for the workspace)
 export const getBotTraining = async (req: Request, res: Response) => {
   try {

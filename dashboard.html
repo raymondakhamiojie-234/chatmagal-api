@@ -1509,6 +1509,48 @@
       }
     }
 
+    /* Premium Dark Theme overrides for Settings View */
+    .settings-view {
+      background: #090d16 !important;
+      color: #f3f4f6 !important;
+      padding: 2rem !important;
+      overflow-y: auto !important;
+      height: 100% !important;
+    }
+    .settings-view h2, .settings-view h3, .settings-view h4, .settings-view strong {
+      color: #ffffff !important;
+    }
+    .settings-view .form-input, .settings-view textarea, .settings-view select {
+      background: #111827 !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f3f4f6 !important;
+      border-radius: 10px !important;
+    }
+    .settings-view .form-input:focus, .settings-view textarea:focus, .settings-view select:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25) !important;
+    }
+    .settings-view .campaign-list-card {
+      background: rgba(17, 24, 39, 0.7) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      border-radius: 20px !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    }
+    .settings-view .workspace-pill {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: #f3f4f6 !important;
+    }
+    
+    /* Orange and Purple Toggles */
+    .toggle-orange input:checked + .toggle-slider {
+      background-color: #f97316 !important;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.4) !important;
+    }
+    .toggle-purple input:checked + .toggle-slider {
+      background-color: #6366f1 !important;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.4) !important;
+    }
+
     @media (max-width: 576px) {
       .app-header {
         flex-direction: column !important;
@@ -2181,96 +2223,163 @@
       <div class="view-pane" id="pane-settings">
         <div class="settings-view">
           <div class="settings-grid">
-          
-          <!-- LEFT COLUMN: CURRENT CREDENTIALS & MANUAL FORM -->
-          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             
-            <!-- CURRENT CONNECTION STATUS CARD -->
+            <!-- CARD 1: PROFILE -->
             <div class="campaign-list-card" style="padding: 1.5rem;">
-              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">📡 Active WhatsApp Connection</h3>
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                👤 Profile
+              </h3>
               
-              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-                  <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Workspace ID</span>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Subscription details -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <span style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Current Subscription Plan</span>
+                    <strong style="font-size: 0.95rem; font-weight: 700; color: #fff;" id="settings-display-subscription">Pro Plan</strong>
+                  </div>
+                  <span class="workspace-pill" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.7rem; letter-spacing: 0.5px;">PREMIUM PRO</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-input-business-name" class="form-label" style="font-size: 0.7rem; font-weight: 700;">Business Identity Name</label>
+                  <input type="text" id="settings-input-business-name" class="form-input" placeholder="e.g. Demo Business" style="font-weight: 600;" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 2: GEMINI AI GUIDELINES -->
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #f59e0b !important;">
+                ✨ Gemini AI Guidelines
+              </h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Automatic Drafting Answers Toggle -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong style="font-size: 0.85rem; color: #fff; display: block;">Automatic Drafting Answers</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Render drafts inside team screen.</span>
+                  </div>
+                  <label class="toggle-switch toggle-orange" style="width:36px; height:20px; flex-shrink: 0;">
+                    <input type="checkbox" id="settings-toggle-auto-draft" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <!-- Answering System Tone -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-select-system-tone" class="form-label" style="font-size: 0.7rem; font-weight: 700;">Answering System Tone</label>
+                  <select id="settings-select-system-tone" class="form-input" style="font-weight: 600; cursor: pointer;">
+                    <option value="Friendly & Outgoing (Casual, polite)">Friendly & Outgoing (Casual, polite)</option>
+                    <option value="Professional & Formal">Professional & Formal</option>
+                    <option value="Direct & Concise">Direct & Concise</option>
+                  </select>
+                </div>
+
+                <!-- Brand Specific Instructions -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-input-system-prompt" class="form-label" style="font-size: 0.7rem; font-weight: 700;">Brand Specific Instructions (System Prompt)</label>
+                  <textarea id="settings-input-system-prompt" class="form-input" placeholder="e.g. You are a support representative for Acme. Never discuss discount pricing codes list." style="min-height: 80px; resize: vertical; font-size: 0.825rem; line-height: 1.45;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 3: PRIVACY & SECURE MASKING -->
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #3b82f6 !important;">
+                🛡️ Privacy & Secure Masking
+              </h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Mask Subscribers Numbers Toggle -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong style="font-size: 0.85rem; color: #fff; display: block;">Mask Subscribers Numbers</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Conceal middle digits on support dashboards.</span>
+                  </div>
+                  <label class="toggle-switch toggle-purple" style="width:36px; height:20px; flex-shrink: 0;">
+                    <input type="checkbox" id="settings-toggle-mask-subscribers">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 4: WHATSAPP API CONNECTION & ONBOARDING -->
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #10b981 !important;">
+                📡 WhatsApp API Onboarding
+              </h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Connection Status fields -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.85rem; border-radius: 10px;">
+                  <span style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Workspace ID</span>
                   <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #f59e0b; flex: 1; overflow: hidden; text-overflow: ellipsis;" id="settings-display-workspace-id">Loading...</code>
+                    <code style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: #f59e0b; flex: 1; overflow: hidden; text-overflow: ellipsis;" id="settings-display-workspace-id">Loading...</code>
                     <button type="button" id="settings-copy-workspace-id-btn" class="refill-btn" style="width:auto; margin:0; padding:0.25rem 0.5rem; font-size:0.68rem; border-radius:6px; box-shadow:none;">📋 Copy</button>
                   </div>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-                  <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta Phone Number ID</span>
-                  <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #10b981;" id="settings-display-phone-id">Loading...</code>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.85rem; border-radius: 10px;">
+                  <span style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta Phone Number ID</span>
+                  <code style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: #10b981;" id="settings-display-phone-id">Loading...</code>
                 </div>
                 
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-                  <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta WABA ID (WhatsApp Business Account)</span>
-                  <code style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #3b82f6;" id="settings-display-waba-id">Loading...</code>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.85rem; border-radius: 10px;">
+                  <span style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">Meta WABA ID (WhatsApp Business Account)</span>
+                  <code style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: #3b82f6;" id="settings-display-waba-id">Loading...</code>
                 </div>
-              </div>
-            </div>
 
-            <!-- MANUAL CONFIGURATION FORM -->
-            <div class="campaign-list-card" style="padding: 1.5rem;">
-              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">📝 Manual Credentials Configuration</h3>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; margin-bottom: 1.25rem;">Manually link your WhatsApp API Phone Number ID and WABA ID credentials to your active database workspace.</p>
-              
-              <form id="settings-manual-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div class="form-group">
-                  <label for="settings-input-phone-id" class="form-label">Phone Number ID</label>
-                  <input type="text" id="settings-input-phone-id" class="form-input" placeholder="e.g. 915932988281109" style="font-family: monospace;" required>
+                <!-- Facebook Embedded Signup Brand Button -->
+                <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">Launch the Meta signup wizard popup:</span>
+                  <button type="button" class="btn" id="settings-fb-login-btn" style="background: #1877f2; border: none; padding: 0.7rem 1.5rem; font-size: 0.825rem; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(24, 119, 242, 0.25); cursor: pointer; width: 100%; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16">
+                      <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
+                    </svg>
+                    Continue with Facebook
+                  </button>
                 </div>
-                
-                <div class="form-group">
-                  <label for="settings-input-waba-id" class="form-label">WABA ID</label>
-                  <input type="text" id="settings-input-waba-id" class="form-input" placeholder="e.g. 1269214828418249" style="font-family: monospace;" required>
-                </div>
-                
-                <button type="submit" class="btn" id="settings-manual-submit-btn" style="margin-top: 0.5rem; padding: 0.75rem;">
-                  💾 Save WhatsApp Credentials
-                </button>
-              </form>
-            </div>
-            
-          </div>
 
-          <!-- RIGHT COLUMN: EMBEDDED ONBOARDING SIMULATOR -->
-          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-            
-            <div class="campaign-list-card" style="padding: 1.5rem;">
-              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">🔗 Meta Embedded Signup Onboarding</h3>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; margin-bottom: 1.25rem;">Onboard your WhatsApp Business Accounts and Phone Numbers automatically using your Facebook Account.</p>
-              
-              <!-- PRODUCTION FACEBOOK LOGIN BUTTON -->
-              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; text-align: center; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
-                <span style="font-size: 0.75rem; color: var(--text-muted);">Launch the Meta dialog to authorize Chatmagal to manage your WABA account:</span>
-                <button type="button" class="btn" id="settings-fb-login-btn" style="background: #1877f2; border: none; padding: 0.8rem 1.75rem; font-size: 0.85rem; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(24, 119, 242, 0.25);">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16" style="margin-right: 2px;">
-                    <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
-                  </svg>
-                  Continue with Facebook
-                </button>
-              </div>
-
-              <!-- FALLBACK / TESTING TOKEN FIELD -->
-              <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.25rem;">
-                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">⚙️ Manual Token Fallback (Testing/Local Sandbox)</span>
-                <form id="settings-onboard-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                  <div class="form-group">
-                    <label for="settings-input-token" class="form-label" style="font-size: 0.7rem;">Meta User Access Token</label>
-                    <textarea id="settings-input-token" class="form-input" placeholder="Paste your Facebook Access Token here..." style="font-family: monospace; min-height: 80px; resize: vertical;" required></textarea>
+                <!-- Manual Connection form -->
+                <form id="settings-manual-form" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); display: block;">📝 Manual Setup Credentials</span>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="settings-input-phone-id" class="form-label" style="font-size: 0.68rem;">Phone Number ID</label>
+                    <input type="text" id="settings-input-phone-id" class="form-input" placeholder="e.g. 915932988281109" style="font-family: monospace;" required>
                   </div>
-                  
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="settings-input-waba-id" class="form-label" style="font-size: 0.68rem;">WABA ID</label>
+                    <input type="text" id="settings-input-waba-id" class="form-input" placeholder="e.g. 1269214828418249" style="font-family: monospace;" required>
+                  </div>
+                  <button type="submit" class="btn" id="settings-manual-submit-btn" style="padding: 0.6rem;">
+                    💾 Save WhatsApp Credentials
+                  </button>
+                </form>
+
+                <!-- Access Token Fallback form -->
+                <form id="settings-onboard-form" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); display: block;">⚙️ Manual Token Fallback (Testing Sandbox)</span>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="settings-input-token" class="form-label" style="font-size: 0.68rem;">Meta User Access Token</label>
+                    <textarea id="settings-input-token" class="form-input" placeholder="Paste your Facebook Access Token here..." style="font-family: monospace; min-height: 60px; resize: vertical;" required></textarea>
+                  </div>
                   <button type="submit" class="btn" id="settings-onboard-submit-btn" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 0.6rem; font-size: 0.8rem;">
-                    🚀 Retrieve and Onboard WABA Account
+                    🚀 Retrieve & Onboard WABA
                   </button>
                 </form>
               </div>
             </div>
-            
+
           </div>
-          
-        </div>
+
+          <!-- Bottom Unified Save Tenant Settings Button -->
+          <div style="text-align: right; margin-top: 1.5rem;">
+            <button type="button" id="settings-save-premium-btn" class="btn" style="padding: 0.75rem 2rem; font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 15px var(--primary-glow);">
+              💾 Save Tenant Settings
+            </button>
+          </div>
 
         <!-- 🤖 AI AUTO-RESPONDENT TRAINING & KNOWLEDGE BASE -->
         <div class="campaign-list-card" style="padding: 1.5rem; margin-top: 1.5rem;">
@@ -4523,6 +4632,13 @@
       const phoneIdInput = document.getElementById('settings-input-phone-id');
       const wabaIdInput = document.getElementById('settings-input-waba-id');
       
+      const businessNameInput = document.getElementById('settings-input-business-name');
+      const autoDraftToggle = document.getElementById('settings-toggle-auto-draft');
+      const systemToneSelect = document.getElementById('settings-select-system-tone');
+      const systemPromptInput = document.getElementById('settings-input-system-prompt');
+      const maskSubscribersToggle = document.getElementById('settings-toggle-mask-subscribers');
+      const subscriptionDisplay = document.getElementById('settings-display-subscription');
+
       if (workspaceIdDisplay) {
         workspaceIdDisplay.textContent = currentWorkspace.id || workspaceId;
       }
@@ -4540,8 +4656,72 @@
         wabaIdInput.value = currentWorkspace.metaWabaId || '';
       }
 
+      if (subscriptionDisplay) {
+        subscriptionDisplay.textContent = currentWorkspace.subscriptionPlan || 'Pro Plan';
+      }
+      if (businessNameInput) {
+        businessNameInput.value = currentWorkspace.businessName || currentWorkspace.name || '';
+      }
+      if (autoDraftToggle) {
+        autoDraftToggle.checked = currentWorkspace.autoDraft !== false;
+      }
+      if (systemToneSelect) {
+        systemToneSelect.value = currentWorkspace.systemTone || 'Friendly & Outgoing (Casual, polite)';
+      }
+      if (systemPromptInput) {
+        systemPromptInput.value = currentWorkspace.systemPrompt || '';
+      }
+      if (maskSubscribersToggle) {
+        maskSubscribersToggle.checked = currentWorkspace.maskSubscribers === true;
+      }
+      
       // Load custom AI training rules in background
       loadBotTrainingRules();
+    }
+
+    // Save Premium Tenant Settings
+    const savePremiumBtn = document.getElementById('settings-save-premium-btn');
+    if (savePremiumBtn) {
+      savePremiumBtn.addEventListener('click', async () => {
+        savePremiumBtn.disabled = true;
+        savePremiumBtn.textContent = 'Saving...';
+        
+        const businessName = document.getElementById('settings-input-business-name').value;
+        const autoDraft = document.getElementById('settings-toggle-auto-draft').checked;
+        const systemTone = document.getElementById('settings-select-system-tone').value;
+        const systemPrompt = document.getElementById('settings-input-system-prompt').value;
+        const maskSubscribers = document.getElementById('settings-toggle-mask-subscribers').checked;
+
+        try {
+          const response = await apiRequest('/api/workspace/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessName,
+              autoDraft,
+              systemTone,
+              systemPrompt,
+              maskSubscribers
+            })
+          });
+
+          if (response && response.workspace) {
+            currentWorkspace = response.workspace;
+            if (activeWorkspacePill) {
+              activeWorkspacePill.textContent = `Workspace: ${currentWorkspace.businessName || currentWorkspace.name}`;
+            }
+            alert('✓ Success! Tenant Settings saved successfully.');
+          } else {
+            alert('✗ Error: Failed to save settings.');
+          }
+        } catch (err) {
+          console.error('Failed to save settings:', err);
+          alert(`✗ Error: ${err.message}`);
+        } finally {
+          savePremiumBtn.disabled = false;
+          savePremiumBtn.textContent = '💾 Save Tenant Settings';
+        }
+      });
     }
 
     // Workspace ID Copy Action

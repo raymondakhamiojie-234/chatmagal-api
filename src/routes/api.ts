@@ -20,7 +20,8 @@ import {
   uploadBotTraining,
   clearBotTraining,
   getTeamMembers,
-  addTeamMember
+  addTeamMember,
+  updateWorkspaceSettings
 } from '../controllers/dashboardController';
 
 const router = Router();
@@ -47,6 +48,7 @@ router.delete('/campaigns/:campaignId', authMiddleware, cancelCampaign);
 router.post('/support/send', authMiddleware, sendSupportReply);
 router.post('/workspace/refill', authMiddleware, refillWallet);
 router.post('/workspace/update-meta', authMiddleware, updateWorkspaceMeta);
+router.post('/workspace/settings', authMiddleware, updateWorkspaceSettings);
 router.get('/media/:mediaId', authMiddleware, getMediaProxy);
 router.get('/billing/transactions', authMiddleware, getTransactions);
 router.post('/contacts/:contactId/assign', authMiddleware, assignContact);

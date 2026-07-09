@@ -50,15 +50,31 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
   const apiKey = process.env.GEMINI_API_KEY;
   const hasLiveKey = apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.trim() !== '';
 
-  // 1. Resolve contact's workspaceId to fetch corresponding custom Q&A training rules
+  // 1. Resolve contact's workspaceId to fetch corresponding custom settings and Q&A training rules
   let workspaceId = '';
+  let workspaceName = 'Chatmagal';
+  let systemTone = 'Friendly & Outgoing (Casual, polite)';
+  let systemPrompt = '';
   try {
     const contact = await prisma.contact.findUnique({
       where: { id: contactId },
-      select: { workspaceId: true }
+      select: { 
+        workspaceId: true,
+        workspace: {
+          select: {
+            name: true,
+            businessName: true,
+            systemTone: true,
+            systemPrompt: true
+          }
+        }
+      }
     });
     if (contact) {
       workspaceId = contact.workspaceId;
+      workspaceName = contact.workspace.businessName || contact.workspace.name || 'Chatmagal';
+      systemTone = contact.workspace.systemTone || 'Friendly & Outgoing (Casual, polite)';
+      systemPrompt = contact.workspace.systemPrompt || '';
     }
   } catch (err) {
     console.warn('Could not load contact workspaceId context for AI respondent:', err);
@@ -107,10 +123,12 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
 
   if (hasLiveKey) {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const promptContext = `System Instruction: You are the automated AI assistant for Chatmagal, a modern multi-tenant WhatsApp SaaS platform. 
-Provide exceptionally helpful, natural, human-like, concise, and professional responses to the customer. 
+    const promptContext = `System Instruction: You are the automated AI assistant for the WhatsApp Business account of "${workspaceName}". 
+Answering Tone Guidelines: You must write in a tone that is "${systemTone}".
+${systemPrompt ? `Brand Specific Instructions & System Guidelines:\n${systemPrompt}\n` : 'Provide exceptionally helpful, natural, human-like, concise, and professional responses to the customer.'} 
 You are having a continuous multi-turn conversation with the customer. Leverage the provided conversation history context to maintain context, remember previous statements, and reply naturally to standard conversational questions.
 If they ask about rates, explain that manual messages and auto-replies cost $0.05. Keep answers under 3-4 sentences and format them with clean markdown/emojis suitable for WhatsApp text messages.
+
 
 ${trainingContextText ? `CRITICAL REQUIREMENT: You have been provided with a custom business Q&A reference knowledge base below. If the customer's question matches or is closely related to any of the questions in this reference, you MUST strictly use the corresponding "Your Prepared Answer" to formulate your response. Do not invent details or contradict the provided reference answers.
 
