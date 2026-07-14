@@ -36,7 +36,15 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true }));
 
 // Serve frontend console, uploader and simulator statically to prevent browser CORS/file origin restrictions
-app.use(express.static(process.cwd()));
+app.use(express.static(process.cwd(), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Redirect root / to dashboard.html for better user experience
 app.get('/', (req, res) => {
