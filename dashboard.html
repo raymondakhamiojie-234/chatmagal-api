@@ -18,6 +18,7 @@
     :root {
       --bg-deep: #f8fafc;
       --bg-panel: rgba(255, 255, 255, 0.9);
+      --bg-panel-solid: #ffffff;
       --border-light: rgba(15, 23, 42, 0.07);
       --border-glowing: rgba(16, 185, 129, 0.25);
       --primary: #10b981;
@@ -31,7 +32,23 @@
       --text-muted: #64748b;
       --bubble-in: #e2e8f0;
       --bubble-out: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%);
+      --input-bg: #ffffff;
+      --input-border: rgba(15, 23, 42, 0.1);
       --sidebar-width: 260px;
+    }
+
+    [data-theme="dark"] {
+      --bg-deep: #0f172a;
+      --bg-panel: rgba(30, 41, 59, 0.9);
+      --bg-panel-solid: #1e293b;
+      --border-light: rgba(255, 255, 255, 0.07);
+      --border-glowing: rgba(16, 185, 129, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --bubble-in: #334155;
+      --bubble-out: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%);
+      --input-bg: #0f172a;
+      --input-border: rgba(255, 255, 255, 0.15);
     }
 
     * {
@@ -162,7 +179,7 @@
     .wallet-balance {
       font-size: 1.4rem;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--text-main);
       margin: 0.25rem 0 0.5rem 0;
       font-family: 'Outfit', sans-serif;
     }
@@ -274,7 +291,7 @@
     .header-title-container h1 {
       font-size: 1.2rem;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--text-main);
     }
 
     .header-title-container p {
@@ -292,7 +309,7 @@
     .workspace-pill {
       font-size: 0.75rem;
       font-weight: 600;
-      color: #0f172a;
+      color: var(--text-main);
       background: rgba(0, 0, 0, 0.03);
       border: 1px solid var(--border-light);
       padding: 0.4rem 0.85rem;
@@ -333,7 +350,7 @@
     }
 
     .portal-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid rgba(16, 185, 129, 0.15);
       border-radius: 24px;
       padding: 2.5rem;
@@ -361,7 +378,7 @@
     }
 
     .kpi-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-light);
       border-radius: 18px;
       padding: 1.5rem;
@@ -389,7 +406,7 @@
     .kpi-value {
       font-size: 2rem;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--text-main);
       margin-top: 0.5rem;
       font-family: 'Outfit', sans-serif;
     }
@@ -418,7 +435,7 @@
     }
 
     .analytics-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-light);
       border-radius: 20px;
       padding: 1.75rem;
@@ -428,7 +445,7 @@
     .analytics-card h3 {
       font-size: 1.05rem;
       font-weight: 600;
-      color: #0f172a;
+      color: var(--text-main);
       margin-bottom: 1.25rem;
       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       padding-bottom: 0.5rem;
@@ -461,7 +478,7 @@
       border-bottom: 1px solid var(--border-light);
       font-size: 0.95rem;
       font-weight: 600;
-      color: #0f172a;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -530,7 +547,7 @@
     .thread-number {
       font-weight: 600;
       font-size: 0.875rem;
-      color: #0f172a;
+      color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -570,7 +587,7 @@
     .active-contact-title {
       font-weight: 600;
       font-size: 0.95rem;
-      color: #0f172a;
+      color: var(--text-main);
     }
 
     .active-chat-messages {
@@ -612,14 +629,14 @@
       background-color: var(--bubble-in);
       border: 1px solid rgba(0, 0, 0, 0.03);
       border-bottom-left-radius: 4px;
-      color: #0f172a;
+      color: var(--text-main);
     }
 
     .chat-bubble-row.outbound .chat-bubble {
       background: var(--bubble-out);
       border: 1px solid rgba(16, 185, 129, 0.15);
       border-bottom-right-radius: 4px;
-      color: #0f172a;
+      color: var(--text-main);
     }
 
     .bubble-time {
@@ -711,7 +728,7 @@
 
     .chat-text-area:focus {
       border-color: var(--primary);
-      background: #fff;
+      background: var(--bg-panel-solid);
       box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
@@ -782,7 +799,7 @@
     }
 
     .detail-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-light);
       border-radius: 14px;
       padding: 1rem;
@@ -799,7 +816,7 @@
 
     .detail-val {
       font-size: 0.875rem;
-      color: #0f172a;
+      color: var(--text-main);
       font-weight: 500;
     }
 
@@ -821,7 +838,7 @@
     }
 
     .campaign-list-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-light);
       border-radius: 20px;
       padding: 1.75rem;
@@ -929,7 +946,7 @@
     }
 
     .campaign-modal-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-light);
       border-radius: 24px;
       padding: 2.25rem;
@@ -982,7 +999,7 @@
     .form-input:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px var(--primary-glow);
-      background: #fff;
+      background: var(--bg-panel-solid);
     }
 
     /* Global buttons */
@@ -1093,7 +1110,7 @@
     }
 
     .billing-card {
-      background: #fff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-light);
       border-radius: 20px;
       padding: 1.75rem;
@@ -1148,7 +1165,7 @@
     .receipt-title {
       font-size: 1.35rem;
       font-weight: 800;
-      color: #0f172a;
+      color: var(--text-main);
       letter-spacing: -0.5px;
       font-family: 'Outfit', sans-serif;
     }
@@ -1178,7 +1195,7 @@
 
     .receipt-table td {
       font-size: 0.825rem;
-      color: #0f172a;
+      color: var(--text-main);
       padding: 0.75rem 0;
       border-bottom: 1px solid #f1f5f9;
     }
@@ -1218,7 +1235,7 @@
         top: 0;
         width: 100%;
         height: auto;
-        background: #fff;
+        background: var(--bg-panel-solid);
         display: flex !important;
         align-items: flex-start;
         justify-content: center;
@@ -1399,6 +1416,12 @@
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 1.5rem;
       width: 100%;
+    }
+
+    @media (max-width: 1400px) {
+      .chat-view .chat-details-sidebar {
+        display: none !important;
+      }
     }
 
     @media (max-width: 1200px) {
@@ -1651,8 +1674,8 @@
         <h3 style="color:#047857; font-size:0.9rem; font-weight:700; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">✓ Account Created Successfully!</h3>
         <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">Your account is pre-funded with <strong>$100.00</strong> starting credits. Copy your Workspace ID to secure your access:</p>
         
-        <div style="display:flex; gap:0.5rem; align-items:center; background:#fff; border:1px solid var(--border-light); padding:0.4rem 0.6rem; border-radius:8px;">
-          <span id="portal-new-id-badge" style="font-family:monospace; font-size:0.75rem; font-weight:700; color:#0f172a; flex:1; overflow:hidden; text-overflow:ellipsis;"></span>
+        <div style="display:flex; gap:0.5rem; align-items:center; background: var(--bg-panel-solid); border:1px solid var(--border-light); padding:0.4rem 0.6rem; border-radius:8px;">
+          <span id="portal-new-id-badge" style="font-family:monospace; font-size:0.75rem; font-weight:700; color: var(--text-main); flex:1; overflow:hidden; text-overflow:ellipsis;"></span>
           <button type="button" id="portal-copy-btn" class="refill-btn" style="width:auto; margin:0; padding:0.25rem 0.5rem; font-size:0.68rem; border-radius:6px; box-shadow:none;">📋 Copy</button>
         </div>
         
@@ -1666,7 +1689,7 @@
   <!-- SIDEBAR NAVIGATION -->
   <aside class="app-sidebar">
     <div class="sidebar-header">
-      <div class="logo-container" style="display: flex; align-items: center; justify-content: flex-start; background: #fff; padding: 6px 12px; border-radius: 10px; margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.05); width: fit-content; max-width: 180px;">
+      <div class="logo-container" style="display: flex; align-items: center; justify-content: flex-start; background: var(--bg-panel-solid); padding: 6px 12px; border-radius: 10px; margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.05); width: fit-content; max-width: 180px;">
         <img src="/logo.png" alt="Chatmagal Logo" style="height: 28px; width: auto; object-fit: contain;">
       </div>
       
@@ -1694,7 +1717,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.35rem;">
           <div class="thread-avatar" style="width:28px; height:28px; font-size:0.75rem; border-radius:8px; background:rgba(16,185,129,0.1); color:#047857; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">ME</div>
-          <select id="agent-status-select" class="form-input" style="padding:0.25rem 0.5rem; font-size:0.75rem; height:28px; border-radius:6px; cursor:pointer; font-weight:600; background:#fff; border:1px solid var(--border-light); flex:1; outline:none;">
+          <select id="agent-status-select" class="form-input" style="padding:0.25rem 0.5rem; font-size:0.75rem; height:28px; border-radius:6px; cursor:pointer; font-weight:600; background: var(--bg-panel-solid); border:1px solid var(--border-light); flex:1; outline:none;">
             <option value="Online">🟢 Online (Available)</option>
             <option value="Away">🟡 Away</option>
             <option value="Offline">🔴 Offline</option>
@@ -1730,6 +1753,13 @@
         ⚙️ WhatsApp Settings
       </div>
     </nav>
+
+    <!-- Theme Toggle -->
+    <div style="padding: 1rem 1.75rem;">
+      <button id="theme-toggle-btn" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: transparent; border: 1px solid var(--border-light); color: var(--text-main); font-size: 0.8rem; box-shadow: none;">
+        🌓 Toggle Theme
+      </button>
+    </div>
 
     <!-- Sidebar footer (Socket connection status) -->
     <div class="sidebar-footer">
@@ -1919,8 +1949,8 @@
                       <span>👥 Add Team Member</span>
                       <button id="close-team-member-popover" style="background: none; border: none; font-size: 0.85rem; cursor: pointer; color: #94a3b8; margin-left: auto;">✕</button>
                     </div>
-                    <input type="text" id="new-member-name" placeholder="Full Name (e.g. Agent John)" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(15,23,42,0.1); border-radius: 6px; outline: none; background: #fff; color: #0f172a;" />
-                    <input type="text" id="new-member-role" placeholder="Role/Position (e.g. Support)" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(15,23,42,0.1); border-radius: 6px; outline: none; background: #fff; color: #0f172a;" />
+                    <input type="text" id="new-member-name" placeholder="Full Name (e.g. Agent John)" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--input-border); border-radius: 6px; outline: none; background: var(--bg-panel-solid); color: var(--text-main);" />
+                    <input type="text" id="new-member-role" placeholder="Role/Position (e.g. Support)" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--input-border); border-radius: 6px; outline: none; background: var(--bg-panel-solid); color: var(--text-main);" />
                     <button id="submit-team-member-btn" style="width: 100%; padding: 0.4rem; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: background 0.2s;">Assign</button>
                   </div>
                 </div>
@@ -1941,7 +1971,7 @@
             <!-- Chat Bottom Typing Console -->
             <div class="active-chat-input-bar" id="active-chat-input-bar" style="display: none; position: relative;">
               <!-- Slash Commands Popup Autocomplete Modal (Option F) -->
-              <div id="slash-commands-popup" style="display: none; position: absolute; bottom: 70px; left: 2rem; right: 2rem; background: #fff; border: 1px solid rgba(16,185,129,0.2); border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 0 15px var(--primary-glow); z-index: 100; overflow: hidden; animation: fadeIn 0.2s ease;">
+              <div id="slash-commands-popup" style="display: none; position: absolute; bottom: 70px; left: 2rem; right: 2rem; background: var(--bg-panel-solid); border: 1px solid rgba(16,185,129,0.2); border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 0 15px var(--primary-glow); z-index: 100; overflow: hidden; animation: fadeIn 0.2s ease;">
                 <div style="background: rgba(16,185,129,0.06); padding: 0.5rem 1rem; border-bottom: 1px solid var(--border-light); font-size: 0.72rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.5px; display:flex; justify-content:space-between; align-items:center;">
                   <span>⚡ Canned Quick Replies (Select or type to search)</span>
                   <span style="font-family: monospace; background:rgba(0,0,0,0.05); padding:0.1rem 0.3rem; border-radius:4px; font-weight:normal; text-transform:none;">Type / to trigger</span>
@@ -2031,7 +2061,7 @@
           <div class="campaign-list-card" style="margin-top: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <div>
-                <h3 style="font-size: 0.95rem; font-weight: 600; color:#0f172a;">Approved Meta Templates</h3>
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);">Approved Meta Templates</h3>
                 <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem;">Review available templates sync'd from Meta's API for broadcasts.</p>
               </div>
             </div>
@@ -2443,7 +2473,7 @@
 
       <!-- PRINTABLE RECEIPT MODAL -->
       <div class="campaign-modal" id="receipt-modal">
-        <div class="campaign-modal-card" style="max-width:540px; padding:2.5rem; background:#fff; color:#0f172a; border-radius:16px; border:1px solid rgba(0,0,0,0.1);" id="printable-receipt-content">
+        <div class="campaign-modal-card" style="max-width:540px; padding:2.5rem; background: var(--bg-panel-solid); color: var(--text-main); border-radius:16px; border:1px solid rgba(0,0,0,0.1);" id="printable-receipt-content">
           <!-- Populated Dynamically via Javascript -->
         </div>
       </div>
@@ -3249,7 +3279,7 @@
               <div class="thread-avatar">${initials}</div>
               <div class="thread-details">
                 <div class="thread-contact-info" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                  <span class="thread-number" style="display:flex; align-items:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 700; font-size: 0.85rem; color: #0f172a;">
+                  <span class="thread-number" style="display:flex; align-items:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
                     +${contact.phoneNumber}${assignedBadge}${botBadge}${priorityBadge}${sentimentBadge}
                   </span>
                   <span class="thread-time" style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${time}</span>
@@ -4021,12 +4051,12 @@
         <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 0.8rem; line-height: 1.5;">
           <div>
             <strong style="color: #64748b; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">BILLED TO:</strong>
-            <span style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">${workspaceName}</span><br>
+            <span style="font-weight: 700; color: var(--text-main); font-size: 0.85rem;">${workspaceName}</span><br>
             <span style="font-family: monospace; color: #64748b; font-size: 0.7rem;">ID: ${workspaceIdStr}</span>
           </div>
           <div style="text-align: right;">
             <strong style="color: #64748b; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem;">PAYMENT METHOD:</strong>
-            <span style="font-weight: 600; color: #0f172a;">Prepaid Account Credits</span><br>
+            <span style="font-weight: 600; color: var(--text-main);">Prepaid Account Credits</span><br>
             <span style="color: #64748b;">Internal Balance Refill</span>
           </div>
         </div>
@@ -4041,13 +4071,13 @@
           </thead>
           <tbody>
             <tr>
-              <td style="font-weight: 600; color: #0f172a; text-align: left;">
+              <td style="font-weight: 600; color: var(--text-main); text-align: left;">
                 ${tx.description}
                 <div style="font-size: 0.7rem; color: #64748b; font-weight: normal; margin-top: 0.2rem;">
                   Category: ${isRefill ? 'Prepaid Ledger Top Up' : 'Support Message Charge'}
                 </div>
               </td>
-              <td style="text-align: right; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+              <td style="text-align: right; font-weight: 700; color: var(--text-main); font-family: 'Outfit', sans-serif;">
                 ${formattedAmount}
               </td>
             </tr>
@@ -5136,6 +5166,29 @@
         }
       }
       return rules;
+    }
+
+    // ----------------------------------------------------
+    // THEME TOGGLE LOGIC
+    // ----------------------------------------------------
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+      // Check local storage for theme preference
+      const currentTheme = localStorage.getItem('theme');
+      if (currentTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+
+      themeToggleBtn.addEventListener('click', () => {
+        let theme = document.documentElement.getAttribute('data-theme');
+        if (theme === 'dark') {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+        }
+      });
     }
 
   </script>
