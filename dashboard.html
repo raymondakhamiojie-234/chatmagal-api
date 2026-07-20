@@ -2958,27 +2958,29 @@
     });
 
     // 6. Logout restores original portal view layout
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('workspaceToken'); // CLEAR PERSISTED TOKEN
-      if (socket) socket.disconnect();
-      activeContactId = null;
-      
-      // Reset portal layouts
-      portalPaneSignIn.style.display = 'block';
-      portalPaneSignUp.style.display = 'none';
-      document.querySelector('.portal-tabs').style.display = 'flex';
-      portalSignUpSuccess.style.display = 'none';
-      portalSignUpBtn.disabled = false;
-      portalSignUpBtn.textContent = 'Create Workspace Account';
-      portalSignUpName.value = '';
-      
-      // Default back to sign in tab selection
-      portalTabSignIn.click();
+    if (typeof logoutBtn !== 'undefined' && logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('workspaceToken'); // CLEAR PERSISTED TOKEN
+        if (socket) socket.disconnect();
+        activeContactId = null;
+        
+        // Reset portal layouts
+        portalPaneSignIn.style.display = 'block';
+        portalPaneSignUp.style.display = 'none';
+        document.querySelector('.portal-tabs').style.display = 'flex';
+        portalSignUpSuccess.style.display = 'none';
+        portalSignUpBtn.disabled = false;
+        portalSignUpBtn.textContent = 'Create Workspace Account';
+        portalSignUpName.value = '';
+        
+        // Default back to sign in tab selection
+        portalTabSignIn.click();
 
-      portalOverlay.style.display = 'flex';
-      document.getElementById('chat-threads-list').innerHTML = '';
-      resetChatArea();
-    });
+        portalOverlay.style.display = 'flex';
+        document.getElementById('chat-threads-list').innerHTML = '';
+        resetChatArea();
+      });
+    }
 
     // 7. Auto login check if token is stored in localStorage
     const savedToken = localStorage.getItem('workspaceToken');
@@ -3209,8 +3211,8 @@
         
         // Update wallet displays
         const formattedBalance = `$${Number(data.workspace.walletBalance).toFixed(2)}`;
-        sidebarWallet.textContent = formattedBalance;
-        overviewWallet.textContent = formattedBalance;
+        if (typeof sidebarWallet !== 'undefined' && sidebarWallet) sidebarWallet.textContent = formattedBalance;
+        if (typeof overviewWallet !== 'undefined' && overviewWallet) overviewWallet.textContent = formattedBalance;
         
         const billingWallet = document.getElementById('billing-wallet-balance');
         if (billingWallet) {
@@ -3218,30 +3220,41 @@
         }
         
         // Update active top header
-        activeWorkspacePill.textContent = `Workspace: ${data.workspace.name}`;
+        if (typeof activeWorkspacePill !== 'undefined' && activeWorkspacePill) {
+          activeWorkspacePill.textContent = `Workspace: ${data.workspace.name}`;
+        }
 
         // Update KPIs
-        document.getElementById('kpi-sent').textContent = data.analytics.totalSent;
-        document.getElementById('kpi-received').textContent = data.analytics.totalReceived;
-        document.getElementById('kpi-contacts').textContent = data.analytics.totalContacts;
-        document.getElementById('kpi-campaigns').textContent = data.analytics.completedCampaigns;
+        const kpiSent = document.getElementById('kpi-sent');
+        if (kpiSent) kpiSent.textContent = data.analytics.totalSent;
+        const kpiReceived = document.getElementById('kpi-received');
+        if (kpiReceived) kpiReceived.textContent = data.analytics.totalReceived;
+        const kpiContacts = document.getElementById('kpi-contacts');
+        if (kpiContacts) kpiContacts.textContent = data.analytics.totalContacts;
+        const kpiCampaigns = document.getElementById('kpi-campaigns');
+        if (kpiCampaigns) kpiCampaigns.textContent = data.analytics.completedCampaigns;
 
         // Render Inbound vs Outbound message traffic chart
-        drawTrafficChart(data.analytics.totalSent, data.analytics.totalReceived);
+        if (typeof drawTrafficChart === 'function' && document.getElementById('trafficChart')) {
+          drawTrafficChart(data.analytics.totalSent, data.analytics.totalReceived);
+        }
 
         // Fetch transaction history to draw credit spend bar ledger
         try {
           const transactions = await apiRequest('/api/billing/transactions');
           transactionsList = transactions;
-          drawSpendChart(transactions);
+          if (typeof drawSpendChart === 'function' && document.getElementById('spendChart')) {
+            drawSpendChart(transactions);
+          }
         } catch (txErr) {
           console.warn('Could not load spend ledger chart:', txErr);
         }
 
         return true;
       } catch (err) {
+        console.error("loadOverviewData Error:", err);
         alert(`Failed to load workspace data. Ensure your server is running and the Workspace ID is created in the database!`);
-        logoutBtn.click();
+        if (typeof logoutBtn !== 'undefined' && logoutBtn) logoutBtn.click();
         return false;
       }
     }
@@ -3254,8 +3267,8 @@
         
         // Render updated balance
         const formattedBalance = `$${Number(data.workspace.walletBalance).toFixed(2)}`;
-        sidebarWallet.textContent = formattedBalance;
-        overviewWallet.textContent = formattedBalance;
+        if (typeof sidebarWallet !== 'undefined' && sidebarWallet) sidebarWallet.textContent = formattedBalance;
+        if (typeof overviewWallet !== 'undefined' && overviewWallet) overviewWallet.textContent = formattedBalance;
         
         const billingWallet = document.getElementById('billing-wallet-balance');
         if (billingWallet) {
@@ -3275,8 +3288,12 @@
       }
     }
 
-    sidebarRefillBtn.addEventListener('click', handleRefill);
-    overviewRefillBtn.addEventListener('click', handleRefill);
+    if (typeof sidebarRefillBtn !== 'undefined' && sidebarRefillBtn) {
+      sidebarRefillBtn.addEventListener('click', handleRefill);
+    }
+    if (typeof overviewRefillBtn !== 'undefined' && overviewRefillBtn) {
+      overviewRefillBtn.addEventListener('click', handleRefill);
+    }
     
     document.addEventListener('click', (e) => {
       if (e.target && e.target.id === 'billing-refill-btn') {
