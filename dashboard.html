@@ -2758,9 +2758,13 @@
         viewPanes.forEach(pane => pane.classList.remove('active'));
         document.getElementById(`pane-${tab}`).classList.add('active');
 
-        // Update headers
-        headerTitle.textContent = tabHeaders[tab].title;
-        headerDesc.textContent = tabHeaders[tab].desc;
+        // Update headers if they exist
+        if (typeof headerTitle !== 'undefined' && headerTitle) {
+          headerTitle.textContent = tabHeaders[tab].title;
+        }
+        if (typeof headerDesc !== 'undefined' && headerDesc) {
+          headerDesc.textContent = tabHeaders[tab].desc;
+        }
 
         // Close sidebar on mobile when switching tabs
         if (window.innerWidth <= 1024) {
