@@ -2014,41 +2014,41 @@
 
           <!-- Active Conversation -->
           <div class="active-chat-container">
-            <div class="active-chat-header" id="active-chat-header" style="display: none; align-items: center; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="active-chat-header" id="active-chat-header" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <!-- Back Button for Mobile View -->
-                <button id="mobile-chat-back-btn" class="mobile-only" style="background: none; border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 6px; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; padding: 0;" title="Back to Chats list">
+                <button id="mobile-chat-back-btn" class="mobile-only" style="background: none; border: 1px solid var(--border-light); color: var(--text-muted); border-radius: 6px; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0;" title="Back to Chats list">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width: 1.1rem; height: 1.1rem;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                   </svg>
                 </button>
-                <div>
-                  <div class="active-contact-title" id="active-contact-title">+2348054540828</div>
+                <div style="min-width: 0;">
+                  <div class="active-contact-title" id="active-contact-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">+2348054540828</div>
                 <div style="font-size:0.7rem; color:var(--success); font-weight:600; display:flex; align-items:center; gap:0.25rem;">
-                  <span class="status-dot active" style="width:5px; height:5px; background:var(--success);"></span>
-                  Customer Care Session Active
-                  <span id="chat-bot-paused-banner" style="display: none; background: #fee2e2; color: #ef4444; padding: 0.1rem 0.4rem; border-radius: 6px; font-weight: 700; font-size: 0.65rem; border: 1px solid #fca5a5; margin-left: 0.3rem; animation: pulseRed 1.5s infinite ease-in-out;">⏸ Bot Paused for Handoff</span>
-                  <span id="chat-priority-urgent-banner" style="display: none; background: #fee2e2; color: #ef4444; padding: 0.1rem 0.4rem; border-radius: 6px; font-weight: 700; font-size: 0.65rem; border: 1px solid #fca5a5; margin-left: 0.3rem; animation: pulseRed 1.5s infinite ease-in-out;">🚨 URGENT PRIORITY</span>
-                  <span id="chat-typing-indicator" style="display: none; font-size: 0.72rem; color: #10b981; font-weight: 700; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; animation: blinkPulse 1.2s infinite ease-in-out;">💬 typing...</span>
+                  <span class="status-dot active" style="width:6px; height:6px; background:var(--success); display:inline-block; border-radius:50%; flex-shrink: 0;" title="Customer Care Session Active"></span>
+                  <span style="white-space: nowrap;">Active</span>
+                  <span id="chat-bot-paused-banner" style="display: none; background: #fee2e2; color: #ef4444; padding: 0.1rem 0.3rem; border-radius: 4px; font-weight: 700; font-size: 0.65rem; border: 1px solid #fca5a5; animation: pulseRed 1.5s infinite ease-in-out;" title="Bot Paused for Handoff">⏸</span>
+                  <span id="chat-priority-urgent-banner" style="display: none; background: #fee2e2; color: #ef4444; padding: 0.1rem 0.3rem; border-radius: 4px; font-weight: 700; font-size: 0.65rem; border: 1px solid #fca5a5; animation: pulseRed 1.5s infinite ease-in-out;" title="URGENT PRIORITY">🚨</span>
+                  <span id="chat-typing-indicator" style="display: none; font-size: 0.72rem; color: #10b981; font-weight: 700; animation: blinkPulse 1.2s infinite ease-in-out;" title="Typing...">💬</span>
                 </div>
               </div>
             </div>
               
-            <div style="display:flex; align-items:center; gap:1rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap: wrap;">
                 <!-- Auto-Bot Toggle Switch (Option A) -->
-                <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(15,23,42,0.03); border:1px solid var(--border-light); padding:0.25rem 0.5rem; border-radius:8px;" id="bot-toggle-container">
-                  <span style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">🤖 Auto-Bot:</span>
-                  <label class="toggle-switch" style="width:34px; height:18px;">
+                <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(15,23,42,0.03); border:1px solid var(--border-light); padding:0.25rem 0.4rem; border-radius:8px;" id="bot-toggle-container" title="Auto-Bot Toggle">
+                  <span style="font-size:0.85rem; cursor: help;">🤖</span>
+                  <label class="toggle-switch" style="width:34px; height:18px; margin:0;">
                     <input type="checkbox" id="chat-bot-toggle" checked>
                     <span class="toggle-slider" style="border-radius:18px;"></span>
                   </label>
                 </div>
 
                 <!-- Ticket Assignment Selector (Option F) -->
-                <div style="display:flex; align-items:center; gap:0.5rem; position:relative;">
-                  <span id="assignee-lock-icon" style="font-size: 0.85rem; color: #ef4444; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: -0.15rem;">🔒</span>
-                  <span style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Assignee:</span>
-                  <select id="chat-assignee-select" class="form-input" disabled style="padding:0.25rem 0.5rem; font-size:0.75rem; height:28px; width:130px; border-radius:6px; cursor:not-allowed; font-weight:600; background:#f1f5f9; border:1px solid var(--border-light); outline:none; opacity: 0.6; transition: all 0.3s ease;">
+                <div style="display:flex; align-items:center; gap:0.25rem; position:relative;" title="Ticket Assignee">
+                  <span id="assignee-lock-icon" style="font-size: 0.85rem; color: #ef4444; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;">🔒</span>
+                  <span style="font-size:0.85rem; cursor: help;">👤</span>
+                  <select id="chat-assignee-select" class="form-input" disabled style="padding:0.25rem; font-size:0.75rem; height:28px; width:auto; max-width: 110px; border-radius:6px; cursor:not-allowed; font-weight:600; background:#f1f5f9; border:1px solid var(--border-light); outline:none; opacity: 0.6; transition: all 0.3s ease;">
                     <option value="Unassigned">👤 Unassigned</option>
                     <option value="Agent Me">🟢 Agent Me</option>
                     <option value="Agent Alice">👩‍💼 Agent Alice</option>
