@@ -12,7 +12,7 @@ const metaApi = axios.create({
 
 // Auto-response rules
 const AUTO_RESPONSES: Record<string, string> = {
-  '#help': `🤖 *Chatmagal Auto-Helper Menu*
+  '#help': `🤖 *Auto-Helper Menu*
 Use these keywords to retrieve quick information instantly:
 • *#hours* - Standard office operating hours.
 • *#pricing* - Account billing & message pricing rates.
@@ -27,8 +27,8 @@ Our support desks are open:
 • *Inbound Messages*: FREE
 • *Campaign Templates*: $0.05 per recipient`,
   '#contact': `✉️ *Contact Us*
-• *Email*: support@chatmagal.com
-• *Web Portal*: https://chatmagal.com
+• *Email*: support@yourcompany.com
+• *Web Portal*: https://yourcompany.com
 • *Location*: 100 Innovation Way, Suite 400, London`
 };
 
@@ -183,13 +183,13 @@ Bot:`;
   const query = prompt.toLowerCase();
   
   if (query.includes('hello') || query.includes('hi') || query.includes('hey')) {
-    return `👋 *Hello!* Thank you for reaching out to Chatmagal Customer Care. 
+    return `👋 *Hello!* Thank you for reaching out to ${workspaceName} Customer Care. 
 
 I am your AI assistant, ready to assist you instantly. How can I help you today? (Type *#help* for a quick menu of options!)`;
   }
   
   if (query.includes('price') || query.includes('cost') || query.includes('rate') || query.includes('billing')) {
-    return `💸 *Chatmagal Billing Rates*
+    return `💸 *${workspaceName} Billing Rates*
 Our prepaid WhatsApp service charges:
 • *Outbound support replies*: $0.05 / msg
 • *Campaign broadcasts*: $0.05 / recipient
@@ -212,7 +212,7 @@ If you have any other questions, feel free to text. Have a wonderful day ahead!`
   }
 
   // Default intelligent fallback reply
-  return `🤖 *Chatmagal AI Assistant*
+  return `🤖 *${workspaceName} AI Assistant*
 I received your inquiry: "${prompt}". 
 
 If you have any questions about our features, pricing, or setting up your account, feel free to ask! 
