@@ -797,8 +797,10 @@ export const uploadBotTraining = async (req: Request, res: Response) => {
     if (rules.length > 0) {
       const dataToInsert = rules.map((r: any) => ({
         workspaceId,
+        category: r.category ? r.category.trim() : null,
         question: r.question.trim(),
-        answer: r.answer.trim()
+        answer: r.answer.trim(),
+        keywords: r.keywords ? r.keywords.trim() : null
       }));
 
       await prisma.botTraining.createMany({

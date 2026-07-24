@@ -91,7 +91,10 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
       if (botTrainings.length > 0) {
         trainingContextText = 'Custom Business Q&A Reference (Ground-Truth Knowledge Base):\n';
         for (const rule of botTrainings) {
-          trainingContextText += `- User Question: "${rule.question}"\n  Your Prepared Answer: "${rule.answer}"\n`;
+          let ruleContext = `- User Question: "${rule.question}"\n  Your Prepared Answer: "${rule.answer}"\n`;
+          if (rule.category) ruleContext = `  [Category: ${rule.category}]\n` + ruleContext;
+          if (rule.keywords) ruleContext += `  [Associated Keywords: ${rule.keywords}]\n`;
+          trainingContextText += ruleContext;
         }
       }
     } catch (trainErr) {
@@ -171,8 +174,17 @@ Bot:`;
     const queryNormalized = prompt.toLowerCase().trim();
     const matched = botTrainings.find(t => {
       const q = t.question.toLowerCase().trim();
-      // Match if the prompt contains the question, or if they are very close
-      return queryNormalized.includes(q) || q.includes(queryNormalized);
+      
+      // Match by exact/partial question match
+      if (queryNormalized.includes(q) || q.includes(queryNormalized)) return true;
+      
+      // Match by keywords if available
+      if (t.keywords) {
+        const keywordsList = t.keywords.toLowerCase().split(',').map((k: string) => k.trim()).filter(Boolean);
+        return keywordsList.some((kw: string) => queryNormalized.includes(kw));
+      }
+      
+      return false;
     });
     if (matched) {
       console.log(`🎯 [Local AI Engine] Custom training match found: Question: "${matched.question}" -> Answer: "${matched.answer}"`);

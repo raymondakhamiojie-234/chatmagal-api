@@ -119,8 +119,10 @@ model Transaction {
 model BotTraining {
   id          String    @id @default(uuid())
   workspaceId String
+  category    String?
   question    String    @db.Text
   answer      String    @db.Text
+  keywords    String?   @db.Text
   createdAt   DateTime  @default(now())
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id])

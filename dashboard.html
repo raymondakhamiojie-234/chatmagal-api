@@ -2566,8 +2566,10 @@
               <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.78rem;">
                 <thead>
                   <tr style="background: rgba(15, 23, 42, 0.03); border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-weight: 600;">
-                    <th style="padding: 0.6rem 1rem; width: 40%;">User Question</th>
-                    <th style="padding: 0.6rem 1rem; width: 60%;">Bot Response</th>
+                    <th style="padding: 0.6rem 1rem; width: 15%;">Category</th>
+                    <th style="padding: 0.6rem 1rem; width: 35%;">User Question</th>
+                    <th style="padding: 0.6rem 1rem; width: 35%;">Bot Response</th>
+                    <th style="padding: 0.6rem 1rem; width: 15%;">Keywords</th>
                   </tr>
                 </thead>
                 <tbody id="settings-training-rules-tbody">
@@ -5097,8 +5099,10 @@
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid var(--border-light)';
             tr.innerHTML = `
+              <td style="padding: 0.65rem 1rem; color: #64748b; vertical-align: top; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">${escapeHTML(rule.category || '-')}</td>
               <td style="padding: 0.65rem 1rem; font-weight: 600; color: var(--text-main); vertical-align: top; word-break: break-word;">${escapeHTML(rule.question)}</td>
               <td style="padding: 0.65rem 1rem; color: #475569; vertical-align: top; word-break: break-word;">${escapeHTML(rule.answer)}</td>
+              <td style="padding: 0.65rem 1rem; color: #10b981; font-weight: 600; font-size: 0.72rem; vertical-align: top; word-break: break-word;">${escapeHTML(rule.keywords || '-')}</td>
             `;
             tbody.appendChild(tr);
           });
@@ -5130,12 +5134,12 @@
     if (downloadTrainingTemplateBtn) {
       downloadTrainingTemplateBtn.addEventListener('click', () => {
         const csvContent = 'data:text/csv;charset=utf-8,' 
-          + 'Question,Answer\n'
-          + '"What are your working hours?","Our working hours are Monday to Friday from 9 AM to 6 PM."\n'
-          + '"Where is your office located?","Our headquarters is located at 123 Tech Avenue, London."\n'
-          + '"Do you offer refunds?","Yes, we offer a 14-day money-back guarantee on all plans."\n'
-          + '"How much does a message cost?","Outbound messages and auto-replies cost $0.05. Inbound is free."\n'
-          + '"Can I talk to a human?","Yes, type \\"talk to human\\" or click the Live Handoff switch to pause the bot."';
+          + 'Category,Question,Answer,Keywords\n'
+          + '"General","What are your working hours?","Our working hours are Monday to Friday from 9 AM to 6 PM.","hours, time, open, closing"\n'
+          + '"Location","Where is your office located?","Our headquarters is located at 123 Tech Avenue, London.","office, address, location, where"\n'
+          + '"Billing","Do you offer refunds?","Yes, we offer a 14-day money-back guarantee on all plans.","refund, money back, cancel"\n'
+          + '"Pricing","How much does a message cost?","Outbound messages and auto-replies cost $0.05. Inbound is free.","cost, price, rate, charge"\n'
+          + '"Support","Can I talk to a human?","Yes, type \\"talk to human\\" or click the Live Handoff switch to pause the bot.","human, agent, real person, help"';
         
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
@@ -5283,8 +5287,11 @@
       const qIdx = headers.indexOf('question');
       const aIdx = headers.indexOf('answer');
 
+      const cIdx = headers.indexOf('category');
+      const kIdx = headers.indexOf('keywords');
+
       if (qIdx === -1 || aIdx === -1) {
-        throw new Error('CSV headers must include both "Question" and "Answer" columns.');
+        throw new Error('CSV headers must include at least "Question" and "Answer" columns.');
       }
 
       const rules = [];
@@ -5292,11 +5299,15 @@
         const line = lines[i];
         const question = line[qIdx];
         const answer = line[aIdx];
+        const category = cIdx !== -1 ? line[cIdx] : null;
+        const keywords = kIdx !== -1 ? line[kIdx] : null;
         
         if (question && answer && question.trim() && answer.trim()) {
           rules.push({
+            category: category ? category.trim() : null,
             question: question.trim(),
-            answer: answer.trim()
+            answer: answer.trim(),
+            keywords: keywords ? keywords.trim() : null
           });
         }
       }
