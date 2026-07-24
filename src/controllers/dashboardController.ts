@@ -818,9 +818,9 @@ export const uploadBotTraining = async (req: Request, res: Response) => {
       message: `Successfully uploaded and saved ${rules.length} AI training rules!`,
       trainings: updatedTrainings
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading bot training rules:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };
 
