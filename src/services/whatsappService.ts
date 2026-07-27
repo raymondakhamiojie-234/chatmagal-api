@@ -212,26 +212,18 @@ Bot:`;
   const query = prompt.toLowerCase();
   
   if (query.includes('hello') || query.includes('hi') || query.includes('hey')) {
-    return `👋 *Hello!* Thank you for reaching out to ${workspaceName} Customer Care. 
-
-I am your AI assistant, ready to assist you instantly. How can I help you today? (Type *#help* for a quick menu of options!)`;
+    return `👋 *Hello!* Thank you for reaching out to ${workspaceName}. How can I assist you today?`;
   }
   
   if (query.includes('price') || query.includes('cost') || query.includes('rate') || query.includes('billing')) {
-    return `💸 *${workspaceName} Billing Rates*
-Our prepaid WhatsApp service charges:
-• *Outbound support replies*: $0.05 / msg
-• *Campaign broadcasts*: $0.05 / recipient
-• *Inbound messages*: FREE!
-
-You can check your active wallet balance anytime by typing *#balance*.`;
+    return `💸 Please contact our sales team or visit our website for detailed pricing information.`;
   }
 
   if (query.includes('human') || query.includes('agent') || query.includes('person') || query.includes('talk to')) {
     return `👤 *Human Support Handoff*
 I can certainly loop in a live support agent for you! 
 
-I have notified our online customer success team. One of our active agents will take over the thread shortly. Automated responses will be paused.`;
+I have notified our team. One of our active agents will take over the thread shortly.`;
   }
 
   if (query.includes('thank')) {
@@ -241,15 +233,8 @@ If you have any other questions, feel free to text. Have a wonderful day ahead!`
   }
 
   // Default intelligent fallback reply
-  return `🤖 *${workspaceName} AI Assistant*
-I received your inquiry: "${prompt}". 
-
-If you have any questions about our features, pricing, or setting up your account, feel free to ask! 
-
-For specific details, you can also use these quick shortcuts:
-- Type *#hours* to check our operating hours.
-- Type *#pricing* to view our current plans.
-- Type *talk to human* to speak with a live support agent.`;
+  return `🤖 I received your message, but I'm not entirely sure how to answer that based on my current training. 
+Please ask another question or type *talk to human* to speak with a live representative.`;
 }
 
 interface SentimentResult {
