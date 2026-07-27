@@ -533,6 +533,25 @@ export const handleInboundSupport = async (messageData: any, metaPhoneNumberId: 
     if (messageData.type === 'text') {
       const textBody = messageData.text?.body?.trim();
       if (textBody) {
+        // Handoff Notification Engine
+        const isHumanRequest = /talk to human|live agent|human agent|speak to a person|representative|human support/i.test(textBody);
+        
+        if (isHumanRequest) {
+          console.log(`🚨 [Handoff Triggered] Customer +${senderPhoneNumber} requested a human agent. Pausing bot.`);
+          
+          await prisma.contact.update({
+            where: { id: contact.id },
+            data: { botEnabled: false, priority: 'URGENT' }
+          });
+          contact.botEnabled = false; // Update local ref
+          
+          try {
+            const io = getIo();
+            io.to(workspace.id).emit('contactBotToggled', { contactId: contact.id, botEnabled: false });
+            io.to(workspace.id).emit('humanSupportRequested', { contactId: contact.id, phone: senderPhoneNumber });
+          } catch (wsErr) {}
+        }
+
         // Option A Handoff check: verify bot is enabled for this contact
         if (contact.botEnabled !== false) {
           // Trigger auto reply asynchronously so we don't delay the inbound response
