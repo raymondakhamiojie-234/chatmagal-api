@@ -467,10 +467,13 @@ export const handleInboundSupport = async (messageData: any, metaPhoneNumberId: 
           phoneNumber: senderPhoneNumber,
         },
       },
-      update: {},
+      update: {
+        unreadCount: { increment: 1 }
+      },
       create: {
         workspaceId: workspace.id,
         phoneNumber: senderPhoneNumber,
+        unreadCount: 1,
       },
     });
 

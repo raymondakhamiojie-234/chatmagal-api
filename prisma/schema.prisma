@@ -41,6 +41,7 @@ model Contact {
   optInStatus   Boolean   @default(true)
   assignedAgent String?
   botEnabled    Boolean   @default(true) // New field: toggles bot automated replies
+  unreadCount   Int       @default(0)    // Track unread messages for notification badges
   sentiment     String    @default("NEUTRAL") // NEW: HAPPY, NEUTRAL, ANGRY, URGENT
   priority      String    @default("STANDARD") // NEW: STANDARD, HIGH, URGENT
 

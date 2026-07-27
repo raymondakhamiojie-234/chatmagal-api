@@ -3364,17 +3364,25 @@
 
           sentimentBadge = `<span style="font-size:0.75rem; display:inline-flex; align-items:center; justify-content:center; margin-left:0.35rem;" title="Sentiment: ${sentiment}">${emoji}</span>`;
 
+          let unreadBadge = '';
+          if (contact.unreadCount > 0) {
+            unreadBadge = `<span style="background-color:#25D366; color:#ffffff; font-size:0.65rem; font-weight:bold; border-radius:50%; min-width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; padding:0 4px; margin-top:4px;">${contact.unreadCount}</span>`;
+          }
+
           listHTML += `
             <div class="thread-item ${isActive ? 'active' : ''}" onclick="selectThread('${contact.id}')">
               <div class="thread-avatar">${initials}</div>
               <div class="thread-details">
-                <div class="thread-contact-info" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div class="thread-contact-info" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
                   <span class="thread-number" style="display:flex; align-items:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
                     +${contact.phoneNumber}${assignedBadge}${botBadge}${priorityBadge}${sentimentBadge}
                   </span>
-                  <span class="thread-time" style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${time}</span>
+                  <div style="display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0;">
+                    <span class="thread-time" style="font-size:0.68rem; color:${contact.unreadCount > 0 ? '#25D366' : 'var(--text-muted)'}; font-weight:${contact.unreadCount > 0 ? '700' : 'normal'};">${time}</span>
+                    ${unreadBadge}
+                  </div>
                 </div>
-                <div class="thread-preview" style="font-size:0.775rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${preview}</div>
+                <div class="thread-preview" style="font-size:0.775rem; color:${contact.unreadCount > 0 ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight:${contact.unreadCount > 0 ? '600' : 'normal'}; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; padding-top:2px;">${preview}</div>
               </div>
             </div>
           `;
@@ -3395,15 +3403,20 @@
     async function selectThread(contactId) {
       activeContactId = contactId;
       
+      const contact = contactsMap[contactId];
+      if (!contact) return;
+
+      // Optimistically clear the unread notification badge
+      if (contact.unreadCount > 0) {
+        contact.unreadCount = 0;
+      }
+
       // Update sidebar visual active state
       const items = document.querySelectorAll('.thread-item');
       items.forEach(el => el.classList.remove('active'));
       
       // Make active contact show in list
       loadChatThreads(false);
-
-      const contact = contactsMap[contactId];
-      if (!contact) return;
 
       // Restore ticket assignee selector in the header (Option F)
       const assigneeSelect = document.getElementById('chat-assignee-select');

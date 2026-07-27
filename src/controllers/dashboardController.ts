@@ -99,6 +99,13 @@ export const getContacts = async (req: Request, res: Response) => {
         return bWeight - aWeight; // higher priority at top
       }
 
+      const aUnread = a.unreadCount > 0 ? 1 : 0;
+      const bUnread = b.unreadCount > 0 ? 1 : 0;
+
+      if (aUnread !== bUnread) {
+        return bUnread - aUnread; // unread at top
+      }
+
       const aTime = a.messages[0]?.createdAt.getTime() || 0;
       const bTime = b.messages[0]?.createdAt.getTime() || 0;
       return bTime - aTime;
@@ -134,6 +141,14 @@ export const getMessages = async (req: Request, res: Response) => {
       where: { workspaceId, contactId },
       orderBy: { createdAt: 'asc' }, // standard chronological order for chat history
     });
+
+    // Reset unread count when chat is opened
+    if (contact.unreadCount > 0) {
+      await prisma.contact.update({
+        where: { id: contact.id },
+        data: { unreadCount: 0 }
+      });
+    }
 
     return res.status(200).json(messages);
   } catch (error) {
