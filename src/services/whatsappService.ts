@@ -114,7 +114,7 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
     // Reverse recent messages to chronological order (asc)
     const chronologicalMessages = recentMessages.reverse();
     for (const msg of chronologicalMessages) {
-      const role = msg.direction === 'INBOUND' ? 'Customer' : 'Bot';
+      const role = msg.direction === 'INBOUND' ? 'Customer' : 'Us (Previous Agent or Bot)';
       const text = extractMessageText(msg);
       if (text) {
         historyText += `${role}: ${text}\n`;
@@ -129,7 +129,8 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
     const promptContext = `System Instruction: You are the automated AI assistant for the WhatsApp Business account of "${workspaceName}". 
 Answering Tone Guidelines: You must write in a tone that is "${systemTone}".
 ${systemPrompt ? `Brand Specific Instructions & System Guidelines:\n${systemPrompt}\n` : 'Provide exceptionally helpful, natural, human-like, concise, and professional responses to the customer.'} 
-You are having a continuous multi-turn conversation with the customer. Leverage the provided conversation history context to maintain context, remember previous statements, and reply naturally to standard conversational questions.
+You are having a continuous multi-turn conversation with the customer. 
+CRITICAL HANDOFF INSTRUCTION: The conversation history may contain messages sent by a human colleague from our team. If a human agent recently stepped away, you are now seamlessly taking back over. Act completely human-like. Do NOT announce that you are an AI or that you are taking over. Just smoothly continue the conversation and answer the customer's queries.
 If they ask about rates, explain that manual messages and auto-replies cost $0.05. Keep answers under 3-4 sentences and format them with clean markdown/emojis suitable for WhatsApp text messages.
 
 
@@ -147,8 +148,11 @@ Bot:`;
 
     // Attempt with gemini-1.5-flash first
     try {
-      console.log(`🧠 [Gemini AI] Querying live gemini-1.5-flash model...`);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      console.log(`🧠 [Gemini AI] Querying live gemini-1.5-flash model with Google Search Grounding...`);
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-1.5-flash',
+        tools: [{ googleSearchRetrieval: {} }] 
+      });
       const result = await model.generateContent(promptContext);
       const text = result.response.text();
       if (text && text.trim()) return text.trim();
