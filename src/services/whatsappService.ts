@@ -177,13 +177,24 @@ Bot:`;
     const matched = botTrainings.find(t => {
       const q = t.question.toLowerCase().trim();
       
-      // Match by exact/partial question match
-      if (queryNormalized.includes(q) || q.includes(queryNormalized)) return true;
+      // 1. Exact match
+      if (queryNormalized === q) return true;
       
-      // Match by keywords if available
+      // 2. Full question contained in query
+      if (queryNormalized.includes(q)) return true;
+
+      // 3. Query contained in question (Only if query is substantial, >= 5 chars, to avoid "ok" matching "facebook")
+      if (queryNormalized.length >= 5 && q.includes(queryNormalized)) return true;
+      
+      // 4. Match by keywords using Word Boundaries to avoid "web" matching inside "website"
       if (t.keywords) {
         const keywordsList = t.keywords.toLowerCase().split(',').map((k: string) => k.trim()).filter(Boolean);
-        return keywordsList.some((kw: string) => queryNormalized.includes(kw));
+        return keywordsList.some((kw: string) => {
+          // Create a regex with word boundaries. Escape special chars in keyword.
+          const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedKw}\\b`, 'i');
+          return regex.test(queryNormalized);
+        });
       }
       
       return false;
