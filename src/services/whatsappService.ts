@@ -337,6 +337,35 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
     // 1. Intercept Main Menu
     if (lQuery === 'hi' || lQuery === 'hello' || lQuery === 'menu') {
+      const welcomeText = `Welcome to ${workspace.businessName || workspace.name || 'our service'}! 👋\n\nHow can we assist you today?`;
+      const welcomePayload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'text',
+        text: { preview_url: false, body: welcomeText },
+      };
+
+      try {
+        const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
+        const res = await metaApi.post(`/${workspace.metaPhoneNumberId}/messages`, welcomePayload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        await prisma.message.create({
+          data: {
+            workspaceId,
+            contactId,
+            direction: MessageDirection.OUTBOUND,
+            lane: MessageLane.SUPPORT,
+            content: { ...welcomePayload, meta_response: res.data },
+            status: MessageStatus.SENT,
+          },
+        });
+      } catch (err) {
+        console.error('Failed to send welcome message:', err);
+      }
+
       payload = {
         messaging_product: 'whatsapp',
         recipient_type: 'individual',
