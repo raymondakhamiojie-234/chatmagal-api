@@ -331,23 +331,106 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
     if (!workspace || !workspace.metaPhoneNumberId) return;
 
     let replyText = '';
+    let payload: any = null;
+    const lQuery = queryText.toLowerCase();
     const isCommand = queryText.startsWith('#');
 
-    if (isCommand) {
-      const keyword = queryText.toLowerCase();
+    // 1. Intercept Main Menu
+    if (lQuery === 'hi' || lQuery === 'hello' || lQuery === 'menu') {
+      payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'interactive',
+        interactive: {
+          type: 'list',
+          header: { type: 'text', text: 'Welcome' },
+          body: { text: 'Choose an option:' },
+          action: {
+            button: 'Menu',
+            sections: [{
+              title: 'Options',
+              rows: [
+                { id: 'menu_register', title: 'Register' },
+                { id: 'menu_login', title: 'Login' },
+                { id: 'menu_forgot', title: 'Forgot password' },
+                { id: 'menu_human', title: 'Live chat' },
+                { id: 'menu_support', title: 'Support' },
+                { id: 'menu_guide', title: 'Guide' }
+              ]
+            }]
+          }
+        }
+      };
+      replyText = 'Interactive Main Menu Sent';
+    }
+    // 2. Intercept Guide Sub-Menu
+    else if (queryText === 'menu_guide') {
+      const questions = await prisma.botTraining.findMany({
+        where: { workspaceId },
+        take: 10,
+        orderBy: { createdAt: 'asc' }
+      });
+
+      const rows = questions.map((q, idx) => ({
+        id: `guide_${q.id}`, 
+        title: `Topic ${idx + 1}`, 
+        description: q.question.substring(0, 72)
+      }));
+
+      if (rows.length === 0) {
+        rows.push({ id: 'menu_human', title: 'Talk to Human', description: 'No guide topics found.' });
+      }
+
+      payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'interactive',
+        interactive: {
+          type: 'list',
+          header: { type: 'text', text: 'Guide Sub-Menu' },
+          body: { text: 'Tap a topic below — the answer appears as the next message in this chat.' },
+          action: {
+            button: 'Topics',
+            sections: [{
+              title: 'Topics on this page',
+              rows: rows
+            }]
+          }
+        }
+      };
+      replyText = 'Interactive Guide Menu Sent';
+    }
+    // 3. Handle Link Options
+    else if (queryText === 'menu_register' || queryText === 'menu_login' || queryText === 'menu_forgot') {
+      replyText = 'https://www.falcusmediaagency.com';
+    }
+    // 4. Handle Guide Topic Selection
+    else if (queryText.startsWith('guide_')) {
+      const guideId = queryText.replace('guide_', '');
+      const question = await prisma.botTraining.findUnique({ where: { id: guideId } });
+      if (question) {
+        replyText = question.answer;
+      } else {
+        replyText = 'Sorry, that topic is no longer available.';
+      }
+    }
+    // 5. Existing Commands
+    else if (isCommand) {
+      const keyword = lQuery;
       replyText = AUTO_RESPONSES[keyword] || '';
       
       if (keyword === '#balance') {
-        replyText = `💳 *Workspace Wallet Balance*
-Your current prepaid credit balance is: *$${Number(workspace.walletBalance).toFixed(2)}*`;
+        replyText = `💳 *Workspace Wallet Balance*\nYour current prepaid credit balance is: *$${Number(workspace.walletBalance).toFixed(2)}*`;
       }
     }
 
-    if (!replyText) {
+    if (!replyText && !payload) {
       replyText = await generateGeminiResponse(contactId, queryText);
     }
 
-    if (!replyText) return;
+    if (!replyText && !payload) return;
 
     const cost = 0.05;
     const currentBalance = Number(workspace.walletBalance);
@@ -358,16 +441,20 @@ Your current prepaid credit balance is: *$${Number(workspace.walletBalance).toFi
     }
 
     const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
-    const payload = {
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: phoneNumber,
-      type: 'text',
-      text: {
-        preview_url: false,
-        body: replyText,
-      },
-    };
+    
+    // Construct default text payload if no interactive payload exists
+    if (!payload) {
+      payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'text',
+        text: {
+          preview_url: false,
+          body: replyText,
+        },
+      };
+    }
 
     // Deduct charge and create transaction log inside a database transaction
     const newBalance = currentBalance - cost;
@@ -530,35 +617,46 @@ export const handleInboundSupport = async (messageData: any, metaPhoneNumberId: 
     }
 
     // Check for keyword matching auto responses or general conversational queries
+    let textBody = '';
+    
     if (messageData.type === 'text') {
-      const textBody = messageData.text?.body?.trim();
-      if (textBody) {
-        // Handoff Notification Engine
-        const isHumanRequest = /talk to human|live agent|human agent|speak to a person|representative|human support/i.test(textBody);
-        
-        if (isHumanRequest) {
-          console.log(`🚨 [Handoff Triggered] Customer +${senderPhoneNumber} requested a human agent. Pausing bot.`);
-          
-          await prisma.contact.update({
-            where: { id: contact.id },
-            data: { botEnabled: false, priority: 'URGENT' }
-          });
-          contact.botEnabled = false; // Update local ref
-          
-          try {
-            const io = getIo();
-            io.to(workspace.id).emit('contactBotToggled', { contactId: contact.id, botEnabled: false });
-            io.to(workspace.id).emit('humanSupportRequested', { contactId: contact.id, phone: senderPhoneNumber });
-          } catch (wsErr) {}
-        }
+      textBody = messageData.text?.body?.trim() || '';
+    } else if (messageData.type === 'interactive') {
+      const interactiveType = messageData.interactive?.type;
+      if (interactiveType === 'list_reply') {
+        // We will pass the hidden ID of the list item down as a pseudo-command
+        textBody = messageData.interactive.list_reply.id; 
+      } else if (interactiveType === 'button_reply') {
+        textBody = messageData.interactive.button_reply.id;
+      }
+    }
 
-        // Option A Handoff check: verify bot is enabled for this contact
-        if (contact.botEnabled !== false) {
-          // Trigger auto reply asynchronously so we don't delay the inbound response
-          triggerAutoResponse(workspace.id, contact.id, senderPhoneNumber, textBody);
-        } else {
-          console.log(`🤖 [Bot Handoff] Auto-reply skipped for contact +${senderPhoneNumber} (Bot Paused for Handoff)`);
-        }
+    if (textBody) {
+      // Handoff Notification Engine
+      const isHumanRequest = /talk to human|live agent|human agent|speak to a person|representative|human support|menu_human/i.test(textBody);
+      
+      if (isHumanRequest) {
+        console.log(`🚨 [Handoff Triggered] Customer +${senderPhoneNumber} requested a human agent. Pausing bot.`);
+        
+        await prisma.contact.update({
+          where: { id: contact.id },
+          data: { botEnabled: false, priority: 'URGENT' }
+        });
+        contact.botEnabled = false; // Update local ref
+        
+        try {
+          const io = getIo();
+          io.to(workspace.id).emit('contactBotToggled', { contactId: contact.id, botEnabled: false });
+          io.to(workspace.id).emit('humanSupportRequested', { contactId: contact.id, phone: senderPhoneNumber });
+        } catch (wsErr) {}
+      }
+
+      // Option A Handoff check: verify bot is enabled for this contact
+      if (contact.botEnabled !== false) {
+        // Trigger auto reply asynchronously so we don't delay the inbound response
+        triggerAutoResponse(workspace.id, contact.id, senderPhoneNumber, textBody);
+      } else {
+        console.log(`🤖 [Bot Handoff] Auto-reply skipped for contact +${senderPhoneNumber} (Bot Paused for Handoff)`);
       }
     }
 

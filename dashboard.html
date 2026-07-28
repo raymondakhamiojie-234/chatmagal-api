@@ -3641,6 +3641,15 @@
         if (isInbound) {
           if (message.content.text && message.content.text.body) {
             bodyText = message.content.text.body;
+          } else if (msgType === 'interactive') {
+            const intType = message.content.interactive?.type;
+            if (intType === 'list_reply') {
+              bodyText = `📋 [Menu Selected] <b>${message.content.interactive.list_reply.title || message.content.interactive.list_reply.id}</b>`;
+            } else if (intType === 'button_reply') {
+              bodyText = `🔘 [Button Clicked] <b>${message.content.interactive.button_reply.title || message.content.interactive.button_reply.id}</b>`;
+            } else {
+              bodyText = `[Interactive Reply]`;
+            }
           } else if (message.content.button && message.content.button.text) {
             bodyText = `[Clicked Button] ${message.content.button.text}`;
           } else {
@@ -3648,7 +3657,20 @@
           }
         } else {
           // Outbound text messages
-          if (message.content.text && message.content.text.body) {
+          if (msgType === 'interactive') {
+            const intType = message.content.interactive?.type;
+            if (intType === 'list') {
+              const header = message.content.interactive.header?.text || '';
+              const body = message.content.interactive.body?.text || 'Choose an option';
+              bodyText = `<div style="background:rgba(0,0,0,0.02); border:1px solid var(--border-light); border-radius:12px; padding:0.85rem; width: 240px;">
+                ${header ? `<b>${header}</b><br>` : ''}
+                ${body}
+                <br><br><span style="color:var(--primary); font-weight:bold;">☷ ${message.content.interactive.action?.button || 'Menu'}</span>
+              </div>`;
+            } else {
+              bodyText = `[Interactive Menu Sent]`;
+            }
+          } else if (message.content.text && message.content.text.body) {
             bodyText = message.content.text.body;
           } else if (message.content.template && message.content.template.name) {
             bodyText = `🚀 Marketing Template Sent: "${message.content.template.name}"`;
