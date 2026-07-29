@@ -336,7 +336,15 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
     const isCommand = queryText.startsWith('#');
 
     // 1. Intercept Main Menu
-    if (lQuery === 'hi' || lQuery === 'hello' || lQuery === 'menu') {
+    if (
+      lQuery === 'hi' || 
+      lQuery === 'hello' || 
+      lQuery === 'hey' || 
+      lQuery === 'menu' || 
+      lQuery === 'good morning' || 
+      lQuery === 'good afternoon' || 
+      lQuery === 'good evening'
+    ) {
       const welcomeText = `Welcome to ${workspace.businessName || workspace.name || 'our service'}! 👋\n\nHow can we assist you today?`;
       const welcomePayload = {
         messaging_product: 'whatsapp',
