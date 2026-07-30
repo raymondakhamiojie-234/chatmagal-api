@@ -426,10 +426,8 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
     // If we have intercepted via state machine, skip the rest
     if (replyText || payload) {
       // Proceed to the send logic below
-    } else
-
-    // 1. Intercept Main Menu
-    if (
+    } else if (
+      // 1. Intercept Main Menu
       lQuery === 'hi' || 
       lQuery === 'hello' || 
       lQuery === 'hey' || 
