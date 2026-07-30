@@ -327,13 +327,106 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
     const workspace = await prisma.workspace.findUnique({
       where: { id: workspaceId },
     });
+    
+    const contact = await prisma.contact.findUnique({
+      where: { id: contactId },
+    });
 
-    if (!workspace || !workspace.metaPhoneNumberId) return;
+    if (!workspace || !workspace.metaPhoneNumberId || !contact) return;
 
     let replyText = '';
     let payload: any = null;
     const lQuery = queryText.toLowerCase();
     const isCommand = queryText.startsWith('#');
+    
+    // ==========================================
+    // 0. FORM STATE MACHINE INTERCEPTOR
+    // ==========================================
+    if (contact.formState) {
+      if (lQuery === 'cancel' || lQuery === 'stop') {
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { formState: null, formData: null }
+        });
+        replyText = 'Form cancelled. You can type "Hi" to see the main menu again.';
+      } else if (contact.formState === 'AWAITING_PAGE_LINK') {
+        const currentData = (contact.formData as any) || {};
+        currentData.link = queryText;
+        
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { formState: 'AWAITING_PAGE_SETUP', formData: currentData }
+        });
+
+        payload = {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: phoneNumber,
+          type: 'interactive',
+          interactive: {
+            type: 'button',
+            body: { text: 'Is the page setup or already setup?' },
+            action: {
+              buttons: [
+                { type: 'reply', reply: { id: 'page_setup', title: 'Setup' } },
+                { type: 'reply', reply: { id: 'page_already_setup', title: 'Already setup' } }
+              ]
+            }
+          }
+        };
+      } else if (contact.formState === 'AWAITING_PROFILE_LINK') {
+        const currentData = (contact.formData as any) || {};
+        currentData.link = queryText;
+        
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { formState: 'AWAITING_PROFILE_SETUP', formData: currentData }
+        });
+
+        payload = {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: phoneNumber,
+          type: 'interactive',
+          interactive: {
+            type: 'button',
+            body: { text: 'Is the profile setup or already setup?' },
+            action: {
+              buttons: [
+                { type: 'reply', reply: { id: 'profile_setup', title: 'Setup' } },
+                { type: 'reply', reply: { id: 'profile_already_setup', title: 'Already setup' } }
+              ]
+            }
+          }
+        };
+      } else if (contact.formState === 'AWAITING_PAGE_ADMIN') {
+        const currentData = (contact.formData as any) || {};
+        currentData.adminConfirmation = queryText;
+        
+        // Finalize form
+        try {
+          const { appendRowToSheet } = require('./googleSheetsService');
+          if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+            await appendRowToSheet(
+              workspace.googleServiceAccountJson, 
+              workspace.googleSpreadsheetId, 
+              [new Date().toISOString(), phoneNumber, currentData.type, currentData.link, currentData.setupStatus, currentData.adminConfirmation]
+            );
+          }
+        } catch (err) { console.error('Sheet append error:', err); }
+
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { formState: null, formData: null }
+        });
+        replyText = '✅ Thank you! We have received your information and our staff will process it shortly.';
+      }
+    }
+    
+    // If we have intercepted via state machine, skip the rest
+    if (replyText || payload) {
+      // Proceed to the send logic below
+    } else
 
     // 1. Intercept Main Menu
     if (
@@ -388,12 +481,12 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
             sections: [{
               title: 'Options',
               rows: [
-                { id: 'menu_register', title: 'Register' },
-                { id: 'menu_login', title: 'Login' },
-                { id: 'menu_forgot', title: 'Forgot password' },
+                { id: 'menu_monetize_page', title: 'Monetize A Page' },
+                { id: 'menu_monetize_profile', title: 'Monetize A profile' },
+                { id: 'menu_buy_account', title: 'Buy An account' },
+                { id: 'menu_buy_service', title: 'Buy a service' },
                 { id: 'menu_human', title: 'Live chat' },
-                { id: 'menu_support', title: 'Support' },
-                { id: 'menu_guide', title: 'Guide' }
+                { id: 'menu_support', title: 'Support' }
               ]
             }]
           }
@@ -401,23 +494,140 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
       };
       replyText = 'Interactive Main Menu Sent';
     }
-    // 2. Intercept Guide Sub-Menu
-    else if (queryText === 'menu_guide') {
-      const questions = await prisma.botTraining.findMany({
-        where: { workspaceId },
-        take: 10,
-        orderBy: { createdAt: 'asc' }
+    // 2. Handle New Sub-Menu Clicks
+    else if (queryText === 'menu_monetize_page') {
+      await prisma.contact.update({
+        where: { id: contactId },
+        data: { formState: 'AWAITING_PAGE_LINK', formData: { type: 'Monetize A Page' } }
       });
+      replyText = 'Please send us your Page Link:';
+    }
+    else if (queryText === 'menu_monetize_profile') {
+      await prisma.contact.update({
+        where: { id: contactId },
+        data: { formState: 'AWAITING_PROFILE_LINK', formData: { type: 'Monetize A Profile' } }
+      });
+      replyText = 'Please send us your Profile Link:';
+    }
+    else if (queryText === 'menu_buy_account') {
+      payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'interactive',
+        interactive: {
+          type: 'list',
+          header: { type: 'text', text: 'Buy An account' },
+          body: { text: 'Choose an account type:' },
+          action: {
+            button: 'Accounts',
+            sections: [{
+              title: 'Options',
+              rows: [
+                { id: 'buy_facebook_page', title: 'Facebook page' },
+                { id: 'buy_facebook_group', title: 'Facebook group' },
+                { id: 'buy_tiktok', title: 'TikTok account' },
+                { id: 'buy_youtube', title: 'YouTube channel' },
+                { id: 'buy_instagram', title: 'Instagram account' }
+              ]
+            }]
+          }
+        }
+      };
+    }
+    else if (queryText === 'menu_buy_service') {
+      payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'interactive',
+        interactive: {
+          type: 'list',
+          header: { type: 'text', text: 'Buy a service' },
+          body: { text: 'Choose a service type:' },
+          action: {
+            button: 'Services',
+            sections: [{
+              title: 'Options',
+              rows: [
+                { id: 'service_disable_profile', title: 'Disable profile' },
+                { id: 'service_suspended_page', title: 'Suspended page' },
+                { id: 'service_verify_profile', title: 'Verify profile' }
+              ]
+            }]
+          }
+        }
+      };
+    }
+    else if (queryText === 'page_setup' || queryText === 'page_already_setup') {
+      const isAlreadySetup = queryText === 'page_already_setup';
+      const currentData = (contact.formData as any) || {};
+      currentData.setupStatus = isAlreadySetup ? 'Already setup' : 'Setup';
+      
+      if (isAlreadySetup) {
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { formState: 'AWAITING_PAGE_ADMIN', formData: currentData }
+        });
+        replyText = 'Please make the page an admin and reply with "Done" when complete.';
+      } else {
+        // Form is complete here
+        try {
+          const { appendRowToSheet } = require('./googleSheetsService');
+          if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+            await appendRowToSheet(
+              workspace.googleServiceAccountJson, 
+              workspace.googleSpreadsheetId, 
+              [new Date().toISOString(), phoneNumber, currentData.type, currentData.link, currentData.setupStatus, 'N/A']
+            );
+          }
+        } catch (err) { console.error('Sheet append error:', err); }
 
-      const rows = questions.map((q, idx) => ({
-        id: `guide_${q.id}`, 
-        title: `Topic ${idx + 1}`, 
-        description: q.question.substring(0, 72)
-      }));
-
-      if (rows.length === 0) {
-        rows.push({ id: 'menu_human', title: 'Talk to Human', description: 'No guide topics found.' });
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { formState: null, formData: null }
+        });
+        replyText = '✅ Thank you! We have received your information and our staff will process it shortly.';
       }
+    }
+    else if (queryText === 'profile_setup' || queryText === 'profile_already_setup') {
+      const isAlreadySetup = queryText === 'profile_already_setup';
+      const currentData = (contact.formData as any) || {};
+      currentData.setupStatus = isAlreadySetup ? 'Already setup' : 'Setup';
+      
+      try {
+        const { appendRowToSheet } = require('./googleSheetsService');
+        if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+          await appendRowToSheet(
+            workspace.googleServiceAccountJson, 
+            workspace.googleSpreadsheetId, 
+            [new Date().toISOString(), phoneNumber, currentData.type, currentData.link, currentData.setupStatus, 'N/A']
+          );
+        }
+      } catch (err) { console.error('Sheet append error:', err); }
+
+      await prisma.contact.update({
+        where: { id: contactId },
+        data: { formState: null, formData: null }
+      });
+      replyText = '✅ Thank you! We have received your profile information and our staff will process it shortly.';
+    }
+    else if (queryText.startsWith('buy_') || queryText.startsWith('service_')) {
+      const itemTitle = queryText.replace('buy_', '').replace('service_', '').replace(/_/g, ' ').toUpperCase();
+      try {
+        const { appendRowToSheet } = require('./googleSheetsService');
+        if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+          await appendRowToSheet(
+            workspace.googleServiceAccountJson, 
+            workspace.googleSpreadsheetId, 
+            [new Date().toISOString(), phoneNumber, queryText.startsWith('buy_') ? 'Buy An account' : 'Buy a service', 'N/A', 'N/A', itemTitle]
+          );
+        }
+      } catch (err) { console.error('Sheet append error:', err); }
+      
+      replyText = `✅ Thank you! We have logged your request for: *${itemTitle}*. Our team will contact you shortly.`;
+    }
+    // 3. Fallback to existing commands
 
       payload = {
         messaging_product: 'whatsapp',

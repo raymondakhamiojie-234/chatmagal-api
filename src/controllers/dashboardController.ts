@@ -739,12 +739,12 @@ export const updateWorkspaceMeta = async (req: Request, res: Response) => {
 // POST /api/workspace/settings (Update dynamic premium settings fields)
 export const updateWorkspaceSettings = async (req: Request, res: Response) => {
   try {
-    const workspaceId = req.user?.workspaceId;
+    const { workspaceId } = (req as any).user;
     if (!workspaceId) {
       return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
     }
 
-    const { businessName, autoDraft, systemTone, systemPrompt, maskSubscribers } = req.body;
+    const { businessName, autoDraft, systemTone, systemPrompt, maskSubscribers, googleSpreadsheetId, googleServiceAccountJson } = req.body;
 
     const updatedWorkspace = await prisma.workspace.update({
       where: { id: workspaceId },
@@ -754,6 +754,8 @@ export const updateWorkspaceSettings = async (req: Request, res: Response) => {
         systemTone: systemTone !== undefined ? systemTone : undefined,
         systemPrompt: systemPrompt !== undefined ? systemPrompt : undefined,
         maskSubscribers: maskSubscribers !== undefined ? maskSubscribers : undefined,
+        googleSpreadsheetId: googleSpreadsheetId !== undefined ? googleSpreadsheetId : undefined,
+        googleServiceAccountJson: googleServiceAccountJson !== undefined ? googleServiceAccountJson : undefined,
       }
     });
 

@@ -2469,6 +2469,27 @@
                 </form>
               </div>
             </div>
+            
+            <!-- CARD 5: GOOGLE SHEETS INTEGRATION -->
+            <div class="campaign-list-card" style="padding: 1.5rem; margin-top: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #10b981 !important;">
+                📊 Google Sheets Integration
+              </h3>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Connect a Google Cloud Service Account to automatically save collected user data (e.g. Monetization forms) directly to your Google Spreadsheet.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-input-spreadsheet-id" class="form-label" style="font-size: 0.68rem;">Google Spreadsheet ID</label>
+                  <input type="text" id="settings-input-spreadsheet-id" class="form-input" placeholder="e.g. 1BxiMvs0X1... (from the URL)" style="font-family: monospace;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-input-service-account" class="form-label" style="font-size: 0.68rem;">Google Service Account JSON Credentials</label>
+                  <textarea id="settings-input-service-account" class="form-input" placeholder='Paste the entire credentials.json file content here...' style="font-family: monospace; min-height: 100px; resize: vertical; font-size: 0.7rem;"></textarea>
+                </div>
+              </div>
+            </div>
 
           </div>
 
@@ -4854,6 +4875,9 @@
       const systemPromptInput = document.getElementById('settings-input-system-prompt');
       const maskSubscribersToggle = document.getElementById('settings-toggle-mask-subscribers');
       const subscriptionDisplay = document.getElementById('settings-display-subscription');
+      
+      const googleSpreadsheetIdInput = document.getElementById('settings-input-spreadsheet-id');
+      const googleServiceAccountInput = document.getElementById('settings-input-service-account');
 
       if (workspaceIdDisplay) {
         workspaceIdDisplay.textContent = currentWorkspace.id || workspaceId;
@@ -4890,6 +4914,12 @@
       if (maskSubscribersToggle) {
         maskSubscribersToggle.checked = currentWorkspace.maskSubscribers === true;
       }
+      if (googleSpreadsheetIdInput) {
+        googleSpreadsheetIdInput.value = currentWorkspace.googleSpreadsheetId || '';
+      }
+      if (googleServiceAccountInput) {
+        googleServiceAccountInput.value = currentWorkspace.googleServiceAccountJson || '';
+      }
       
       // Load custom AI training rules in background
       loadBotTrainingRules();
@@ -4907,6 +4937,8 @@
         const systemTone = document.getElementById('settings-select-system-tone').value;
         const systemPrompt = document.getElementById('settings-input-system-prompt').value;
         const maskSubscribers = document.getElementById('settings-toggle-mask-subscribers').checked;
+        const googleSpreadsheetId = document.getElementById('settings-input-spreadsheet-id')?.value || '';
+        const googleServiceAccountJson = document.getElementById('settings-input-service-account')?.value || '';
 
         try {
           const response = await apiRequest('/api/workspace/settings', {
@@ -4917,7 +4949,9 @@
               autoDraft,
               systemTone,
               systemPrompt,
-              maskSubscribers
+              maskSubscribers,
+              googleSpreadsheetId,
+              googleServiceAccountJson
             })
           });
 

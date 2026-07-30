@@ -19,12 +19,14 @@ model Workspace {
   createdAt         DateTime   @default(now())
 
   // Premium Tenant Settings
-  subscriptionPlan  String     @default("Pro Plan")
-  businessName      String     @default("")
-  autoDraft         Boolean    @default(true)
-  systemTone        String     @default("Friendly & Outgoing (Casual, polite)")
-  systemPrompt      String     @default("")
-  maskSubscribers   Boolean    @default(false)
+  subscriptionPlan         String     @default("Pro Plan")
+  businessName             String     @default("")
+  autoDraft                Boolean    @default(true)
+  systemTone               String     @default("Friendly & Outgoing (Casual, polite)")
+  systemPrompt             String     @default("")
+  maskSubscribers          Boolean    @default(false)
+  googleServiceAccountJson String?    @db.Text
+  googleSpreadsheetId      String?
 
   contacts          Contact[]
   messages          Message[]
@@ -44,6 +46,8 @@ model Contact {
   unreadCount   Int       @default(0)    // Track unread messages for notification badges
   sentiment     String    @default("NEUTRAL") // NEW: HAPPY, NEUTRAL, ANGRY, URGENT
   priority      String    @default("STANDARD") // NEW: STANDARD, HIGH, URGENT
+  formState     String?   
+  formData      Json?     
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
   messages    Message[]
