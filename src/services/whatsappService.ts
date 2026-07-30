@@ -626,42 +626,6 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
       replyText = `✅ Thank you! We have logged your request for: *${itemTitle}*. Our team will contact you shortly.`;
     }
     // 3. Fallback to existing commands
-
-      payload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phoneNumber,
-        type: 'interactive',
-        interactive: {
-          type: 'list',
-          header: { type: 'text', text: 'Guide Sub-Menu' },
-          body: { text: 'Tap a topic below — the answer appears as the next message in this chat.' },
-          action: {
-            button: 'Topics',
-            sections: [{
-              title: 'Topics on this page',
-              rows: rows
-            }]
-          }
-        }
-      };
-      replyText = 'Interactive Guide Menu Sent';
-    }
-    // 3. Handle Link Options
-    else if (queryText === 'menu_register' || queryText === 'menu_login' || queryText === 'menu_forgot') {
-      replyText = 'https://www.falcusmediaagency.com';
-    }
-    // 4. Handle Guide Topic Selection
-    else if (queryText.startsWith('guide_')) {
-      const guideId = queryText.replace('guide_', '');
-      const question = await prisma.botTraining.findUnique({ where: { id: guideId } });
-      if (question) {
-        replyText = question.answer;
-      } else {
-        replyText = 'Sorry, that topic is no longer available.';
-      }
-    }
-    // 5. Existing Commands
     else if (isCommand) {
       const keyword = lQuery;
       replyText = AUTO_RESPONSES[keyword] || '';
