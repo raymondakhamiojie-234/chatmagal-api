@@ -1,4 +1,4 @@
-import { PrismaClient, MessageDirection, MessageLane, MessageStatus } from '@prisma/client';
+import { PrismaClient, Prisma, MessageDirection, MessageLane, MessageStatus } from '@prisma/client';
 import { getIo } from '../../config/socket';
 import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -346,7 +346,7 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
       if (lQuery === 'cancel' || lQuery === 'stop') {
         await prisma.contact.update({
           where: { id: contactId },
-          data: { formState: null, formData: null }
+          data: { formState: null, formData: Prisma.DbNull }
         });
         replyText = 'Form cancelled. You can type "Hi" to see the main menu again.';
       } else if (contact.formState === 'AWAITING_PAGE_LINK') {
@@ -417,7 +417,7 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
         await prisma.contact.update({
           where: { id: contactId },
-          data: { formState: null, formData: null }
+          data: { formState: null, formData: Prisma.DbNull }
         });
         replyText = '✅ Thank you! We have received your information and our staff will process it shortly.';
       }
@@ -583,7 +583,7 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
         await prisma.contact.update({
           where: { id: contactId },
-          data: { formState: null, formData: null }
+          data: { formState: null, formData: Prisma.DbNull }
         });
         replyText = '✅ Thank you! We have received your information and our staff will process it shortly.';
       }
@@ -606,7 +606,7 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
       await prisma.contact.update({
         where: { id: contactId },
-        data: { formState: null, formData: null }
+        data: { formState: null, formData: Prisma.DbNull }
       });
       replyText = '✅ Thank you! We have received your profile information and our staff will process it shortly.';
     }
