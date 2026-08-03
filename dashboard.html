@@ -2514,6 +2514,9 @@
             
             <div style="display: flex; gap: 0.5rem;">
               <!-- DOWNLOAD TEMPLATE LINK -->
+              <button type="button" id="settings-add-training-rule-btn" class="btn btn-primary" style="padding: 0.45rem 0.85rem; font-size: 0.75rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; background: var(--primary); color: #fff; border: none;">
+                ➕ Add New Rule
+              </button>
               <button type="button" id="settings-download-training-template-btn" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.75rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;">
                 📥 Download CSV Template
               </button>
@@ -2565,6 +2568,38 @@
                   <!-- Populated Dynamically via Javascript -->
                 </div>
             </div>
+
+        <!-- ADD RULE MODAL (Hidden by default) -->
+        <div id="add-training-rule-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+          <div style="background: var(--bg-card); width: 90%; max-width: 500px; border-radius: 12px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid var(--border-light);">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">➕ Add New Q&A Rule</h3>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Category (Optional)</label>
+              <input type="text" id="add-rule-category" class="form-control" placeholder="e.g. Monetization" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border-light); border-radius: 6px; background: rgba(15, 23, 42, 0.02); color: var(--text-main); font-size: 0.85rem;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">User Question (Required)</label>
+              <input type="text" id="add-rule-question" class="form-control" placeholder="e.g. I want to solve verify issue" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border-light); border-radius: 6px; background: rgba(15, 23, 42, 0.02); color: var(--text-main); font-size: 0.85rem;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Bot Answer (Required)</label>
+              <textarea id="add-rule-answer" class="form-control" placeholder="e.g. We charge 20,000 Naira for this service..." style="width: 100%; padding: 0.6rem; border: 1px solid var(--border-light); border-radius: 6px; background: rgba(15, 23, 42, 0.02); color: var(--text-main); font-size: 0.85rem; min-height: 100px; resize: vertical;"></textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Keywords (Comma-separated)</label>
+              <input type="text" id="add-rule-keywords" class="form-control" placeholder="e.g. verify issue, confirm identity" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border-light); border-radius: 6px; background: rgba(15, 23, 42, 0.02); color: var(--text-main); font-size: 0.85rem;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button type="button" id="add-rule-cancel-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-light); background: transparent;">Cancel</button>
+              <button type="button" id="add-rule-save-btn" class="btn btn-primary" style="padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; background: var(--primary); color: white; border: none; font-weight: 600;">Save Rule</button>
+            </div>
+          </div>
+        </div>
 
             <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
@@ -5244,6 +5279,57 @@
           await loadBotTrainingRules();
         } catch (err) {
           alert(`Failed to clear knowledge base: ${err.message}`);
+        }
+      });
+    }
+
+    // Add New Rule Modal Logic
+    const addRuleBtn = document.getElementById('settings-add-training-rule-btn');
+    const addRuleModal = document.getElementById('add-training-rule-modal');
+    const addRuleCancelBtn = document.getElementById('add-rule-cancel-btn');
+    const addRuleSaveBtn = document.getElementById('add-rule-save-btn');
+    
+    if (addRuleBtn && addRuleModal) {
+      addRuleBtn.addEventListener('click', () => {
+        addRuleModal.style.display = 'flex';
+      });
+
+      addRuleCancelBtn.addEventListener('click', () => {
+        addRuleModal.style.display = 'none';
+        document.getElementById('add-rule-category').value = '';
+        document.getElementById('add-rule-question').value = '';
+        document.getElementById('add-rule-answer').value = '';
+        document.getElementById('add-rule-keywords').value = '';
+      });
+
+      addRuleSaveBtn.addEventListener('click', async () => {
+        const category = document.getElementById('add-rule-category').value;
+        const question = document.getElementById('add-rule-question').value;
+        const answer = document.getElementById('add-rule-answer').value;
+        const keywords = document.getElementById('add-rule-keywords').value;
+
+        if (!question.trim() || !answer.trim()) {
+          alert('Question and Answer are required fields!');
+          return;
+        }
+
+        addRuleSaveBtn.disabled = true;
+        addRuleSaveBtn.textContent = 'Saving...';
+
+        try {
+          await apiRequest('/api/workspace/training/single', {
+            method: 'POST',
+            body: JSON.stringify({ category, question, answer, keywords })
+          });
+          
+          alert('✓ Rule added successfully!');
+          addRuleCancelBtn.click(); // Reset and close modal
+          await loadBotTrainingRules(); // Refresh table
+        } catch (err) {
+          alert(`Failed to save rule: ${err.message}`);
+        } finally {
+          addRuleSaveBtn.disabled = false;
+          addRuleSaveBtn.textContent = 'Save Rule';
         }
       });
     }

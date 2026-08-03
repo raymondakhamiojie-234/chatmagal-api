@@ -841,6 +841,40 @@ export const uploadBotTraining = async (req: Request, res: Response) => {
   }
 };
 
+// POST /api/workspace/training/single (Add a single custom Q&A training rule)
+export const addSingleBotTraining = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    const { question, answer, category, keywords } = req.body;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
+    }
+
+    if (!question || !answer) {
+      return res.status(400).json({ error: 'Question and Answer are required fields' });
+    }
+
+    const newTraining = await prisma.botTraining.create({
+      data: {
+        workspaceId,
+        category: category ? category.trim() : null,
+        question: question.trim(),
+        answer: answer.trim(),
+        keywords: keywords ? keywords.trim() : null
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Successfully added new Q&A rule!',
+      training: newTraining
+    });
+  } catch (error: any) {
+    console.error('Error adding single bot training rule:', error);
+    return res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+};
+
 // DELETE /api/workspace/training (Clear all custom training Q&A rules for the workspace)
 export const clearBotTraining = async (req: Request, res: Response) => {
   try {

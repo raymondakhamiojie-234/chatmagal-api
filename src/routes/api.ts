@@ -18,6 +18,7 @@ import {
   updateWorkspaceMeta,
   getBotTraining,
   uploadBotTraining,
+  addSingleBotTraining,
   clearBotTraining,
   getTeamMembers,
   addTeamMember,
@@ -55,6 +56,7 @@ router.post('/contacts/:contactId/assign', authMiddleware, assignContact);
 router.post('/contacts/:contactId/bot-toggle', authMiddleware, toggleContactBot);
 router.get('/workspace/training', authMiddleware, getBotTraining);
 router.post('/workspace/training/upload', authMiddleware, uploadBotTraining);
+router.post('/workspace/training/single', authMiddleware, addSingleBotTraining);
 router.delete('/workspace/training', authMiddleware, clearBotTraining);
 router.get('/workspace/team-members', authMiddleware, getTeamMembers);
 router.post('/workspace/team-members', authMiddleware, addTeamMember);
