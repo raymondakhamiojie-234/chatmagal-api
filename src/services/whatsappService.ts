@@ -55,6 +55,7 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
   let workspaceName = 'Chatmagal';
   let systemTone = 'Friendly & Outgoing (Casual, polite)';
   let systemPrompt = '';
+  let companyBankDetails = '';
   try {
     const contact = await prisma.contact.findUnique({
       where: { id: contactId },
@@ -65,7 +66,8 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
             name: true,
             businessName: true,
             systemTone: true,
-            systemPrompt: true
+            systemPrompt: true,
+            companyBankDetails: true
           }
         }
       }
@@ -75,6 +77,7 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
       workspaceName = contact.workspace.businessName || contact.workspace.name || 'Chatmagal';
       systemTone = contact.workspace.systemTone || 'Friendly & Outgoing (Casual, polite)';
       systemPrompt = contact.workspace.systemPrompt || '';
+      companyBankDetails = contact.workspace.companyBankDetails || '';
     }
   } catch (err) {
     console.warn('Could not load contact workspaceId context for AI respondent:', err);
@@ -140,6 +143,11 @@ CRITICAL INSTRUCTION: When answering based on this knowledge base, you may extra
 
 ${trainingContextText}
 ` : ''}
+
+${companyBankDetails ? `PAYMENT & BANK DETAILS INSTRUCTION:
+The company's bank details and payment flow instructions are: "${companyBankDetails}"
+If the customer asks for payment details, how to pay, or account details, you MUST provide these exact details to them.
+If the customer provides proof of payment, confirms they have made the transfer, or says they have paid, you MUST acknowledge it and append the exact string "[PAYMENT_LOGGED]" at the very end of your response. This hidden tag triggers our system to automatically log the payment in Google Sheets.` : ''}
 
 Conversation History Context:
 ${historyText}
@@ -634,6 +642,21 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
     if (!replyText && !payload) {
       replyText = await generateGeminiResponse(contactId, queryText);
+      
+      // Auto-Log payment if AI triggered the hidden tag
+      if (replyText.includes('[PAYMENT_LOGGED]')) {
+        replyText = replyText.replace('[PAYMENT_LOGGED]', '').trim();
+        try {
+          const { appendRowToSheet } = require('./googleSheetsService');
+          if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+            await appendRowToSheet(
+              workspace.googleServiceAccountJson, 
+              workspace.googleSpreadsheetId, 
+              [new Date().toISOString(), phoneNumber, 'Payment Received', 'N/A', 'Paid', 'Logged automatically by AI based on conversation']
+            );
+          }
+        } catch (err) { console.error('Sheet append error for auto payment log:', err); }
+      }
     }
 
     if (!replyText && !payload) return;

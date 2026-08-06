@@ -744,7 +744,7 @@ export const updateWorkspaceSettings = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized: No workspace ID found' });
     }
 
-    const { businessName, autoDraft, systemTone, systemPrompt, maskSubscribers, googleSpreadsheetId, googleServiceAccountJson } = req.body;
+    const { businessName, autoDraft, systemTone, systemPrompt, maskSubscribers, googleSpreadsheetId, googleServiceAccountJson, companyBankDetails } = req.body;
 
     const updatedWorkspace = await prisma.workspace.update({
       where: { id: workspaceId },
@@ -756,6 +756,7 @@ export const updateWorkspaceSettings = async (req: Request, res: Response) => {
         maskSubscribers: maskSubscribers !== undefined ? maskSubscribers : undefined,
         googleSpreadsheetId: googleSpreadsheetId !== undefined ? googleSpreadsheetId : undefined,
         googleServiceAccountJson: googleServiceAccountJson !== undefined ? googleServiceAccountJson : undefined,
+        companyBankDetails: companyBankDetails !== undefined ? companyBankDetails : undefined,
       }
     });
 

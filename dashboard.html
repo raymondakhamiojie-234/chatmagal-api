@@ -2375,9 +2375,16 @@
                 </div>
 
                 <!-- Brand Specific Instructions -->
-                <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-group" style="margin-bottom: 1rem;">
                   <label for="settings-input-system-prompt" class="form-label" style="font-size: 0.7rem; font-weight: 700;">Brand Specific Instructions (System Prompt)</label>
                   <textarea id="settings-input-system-prompt" class="form-input" placeholder="e.g. You are a support representative for Acme. Never discuss discount pricing codes list." style="min-height: 80px; resize: vertical; font-size: 0.825rem; line-height: 1.45;"></textarea>
+                </div>
+
+                <!-- Company Bank Details -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-input-bank-details" class="form-label" style="font-size: 0.7rem; font-weight: 700;">Company Bank Details & Payment Flow</label>
+                  <textarea id="settings-input-bank-details" class="form-input" placeholder="e.g. Acme Bank, Account #123456789. Send receipt when done." style="min-height: 60px; resize: vertical; font-size: 0.825rem; line-height: 1.45;"></textarea>
+                  <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.35rem;">The AI will automatically provide these details when asked, and will log the payment to Google Sheets when the customer confirms transfer.</p>
                 </div>
               </div>
             </div>
@@ -4908,6 +4915,7 @@
       const autoDraftToggle = document.getElementById('settings-toggle-auto-draft');
       const systemToneSelect = document.getElementById('settings-select-system-tone');
       const systemPromptInput = document.getElementById('settings-input-system-prompt');
+      const bankDetailsInput = document.getElementById('settings-input-bank-details');
       const maskSubscribersToggle = document.getElementById('settings-toggle-mask-subscribers');
       const subscriptionDisplay = document.getElementById('settings-display-subscription');
       
@@ -4946,6 +4954,9 @@
       if (systemPromptInput) {
         systemPromptInput.value = currentWorkspace.systemPrompt || '';
       }
+      if (bankDetailsInput) {
+        bankDetailsInput.value = currentWorkspace.companyBankDetails || '';
+      }
       if (maskSubscribersToggle) {
         maskSubscribersToggle.checked = currentWorkspace.maskSubscribers === true;
       }
@@ -4971,6 +4982,7 @@
         const autoDraft = document.getElementById('settings-toggle-auto-draft').checked;
         const systemTone = document.getElementById('settings-select-system-tone').value;
         const systemPrompt = document.getElementById('settings-input-system-prompt').value;
+        const companyBankDetails = document.getElementById('settings-input-bank-details')?.value || '';
         const maskSubscribers = document.getElementById('settings-toggle-mask-subscribers').checked;
         const googleSpreadsheetId = document.getElementById('settings-input-spreadsheet-id')?.value || '';
         const googleServiceAccountJson = document.getElementById('settings-input-service-account')?.value || '';
@@ -4984,6 +4996,7 @@
               autoDraft,
               systemTone,
               systemPrompt,
+              companyBankDetails,
               maskSubscribers,
               googleSpreadsheetId,
               googleServiceAccountJson

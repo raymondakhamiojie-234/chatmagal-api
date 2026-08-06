@@ -25,6 +25,7 @@ model Workspace {
   systemTone               String     @default("Friendly & Outgoing (Casual, polite)")
   systemPrompt             String     @default("")
   maskSubscribers          Boolean    @default(false)
+  companyBankDetails       String?    @db.Text
   googleServiceAccountJson String?    @db.Text
   googleSpreadsheetId      String?
 
