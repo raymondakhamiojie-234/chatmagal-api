@@ -27,7 +27,32 @@ export const appendRowToSheet = async (
     const client = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: client as any });
 
-    // 3. Append Row
+    // 3. Check if headers exist
+    try {
+      const readResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A1:F1`,
+      });
+      
+      if (!readResponse.data.values || readResponse.data.values.length === 0) {
+        // Sheet is empty, add headers first
+        const headerRequest = {
+          spreadsheetId,
+          range: `${sheetName}!A1`,
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          resource: {
+            values: [['Date', 'Phone Number', 'Service Category', 'Link/Target', 'Setup Status', 'Details / Admin Confirmation']]
+          }
+        };
+        await sheets.spreadsheets.values.append(headerRequest);
+        console.log('✅ Added header row to empty Google Sheet');
+      }
+    } catch (err) {
+      console.log('⚠️ Could not check for headers (sheet might not exist or be restricted), skipping header insertion.', err.message);
+    }
+
+    // 4. Append Data Row
     const request = {
       spreadsheetId,
       range: `${sheetName}!A1`, // It will append to the next empty row below this
