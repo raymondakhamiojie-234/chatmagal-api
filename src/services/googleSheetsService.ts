@@ -48,7 +48,7 @@ export const appendRowToSheet = async (
         await sheets.spreadsheets.values.append(headerRequest);
         console.log('✅ Added header row to empty Google Sheet');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.log('⚠️ Could not check for headers (sheet might not exist or be restricted), skipping header insertion.', err.message);
     }
 
