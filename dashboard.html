@@ -2389,7 +2389,29 @@
               </div>
             </div>
 
-            <!-- CARD 3: PRIVACY & SECURE MASKING -->
+            <!-- CARD 3: CHAT FLOW BUILDER -->
+            <div class="campaign-list-card" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #10b981 !important;">
+                🔀 Chat Flow Builder
+              </h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.45;">Configure your WhatsApp bot's interactive main menu and automatic conversational flows.</p>
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="settings-input-flow-config" class="form-label" style="font-size: 0.7rem; font-weight: 700;">Menu Configuration (JSON)</label>
+                  <textarea id="settings-input-flow-config" class="form-input" style="min-height: 250px; font-family: monospace; font-size: 0.75rem; resize: vertical; line-height: 1.45;" placeholder='{
+  "welcomeMessage": "Welcome! Choose an option:",
+  "mainMenu": [
+    { "id": "menu_1", "title": "Buy a service", "action": "TEXT", "reply": "Check our website!" }
+  ]
+}'></textarea>
+                  <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.35rem;">Edit the JSON structure above to map out your interactive buttons and AI replies.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 4: PRIVACY & SECURE MASKING -->
             <div class="campaign-list-card" style="padding: 1.5rem;">
               <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #3b82f6 !important;">
                 🛡️ Privacy & Secure Masking
@@ -4957,6 +4979,10 @@
       if (bankDetailsInput) {
         bankDetailsInput.value = currentWorkspace.companyBankDetails || '';
       }
+      const flowConfigInput = document.getElementById('settings-input-flow-config');
+      if (flowConfigInput) {
+        flowConfigInput.value = currentWorkspace.flowConfig ? JSON.stringify(currentWorkspace.flowConfig, null, 2) : '';
+      }
       if (maskSubscribersToggle) {
         maskSubscribersToggle.checked = currentWorkspace.maskSubscribers === true;
       }
@@ -4986,6 +5012,19 @@
         const maskSubscribers = document.getElementById('settings-toggle-mask-subscribers').checked;
         const googleSpreadsheetId = document.getElementById('settings-input-spreadsheet-id')?.value || '';
         const googleServiceAccountJson = document.getElementById('settings-input-service-account')?.value || '';
+        
+        let flowConfig = null;
+        const flowConfigRaw = document.getElementById('settings-input-flow-config')?.value;
+        if (flowConfigRaw && flowConfigRaw.trim()) {
+          try {
+            flowConfig = JSON.parse(flowConfigRaw);
+          } catch (e) {
+            alert('Invalid JSON in Chat Flow Builder. Please fix syntax errors before saving.');
+            savePremiumBtn.disabled = false;
+            savePremiumBtn.textContent = 'Save Configuration';
+            return;
+          }
+        }
 
         try {
           const response = await apiRequest('/api/workspace/settings', {
@@ -4999,7 +5038,8 @@
               companyBankDetails,
               maskSubscribers,
               googleSpreadsheetId,
-              googleServiceAccountJson
+              googleServiceAccountJson,
+              flowConfig
             })
           });
 

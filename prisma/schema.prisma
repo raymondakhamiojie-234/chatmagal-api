@@ -28,6 +28,7 @@ model Workspace {
   companyBankDetails       String?    @db.Text
   googleServiceAccountJson String?    @db.Text
   googleSpreadsheetId      String?
+  flowConfig               Json?      @default("{}")
 
   contacts          Contact[]
   messages          Message[]

@@ -354,281 +354,169 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
           data: { formState: null, formData: Prisma.DbNull }
         });
         replyText = 'Form cancelled. You can type "Hi" to see the main menu again.';
-      } else if (contact.formState === 'AWAITING_PAGE_LINK') {
+      } else if (contact.formState === 'DYNAMIC_FORM') {
         const currentData = (contact.formData as any) || {};
-        currentData.link = queryText;
+        const formId = currentData.formId;
+        const step = currentData.step || 0;
         
-        await prisma.contact.update({
-          where: { id: contactId },
-          data: { formState: 'AWAITING_PAGE_SETUP', formData: currentData }
-        });
-
-        payload = {
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to: phoneNumber,
-          type: 'interactive',
-          interactive: {
-            type: 'button',
-            body: { text: 'Is the page setup or already setup?' },
-            action: {
-              buttons: [
-                { type: 'reply', reply: { id: 'page_setup', title: 'Setup' } },
-                { type: 'reply', reply: { id: 'page_already_setup', title: 'Already setup' } }
-              ]
+        // Find the form configuration in the flowConfig
+        const flowConfig = workspace.flowConfig as any;
+        let matchedForm = null;
+        if (flowConfig && flowConfig.mainMenu) {
+          // Search main menu
+          matchedForm = flowConfig.mainMenu.find((item: any) => item.id === formId);
+          // Search sub menus
+          if (!matchedForm) {
+            for (const item of flowConfig.mainMenu) {
+              if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
+                matchedForm = item.subMenu.options.find((sub: any) => sub.id === formId);
+                if (matchedForm) break;
+              }
             }
           }
-        };
-      } else if (contact.formState === 'AWAITING_PROFILE_LINK') {
-        const currentData = (contact.formData as any) || {};
-        currentData.link = queryText;
-        
-        await prisma.contact.update({
-          where: { id: contactId },
-          data: { formState: 'AWAITING_PROFILE_SETUP', formData: currentData }
-        });
+        }
 
-        payload = {
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to: phoneNumber,
-          type: 'interactive',
-          interactive: {
-            type: 'button',
-            body: { text: 'Is the profile setup or already setup?' },
-            action: {
-              buttons: [
-                { type: 'reply', reply: { id: 'profile_setup', title: 'Setup' } },
-                { type: 'reply', reply: { id: 'profile_already_setup', title: 'Already setup' } }
-              ]
-            }
-          }
-        };
-      } else if (contact.formState === 'AWAITING_PAGE_ADMIN') {
-        const currentData = (contact.formData as any) || {};
-        currentData.adminConfirmation = queryText;
-        
-        // Finalize form
-        try {
-          const { appendRowToSheet } = require('./googleSheetsService');
-          if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
-            await appendRowToSheet(
-              workspace.googleServiceAccountJson, 
-              workspace.googleSpreadsheetId, 
-              [new Date().toISOString(), phoneNumber, currentData.type, currentData.link, currentData.setupStatus, currentData.adminConfirmation]
-            );
-          }
-        } catch (err) { console.error('Sheet append error:', err); }
+        if (matchedForm && matchedForm.action === 'FORM' && matchedForm.formQuestions) {
+          const questions = matchedForm.formQuestions;
+          currentData.answers = currentData.answers || [];
+          currentData.answers.push(queryText);
+          currentData.step = step + 1;
 
-        await prisma.contact.update({
-          where: { id: contactId },
-          data: { formState: null, formData: Prisma.DbNull }
-        });
-        replyText = '✅ Thank you! We have received your information and our staff will process it shortly.';
+          if (currentData.step < questions.length) {
+            // Ask next question
+            await prisma.contact.update({
+              where: { id: contactId },
+              data: { formData: currentData }
+            });
+            replyText = questions[currentData.step];
+          } else {
+            // Form is complete! Log to Google Sheets
+            try {
+              const { appendRowToSheet } = require('./googleSheetsService');
+              if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+                const sheetData = [new Date().toISOString(), phoneNumber, matchedForm.title || formId, ...currentData.answers];
+                await appendRowToSheet(workspace.googleServiceAccountJson, workspace.googleSpreadsheetId, sheetData);
+              }
+            } catch (err) { console.error('Sheet append error:', err); }
+
+            await prisma.contact.update({
+              where: { id: contactId },
+              data: { formState: null, formData: Prisma.DbNull }
+            });
+            replyText = matchedForm.onCompleteMessage || '✅ Thank you! We have received your information and our staff will process it shortly.';
+          }
+        } else {
+          // Invalid state, reset
+          await prisma.contact.update({
+            where: { id: contactId },
+            data: { formState: null, formData: Prisma.DbNull }
+          });
+          replyText = 'An error occurred with the form. Please try again.';
+        }
       }
     }
     
     // If we have intercepted via state machine, skip the rest
     if (replyText || payload) {
       // Proceed to the send logic below
-    } else if (
-      // 1. Intercept Main Menu
-      lQuery === 'hi' || 
-      lQuery === 'hello' || 
-      lQuery === 'hey' || 
-      lQuery === 'menu' || 
-      lQuery === 'good morning' || 
-      lQuery === 'good afternoon' || 
-      lQuery === 'good evening'
-    ) {
-      const welcomeText = `Welcome to ${workspace.businessName || workspace.name || 'our service'}! 👋\n\nHow can we assist you today?`;
-      const welcomePayload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phoneNumber,
-        type: 'text',
-        text: { preview_url: false, body: welcomeText },
-      };
+    } else {
+      // ==========================================
+      // 1. Dynamic Chat Flow Builder Interceptor
+      // ==========================================
+      const flowConfig = workspace.flowConfig as any;
+      const hasFlow = flowConfig && flowConfig.mainMenu && Array.isArray(flowConfig.mainMenu) && flowConfig.mainMenu.length > 0;
 
-      try {
-        const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
-        const res = await metaApi.post(`/${workspace.metaPhoneNumberId}/messages`, welcomePayload, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        await prisma.message.create({
-          data: {
-            workspaceId,
-            contactId,
-            direction: MessageDirection.OUTBOUND,
-            lane: MessageLane.SUPPORT,
-            content: { ...welcomePayload, meta_response: res.data },
-            status: MessageStatus.SENT,
-          },
-        });
-      } catch (err) {
-        console.error('Failed to send welcome message:', err);
+      if (hasFlow) {
+        if (['hi', 'hello', 'hey', 'menu', 'good morning', 'good afternoon', 'good evening'].includes(lQuery)) {
+          // Send Main Menu
+          const welcomeText = flowConfig.welcomeMessage || `Welcome to ${workspace.businessName || workspace.name || 'our service'}! 👋\n\nHow can we assist you today?`;
+          
+          try {
+            const token = workspace.metaAccessToken || process.env.META_SYSTEM_USER_TOKEN;
+            const res = await metaApi.post(`/${workspace.metaPhoneNumberId}/messages`, {
+              messaging_product: 'whatsapp',
+              recipient_type: 'individual',
+              to: phoneNumber,
+              type: 'text',
+              text: { preview_url: false, body: welcomeText },
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            
+            await prisma.message.create({
+              data: {
+                workspaceId, contactId, direction: MessageDirection.OUTBOUND, lane: MessageLane.SUPPORT,
+                content: { body: welcomeText, meta_response: res.data }, status: MessageStatus.SENT,
+              },
+            });
+          } catch (err) { console.error('Failed to send welcome message:', err); }
+
+          const rows = flowConfig.mainMenu.map((item: any) => ({
+            id: item.id,
+            title: item.title.substring(0, 24)
+          }));
+
+          payload = {
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: phoneNumber,
+            type: 'interactive',
+            interactive: {
+              type: 'list',
+              header: { type: 'text', text: 'Welcome' },
+              body: { text: 'Choose an option:' },
+              action: {
+                button: 'Menu',
+                sections: [{ title: 'Options', rows }]
+              }
+            }
+          };
+          replyText = 'Interactive Main Menu Sent';
+        } else {
+          // Find if queryText matches ANY id in the flow config (mainMenu or subMenus)
+          let matchedItem = flowConfig.mainMenu.find((item: any) => item.id === queryText);
+          
+          if (!matchedItem) {
+            for (const item of flowConfig.mainMenu) {
+              if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
+                matchedItem = item.subMenu.options.find((sub: any) => sub.id === queryText);
+                if (matchedItem) break;
+              }
+            }
+          }
+
+          if (matchedItem) {
+            if (matchedItem.action === 'TEXT') {
+              replyText = matchedItem.reply || 'Thank you!';
+            } else if (matchedItem.action === 'SUBMENU' && matchedItem.subMenu && matchedItem.subMenu.options) {
+              const rows = matchedItem.subMenu.options.map((opt: any) => ({
+                id: opt.id,
+                title: opt.title.substring(0, 24)
+              }));
+              payload = {
+                messaging_product: 'whatsapp',
+                recipient_type: 'individual',
+                to: phoneNumber,
+                type: 'interactive',
+                interactive: {
+                  type: 'list',
+                  header: { type: 'text', text: matchedItem.title.substring(0, 60) },
+                  body: { text: matchedItem.subMenu.text || 'Choose an option:' },
+                  action: {
+                    button: 'View Options',
+                    sections: [{ title: 'Options', rows }]
+                  }
+                }
+              };
+              replyText = `Submenu sent for ${matchedItem.title}`;
+            } else if (matchedItem.action === 'FORM' && matchedItem.formQuestions && matchedItem.formQuestions.length > 0) {
+              await prisma.contact.update({
+                where: { id: contactId },
+                data: { formState: 'DYNAMIC_FORM', formData: { formId: matchedItem.id, step: 0, answers: [] } }
+              });
+              replyText = matchedItem.formQuestions[0];
+            }
+          }
+        }
       }
-
-      payload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phoneNumber,
-        type: 'interactive',
-        interactive: {
-          type: 'list',
-          header: { type: 'text', text: 'Welcome' },
-          body: { text: 'Choose an option:' },
-          action: {
-            button: 'Menu',
-            sections: [{
-              title: 'Options',
-              rows: [
-                { id: 'menu_monetize_page', title: 'Monetize A Page' },
-                { id: 'menu_monetize_profile', title: 'Monetize A profile' },
-                { id: 'menu_buy_account', title: 'Buy An account' },
-                { id: 'menu_buy_service', title: 'Buy a service' },
-                { id: 'menu_human', title: 'Live chat' },
-                { id: 'menu_support', title: 'Support' }
-              ]
-            }]
-          }
-        }
-      };
-      replyText = 'Interactive Main Menu Sent';
-    }
-    // 2. Handle New Sub-Menu Clicks
-    else if (queryText === 'menu_monetize_page') {
-      await prisma.contact.update({
-        where: { id: contactId },
-        data: { formState: 'AWAITING_PAGE_LINK', formData: { type: 'Monetize A Page' } }
-      });
-      replyText = 'Please send us your Page Link:';
-    }
-    else if (queryText === 'menu_monetize_profile') {
-      await prisma.contact.update({
-        where: { id: contactId },
-        data: { formState: 'AWAITING_PROFILE_LINK', formData: { type: 'Monetize A Profile' } }
-      });
-      replyText = 'Please send us your Profile Link:';
-    }
-    else if (queryText === 'menu_buy_account') {
-      payload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phoneNumber,
-        type: 'interactive',
-        interactive: {
-          type: 'list',
-          header: { type: 'text', text: 'Buy An account' },
-          body: { text: 'Choose an account type:' },
-          action: {
-            button: 'Accounts',
-            sections: [{
-              title: 'Options',
-              rows: [
-                { id: 'buy_facebook_page', title: 'Facebook page' },
-                { id: 'buy_facebook_group', title: 'Facebook group' },
-                { id: 'buy_tiktok', title: 'TikTok account' },
-                { id: 'buy_youtube', title: 'YouTube channel' },
-                { id: 'buy_instagram', title: 'Instagram account' }
-              ]
-            }]
-          }
-        }
-      };
-    }
-    else if (queryText === 'menu_buy_service') {
-      payload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phoneNumber,
-        type: 'interactive',
-        interactive: {
-          type: 'list',
-          header: { type: 'text', text: 'Buy a service' },
-          body: { text: 'Choose a service type:' },
-          action: {
-            button: 'Services',
-            sections: [{
-              title: 'Options',
-              rows: [
-                { id: 'service_disable_profile', title: 'Disable profile' },
-                { id: 'service_suspended_page', title: 'Suspended page' },
-                { id: 'service_verify_profile', title: 'Verify profile' }
-              ]
-            }]
-          }
-        }
-      };
-    }
-    else if (queryText === 'page_setup' || queryText === 'page_already_setup') {
-      const isAlreadySetup = queryText === 'page_already_setup';
-      const currentData = (contact.formData as any) || {};
-      currentData.setupStatus = isAlreadySetup ? 'Already setup' : 'Setup';
-      
-      if (isAlreadySetup) {
-        await prisma.contact.update({
-          where: { id: contactId },
-          data: { formState: 'AWAITING_PAGE_ADMIN', formData: currentData }
-        });
-        replyText = 'Please make the page an admin and reply with "Done" when complete.';
-      } else {
-        // Form is complete here
-        try {
-          const { appendRowToSheet } = require('./googleSheetsService');
-          if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
-            await appendRowToSheet(
-              workspace.googleServiceAccountJson, 
-              workspace.googleSpreadsheetId, 
-              [new Date().toISOString(), phoneNumber, currentData.type, currentData.link, currentData.setupStatus, 'N/A']
-            );
-          }
-        } catch (err) { console.error('Sheet append error:', err); }
-
-        await prisma.contact.update({
-          where: { id: contactId },
-          data: { formState: null, formData: Prisma.DbNull }
-        });
-        replyText = '✅ Thank you! We have received your information and our staff will process it shortly.';
-      }
-    }
-    else if (queryText === 'profile_setup' || queryText === 'profile_already_setup') {
-      const isAlreadySetup = queryText === 'profile_already_setup';
-      const currentData = (contact.formData as any) || {};
-      currentData.setupStatus = isAlreadySetup ? 'Already setup' : 'Setup';
-      
-      try {
-        const { appendRowToSheet } = require('./googleSheetsService');
-        if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
-          await appendRowToSheet(
-            workspace.googleServiceAccountJson, 
-            workspace.googleSpreadsheetId, 
-            [new Date().toISOString(), phoneNumber, currentData.type, currentData.link, currentData.setupStatus, 'N/A']
-          );
-        }
-      } catch (err) { console.error('Sheet append error:', err); }
-
-      await prisma.contact.update({
-        where: { id: contactId },
-        data: { formState: null, formData: Prisma.DbNull }
-      });
-      replyText = '✅ Thank you! We have received your profile information and our staff will process it shortly.';
-    }
-    else if (queryText.startsWith('buy_') || queryText.startsWith('service_')) {
-      const itemTitle = queryText.replace('buy_', '').replace('service_', '').replace(/_/g, ' ').toUpperCase();
-      try {
-        const { appendRowToSheet } = require('./googleSheetsService');
-        if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
-          await appendRowToSheet(
-            workspace.googleServiceAccountJson, 
-            workspace.googleSpreadsheetId, 
-            [new Date().toISOString(), phoneNumber, queryText.startsWith('buy_') ? 'Buy An account' : 'Buy a service', 'N/A', 'N/A', itemTitle]
-          );
-        }
-      } catch (err) { console.error('Sheet append error:', err); }
-      
-      replyText = `✅ Thank you! We have logged your request for: *${itemTitle}*. Our team will contact you shortly.`;
     }
     // 3. Fallback to existing commands
     else if (isCommand) {
