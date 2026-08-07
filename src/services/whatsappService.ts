@@ -550,6 +550,16 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
     if (!replyText && !payload) return;
 
+    // Apply variable interpolation across all replies
+    if (replyText) {
+      if (workspace.companyBankDetails) {
+        replyText = replyText.replace(/{{bankDetails}}/g, workspace.companyBankDetails);
+      }
+      if (workspace.businessName || workspace.name) {
+        replyText = replyText.replace(/{{businessName}}/g, workspace.businessName || workspace.name);
+      }
+    }
+
     const cost = 0.05;
     const currentBalance = Number(workspace.walletBalance);
 
