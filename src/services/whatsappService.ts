@@ -517,14 +517,15 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
           }
         }
       }
-    }
-    // 3. Fallback to existing commands
-    else if (isCommand) {
-      const keyword = lQuery;
-      replyText = AUTO_RESPONSES[keyword] || '';
       
-      if (keyword === '#balance') {
-        replyText = `💳 *Workspace Wallet Balance*\nYour current prepaid credit balance is: *$${Number(workspace.walletBalance).toFixed(2)}*`;
+      // 3. Fallback to existing commands if flow didn't intercept it
+      if (!replyText && !payload && isCommand) {
+        const keyword = lQuery;
+        replyText = AUTO_RESPONSES[keyword] || '';
+        
+        if (keyword === '#balance') {
+          replyText = `💳 *Workspace Wallet Balance*\nYour current prepaid credit balance is: *$${Number(workspace.walletBalance).toFixed(2)}*`;
+        }
       }
     }
 
