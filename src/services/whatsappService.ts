@@ -570,6 +570,24 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                   }
                 }
               }
+              
+              // Also check if the AI detected route maps to a custom hidden flow in chatFlowUpdate (e.g. payment_flow)
+              if (!matchedItem && flowConfig?.chatFlowUpdate) {
+                const updateKeys = Object.keys(flowConfig.chatFlowUpdate);
+                for (const key of updateKeys) {
+                  const flowObj = flowConfig.chatFlowUpdate[key];
+                  if (flowObj && typeof flowObj === 'object' && flowObj.id === intentOverride && flowObj.steps) {
+                    matchedItem = {
+                      id: flowObj.id,
+                      title: flowObj.id,
+                      action: 'FORM',
+                      formQuestions: flowObj.steps.map((s: any) => s.question || s.message || s.instruction).filter(Boolean),
+                      onCompleteMessage: "✅ Your information has been received."
+                    };
+                    break;
+                  }
+                }
+              }
             }
           }
 
