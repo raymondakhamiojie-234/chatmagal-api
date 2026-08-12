@@ -46,6 +46,76 @@ function extractMessageText(msg: any): string {
 }
 
 // Conversational Gemini AI Generator & Intelligent Sandbox Fallback (Option G)
+async function detectIntent(workspace: any, contactId: string, queryText: string): Promise<string | null> {
+  const flowConfig = workspace.flowConfig as any;
+  if (!flowConfig?.chatFlowUpdate?.intentRouter?.enabled) return null;
+  
+  const intents = flowConfig.chatFlowUpdate.intentRouter.intents;
+  if (!intents || !Array.isArray(intents) || intents.length === 0) return null;
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE' || apiKey.trim() === '') return null;
+
+  let historyText = '';
+  try {
+    const recentMessages = await prisma.message.findMany({
+      where: { contactId },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    });
+    const chronologicalMessages = recentMessages.reverse();
+    for (const msg of chronologicalMessages) {
+      const role = msg.direction === 'INBOUND' ? 'Customer' : 'Us (Previous Agent or Bot)';
+      const text = extractMessageText(msg);
+      if (text) {
+        historyText += `${role}: ${text}\n`;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load chat history context:', err);
+  }
+
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    const intentDescriptions = intents.map((i: any) => `- ${i.id}: ${i.category} (Examples: ${i.examples?.slice(0,5).join(', ')})`).join('\n');
+    
+    const prompt = `You are an intent router for a customer service bot.
+Given the customer's message, determine which intent matches best based on meaning, not just exact words.
+Available Intents:
+${intentDescriptions}
+
+Conversation History (for context):
+${historyText}
+
+Customer Message: "${queryText}"
+
+Respond ONLY with a valid JSON object containing the matched intent ID, or "UNKNOWN" if no intent strongly matches.
+Example: {"intentId": "SERVICE_FOLLOWERS"}
+Example 2: {"intentId": "UNKNOWN"}
+`;
+    console.log(`🧠 [Gemini Intent AI] Classifying message: "${queryText}"`);
+    const result = await model.generateContent(prompt);
+    let text = result.response.text().trim();
+    text = text.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+    const parsed = JSON.parse(text);
+    
+    if (parsed.intentId && parsed.intentId !== 'UNKNOWN') {
+      const matched = intents.find((i: any) => i.id === parsed.intentId);
+      if (matched && matched.routeTo) {
+        console.log(`🎯 [Gemini Intent AI] Matched Intent: ${parsed.intentId} -> Routing to: ${matched.routeTo}`);
+        return matched.routeTo;
+      }
+    }
+    console.log(`🎯 [Gemini Intent AI] No intent matched.`);
+  } catch (err) {
+    console.error('Intent detection error:', err);
+  }
+  return null;
+}
+
 export async function generateGeminiResponse(contactId: string, prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const hasLiveKey = apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.trim() !== '';
@@ -472,13 +542,33 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
           replyText = 'Interactive Main Menu Sent';
         } else {
           // Find if queryText matches ANY id in the flow config (mainMenu or subMenus)
-          let matchedItem = flowConfig.mainMenu.find((item: any) => item.id === queryText);
+          let intentOverride = queryText;
+          let matchedItem = flowConfig.mainMenu.find((item: any) => item.id === intentOverride);
           
           if (!matchedItem) {
             for (const item of flowConfig.mainMenu) {
               if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
-                matchedItem = item.subMenu.options.find((sub: any) => sub.id === queryText);
+                matchedItem = item.subMenu.options.find((sub: any) => sub.id === intentOverride);
                 if (matchedItem) break;
+              }
+            }
+          }
+
+          // If no direct button match, try AI Intent Routing for natural language!
+          if (!matchedItem && flowConfig?.chatFlowUpdate?.intentRouter?.enabled) {
+            const detectedRouteId = await detectIntent(workspace, contactId, queryText);
+            if (detectedRouteId) {
+              intentOverride = detectedRouteId;
+              
+              // Search again with the AI detected route
+              matchedItem = flowConfig.mainMenu.find((item: any) => item.id === intentOverride);
+              if (!matchedItem) {
+                for (const item of flowConfig.mainMenu) {
+                  if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
+                    matchedItem = item.subMenu.options.find((sub: any) => sub.id === intentOverride);
+                    if (matchedItem) break;
+                  }
+                }
               }
             }
           }
