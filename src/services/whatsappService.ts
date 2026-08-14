@@ -120,7 +120,7 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
   const apiKey = process.env.GEMINI_API_KEY;
   const hasLiveKey = apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.trim() !== '';
 
-  // 1. Resolve contact's workspaceId to fetch corresponding custom settings and Q&A training rules
+  let trainingContextText = '';
   let workspaceId = '';
   let workspaceName = 'Chatmagal';
   let systemTone = 'Friendly & Outgoing (Casual, polite)';
@@ -137,7 +137,8 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
             businessName: true,
             systemTone: true,
             systemPrompt: true,
-            companyBankDetails: true
+            companyBankDetails: true,
+            flowConfig: true
           }
         }
       }
@@ -148,13 +149,23 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
       systemTone = contact.workspace.systemTone || 'Friendly & Outgoing (Casual, polite)';
       systemPrompt = contact.workspace.systemPrompt || '';
       companyBankDetails = contact.workspace.companyBankDetails || '';
+      
+      const flowConfig = contact.workspace.flowConfig as any;
+      if (flowConfig && flowConfig.aiKnowledgeBase && flowConfig.aiKnowledgeBase.enabled) {
+        trainingContextText += '\n[JSON AI Knowledge Base]:\n' + JSON.stringify({
+          purpose: flowConfig.aiKnowledgeBase.purpose,
+          responseRules: flowConfig.aiKnowledgeBase.responseRules,
+          generalFaq: flowConfig.aiKnowledgeBase.generalFaq,
+          serviceFaq: flowConfig.aiKnowledgeBase.serviceFaq,
+          troubleshooting: flowConfig.aiKnowledgeBase.troubleshooting
+        }, null, 2) + '\n\n';
+      }
     }
   } catch (err) {
     console.warn('Could not load contact workspaceId context for AI respondent:', err);
   }
 
   // 2. Fetch custom bot training Q&A knowledge base rules
-  let trainingContextText = '';
   let botTrainings: any[] = [];
   if (workspaceId) {
     try {
