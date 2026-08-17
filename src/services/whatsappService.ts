@@ -115,7 +115,10 @@ Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchR
     console.log(`🧠 [Gemini Intent AI] Classifying message: "${queryText}"`);
     const result = await model.generateContent(prompt);
     let text = result.response.text().trim();
-    text = text.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      text = jsonMatch[0];
+    }
     const parsed = JSON.parse(text);
     
     let routeTo = null;
@@ -762,11 +765,23 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
               };
               replyText = `Submenu sent for ${matchedItem.title}`;
             } else if (matchedItem.action === 'FORM' && matchedItem.formQuestions && matchedItem.formQuestions.length > 0) {
-              await prisma.contact.update({
-                where: { id: contactId },
-                data: { formState: 'DYNAMIC_FORM', formData: { formId: matchedItem.id, step: 0, answers: [] } }
-              });
-              replyText = matchedItem.formQuestions[0];
+              const price = await getServicePrice(matchedItem.title, queryText);
+              if (price) {
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { 
+                    formState: 'DYNAMIC_FORM', 
+                    formData: { formId: matchedItem.id, step: 0, answers: [], awaitingPriceConfirmation: true, priceQuote: price, selectedService: matchedItem.title } 
+                  }
+                });
+                replyText = `The current price for ${matchedItem.title} is ${price}.\n\nWould you like to proceed? (Yes/No)`;
+              } else {
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formState: 'DYNAMIC_FORM', formData: { formId: matchedItem.id, step: 0, answers: [], selectedService: matchedItem.title } }
+                });
+                replyText = matchedItem.formQuestions[0];
+              }
             }
           }
         }
