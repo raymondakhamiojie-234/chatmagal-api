@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma, MessageDirection, MessageLane, MessageStatus } from '@prisma/client';
 import { getIo } from '../../config/socket';
+import { getServicePrice } from './pricingService';
 import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -46,7 +47,7 @@ function extractMessageText(msg: any): string {
 }
 
 // Conversational Gemini AI Generator & Intelligent Sandbox Fallback (Option G)
-async function detectIntent(workspace: any, contactId: string, queryText: string): Promise<string | null> {
+async function detectIntent(workspace: any, contactId: string, queryText: string, activeFlowId?: string, currentQuestion?: string): Promise<any | null> {
   const flowConfig = workspace.flowConfig as any;
   if (!flowConfig?.chatFlowUpdate?.intentRouter?.enabled) return null;
   
@@ -81,20 +82,35 @@ async function detectIntent(workspace: any, contactId: string, queryText: string
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     const intentDescriptions = intents.map((i: any) => `- ${i.id}: ${i.category} (Examples: ${i.examples?.slice(0,5).join(', ')})`).join('\n');
+    const outsideScopeDesc = `- OUTSIDE_SCOPE: Use this if the customer asks completely unrelated questions (e.g. weather, jokes, homework, who is the president, write a poem).`;
     
-    const prompt = `You are an intent router for a customer service bot.
-Given the customer's message, determine which intent matches best based on meaning, not just exact words.
+    let activeFlowContextText = '';
+    if (activeFlowId && currentQuestion) {
+      activeFlowContextText = `
+CURRENT FLOW STATUS:
+The customer is currently inside the flow ID: "${activeFlowId}".
+You just asked them this question: "${currentQuestion}"
+`;
+    }
+
+    const prompt = `You are an intent router and flow controller for a customer service bot.
+Given the customer's message, determine which intent matches best based on meaning.
 Available Intents:
 ${intentDescriptions}
+${outsideScopeDesc}
 
 Conversation History (for context):
 ${historyText}
-
+${activeFlowContextText}
 Customer Message: "${queryText}"
 
-Respond ONLY with a valid JSON object containing the matched intent ID, or "UNKNOWN" if no intent strongly matches.
-Example: {"intentId": "SERVICE_FOLLOWERS"}
-Example 2: {"intentId": "UNKNOWN"}
+Respond ONLY with a valid JSON object containing:
+- "intentId": the matched intent ID, or "UNKNOWN", or "OUTSIDE_SCOPE".
+- "isAnswerToCurrentFlow": boolean. True ONLY if their message is a reasonable answer to the "CURRENT FLOW STATUS" question. If they are completely ignoring the question to ask something new, false. (If no flow is active, false).
+- "isFlowSwitchRequested": boolean. True if they are explicitly asking to stop the current flow and start a different service.
+
+Example: {"intentId": "SERVICE_FOLLOWERS", "isAnswerToCurrentFlow": false, "isFlowSwitchRequested": false}
+Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchRequested": false}
 `;
     console.log(`🧠 [Gemini Intent AI] Classifying message: "${queryText}"`);
     const result = await model.generateContent(prompt);
@@ -102,14 +118,20 @@ Example 2: {"intentId": "UNKNOWN"}
     text = text.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
     const parsed = JSON.parse(text);
     
-    if (parsed.intentId && parsed.intentId !== 'UNKNOWN') {
+    let routeTo = null;
+    if (parsed.intentId && parsed.intentId !== 'UNKNOWN' && parsed.intentId !== 'OUTSIDE_SCOPE') {
       const matched = intents.find((i: any) => i.id === parsed.intentId);
       if (matched && matched.routeTo) {
-        console.log(`🎯 [Gemini Intent AI] Matched Intent: ${parsed.intentId} -> Routing to: ${matched.routeTo}`);
-        return matched.routeTo;
+        routeTo = matched.routeTo;
       }
     }
-    console.log(`🎯 [Gemini Intent AI] No intent matched.`);
+    
+    return {
+      intentId: parsed.intentId,
+      routeTo: routeTo,
+      isAnswerToCurrentFlow: parsed.isAnswerToCurrentFlow || false,
+      isFlowSwitchRequested: parsed.isFlowSwitchRequested || false
+    };
   } catch (err) {
     console.error('Intent detection error:', err);
   }
@@ -426,7 +448,7 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
     const isCommand = queryText.startsWith('#');
     
     // ==========================================
-    // 0. FORM STATE MACHINE INTERCEPTOR
+    // 0. FORM STATE MACHINE INTERCEPTOR & FLOW CONTROLLER
     // ==========================================
     if (contact.formState) {
       if (lQuery === 'cancel' || lQuery === 'stop') {
@@ -437,54 +459,145 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
         replyText = 'Form cancelled. You can type "Hi" to see the main menu again.';
       } else if (contact.formState === 'DYNAMIC_FORM') {
         const currentData = (contact.formData as any) || {};
-        const formId = currentData.formId;
-        const step = currentData.step || 0;
+        let formId = currentData.formId;
+        let step = currentData.step || 0;
         
-        // Find the form configuration in the flowConfig
         const flowConfig = workspace.flowConfig as any;
+        
         let matchedForm = null;
-        if (flowConfig && flowConfig.mainMenu) {
-          // Search main menu
-          matchedForm = flowConfig.mainMenu.find((item: any) => item.id === formId);
-          // Search sub menus
-          if (!matchedForm) {
+        const findForm = (id: string) => {
+          if (!flowConfig || !flowConfig.mainMenu) return null;
+          let m = flowConfig.mainMenu.find((item: any) => item.id === id);
+          if (!m) {
             for (const item of flowConfig.mainMenu) {
               if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
-                matchedForm = item.subMenu.options.find((sub: any) => sub.id === formId);
-                if (matchedForm) break;
+                m = item.subMenu.options.find((sub: any) => sub.id === id);
+                if (m) break;
               }
             }
           }
-        }
+          if (!m && flowConfig.chatFlowUpdate) {
+            const keys = Object.keys(flowConfig.chatFlowUpdate);
+            for (const key of keys) {
+              const f = flowConfig.chatFlowUpdate[key];
+              if (f && typeof f === 'object' && f.id === id && f.steps) {
+                m = {
+                  id: f.id, title: f.id, action: 'FORM',
+                  formQuestions: f.steps.map((s: any) => s.question || s.message || s.instruction).filter(Boolean),
+                  onCompleteMessage: "✅ Your information has been received."
+                };
+                break;
+              }
+            }
+          }
+          return m;
+        };
+        
+        matchedForm = findForm(formId);
 
         if (matchedForm && matchedForm.action === 'FORM' && matchedForm.formQuestions) {
           const questions = matchedForm.formQuestions;
-          currentData.answers = currentData.answers || [];
-          currentData.answers.push(queryText);
-          currentData.step = step + 1;
-
-          if (currentData.step < questions.length) {
-            // Ask next question
-            await prisma.contact.update({
-              where: { id: contactId },
-              data: { formData: currentData }
-            });
-            replyText = questions[currentData.step];
-          } else {
-            // Form is complete! Log to Google Sheets
-            try {
-              const { appendRowToSheet } = require('./googleSheetsService');
-              if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
-                const sheetData = [new Date().toISOString(), phoneNumber, matchedForm.title || formId, ...currentData.answers];
-                await appendRowToSheet(workspace.googleServiceAccountJson, workspace.googleSpreadsheetId, sheetData);
+          
+          // INTENT DETECT & FLOW SWITCHING
+          const intentObj = await detectIntent(workspace, contactId, queryText, formId, questions[step]);
+          
+          if (intentObj) {
+            if (intentObj.intentId === 'OUTSIDE_SCOPE') {
+              replyText = "I'm here to help with Falcus Media services and customer support. Please choose what you'd like help with.";
+              // Soft lock: we don't clear the form state, just prompt them and show the menu
+            } else if (!intentObj.isAnswerToCurrentFlow && intentObj.isFlowSwitchRequested && intentObj.routeTo) {
+              // FLOW SWITCH
+              formId = intentObj.routeTo;
+              matchedForm = findForm(formId);
+              if (matchedForm && matchedForm.action === 'FORM') {
+                currentData.formId = formId;
+                currentData.step = 0;
+                currentData.answers = [];
+                step = 0;
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formData: currentData }
+                });
+                replyText = `No problem 👍 You're switching to ${matchedForm.title}.\n\n${matchedForm.formQuestions[0]}`;
               }
-            } catch (err) { console.error('Sheet append error:', err); }
+            } else if (!intentObj.isAnswerToCurrentFlow && intentObj.intentId === 'PAYMENT' && currentData.selectedService) {
+              // PAYMENT INTENT IN FLOW
+              formId = 'payment_flow';
+              matchedForm = findForm(formId);
+              if (matchedForm && matchedForm.action === 'FORM') {
+                currentData.formId = formId;
+                currentData.step = 1; // skip asking service
+                currentData.answers = [currentData.selectedService];
+                step = 1;
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formData: currentData }
+                });
+                replyText = matchedForm.formQuestions[1];
+              }
+            }
+          }
 
-            await prisma.contact.update({
-              where: { id: contactId },
-              data: { formState: null, formData: Prisma.DbNull }
-            });
-            replyText = matchedForm.onCompleteMessage || '✅ Thank you! We have received your information and our staff will process it shortly.';
+          // If we didn't generate a reply text yet, process the answer
+          if (!replyText) {
+            currentData.answers = currentData.answers || [];
+            
+            if (step === 0 && matchedForm.title) currentData.selectedService = matchedForm.title;
+
+            // Price confirmation interceptor
+            if (currentData.awaitingPriceConfirmation) {
+              if (lQuery === 'yes' || lQuery === 'y') {
+                currentData.awaitingPriceConfirmation = false;
+                currentData.step = step + 1;
+                currentData.answers.push("Confirmed Price: " + currentData.priceQuote);
+              } else {
+                replyText = "Okay, we have paused this request. Let me know if you need anything else.";
+                await prisma.contact.update({ where: { id: contactId }, data: { formState: null, formData: Prisma.DbNull } });
+              }
+            } else {
+              currentData.answers.push(queryText);
+              // Check if we should fetch price
+              const serviceName = matchedForm.title;
+              const price = await getServicePrice(serviceName, queryText);
+              if (price) {
+                replyText = `The current price for ${serviceName} is ${price}.\n\nWould you like to proceed? (Yes/No)`;
+                currentData.awaitingPriceConfirmation = true;
+                currentData.priceQuote = price;
+              } else {
+                currentData.step = step + 1;
+              }
+            }
+
+            if (!replyText) {
+              if (currentData.step < questions.length) {
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formData: currentData }
+                });
+                replyText = questions[currentData.step];
+              } else {
+                // Form is complete!
+                try {
+                  const { appendRowToSheet } = require('./googleSheetsService');
+                  if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+                    const sheetData = [new Date().toISOString(), phoneNumber, matchedForm.title || formId, ...currentData.answers];
+                    await appendRowToSheet(workspace.googleServiceAccountJson, workspace.googleSpreadsheetId, sheetData);
+                  }
+                } catch (err) { console.error('Sheet append error:', err); }
+
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formState: null, formData: Prisma.DbNull }
+                });
+                replyText = matchedForm.onCompleteMessage || '✅ Thank you! We have received your information and our staff will process it shortly.';
+              }
+            } else {
+              // update state if we replied (e.g. price check)
+              await prisma.contact.update({
+                where: { id: contactId },
+                data: { formData: currentData }
+              });
+            }
           }
         } else {
           // Invalid state, reset
@@ -567,35 +680,57 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
 
           // If no direct button match, try AI Intent Routing for natural language!
           if (!matchedItem && flowConfig?.chatFlowUpdate?.intentRouter?.enabled) {
-            const detectedRouteId = await detectIntent(workspace, contactId, queryText);
-            if (detectedRouteId) {
-              intentOverride = detectedRouteId;
-              
-              // Search again with the AI detected route
-              matchedItem = flowConfig.mainMenu.find((item: any) => item.id === intentOverride);
-              if (!matchedItem) {
-                for (const item of flowConfig.mainMenu) {
-                  if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
-                    matchedItem = item.subMenu.options.find((sub: any) => sub.id === intentOverride);
-                    if (matchedItem) break;
+            const intentObj = await detectIntent(workspace, contactId, queryText);
+            if (intentObj) {
+              if (intentObj.intentId === 'OUTSIDE_SCOPE') {
+                replyText = "I'm here to help with Falcus Media services and customer support. Please choose what you'd like help with.";
+                
+                // Construct standard main menu payload
+                const rows = flowConfig.mainMenu.map((item: any) => ({
+                  id: item.id,
+                  title: item.title.substring(0, 24)
+                }));
+                payload = {
+                  messaging_product: 'whatsapp',
+                  recipient_type: 'individual',
+                  to: phoneNumber,
+                  type: 'interactive',
+                  interactive: {
+                    type: 'list',
+                    header: { type: 'text', text: 'Falcus Media Ltd' },
+                    body: { text: 'Choose an option:' },
+                    action: { button: 'Menu', sections: [{ title: 'Options', rows }] }
+                  }
+                };
+              } else if (intentObj.routeTo) {
+                intentOverride = intentObj.routeTo;
+                
+                // Search again with the AI detected route
+                matchedItem = flowConfig.mainMenu.find((item: any) => item.id === intentOverride);
+                if (!matchedItem) {
+                  for (const item of flowConfig.mainMenu) {
+                    if (item.action === 'SUBMENU' && item.subMenu && item.subMenu.options) {
+                      matchedItem = item.subMenu.options.find((sub: any) => sub.id === intentOverride);
+                      if (matchedItem) break;
+                    }
                   }
                 }
-              }
-              
-              // Also check if the AI detected route maps to a custom hidden flow in chatFlowUpdate (e.g. payment_flow)
-              if (!matchedItem && flowConfig?.chatFlowUpdate) {
-                const updateKeys = Object.keys(flowConfig.chatFlowUpdate);
-                for (const key of updateKeys) {
-                  const flowObj = flowConfig.chatFlowUpdate[key];
-                  if (flowObj && typeof flowObj === 'object' && flowObj.id === intentOverride && flowObj.steps) {
-                    matchedItem = {
-                      id: flowObj.id,
-                      title: flowObj.id,
-                      action: 'FORM',
-                      formQuestions: flowObj.steps.map((s: any) => s.question || s.message || s.instruction).filter(Boolean),
-                      onCompleteMessage: "✅ Your information has been received."
-                    };
-                    break;
+                
+                // Also check if the AI detected route maps to a custom hidden flow in chatFlowUpdate (e.g. payment_flow)
+                if (!matchedItem && flowConfig?.chatFlowUpdate) {
+                  const updateKeys = Object.keys(flowConfig.chatFlowUpdate);
+                  for (const key of updateKeys) {
+                    const flowObj = flowConfig.chatFlowUpdate[key];
+                    if (flowObj && typeof flowObj === 'object' && flowObj.id === intentOverride && flowObj.steps) {
+                      matchedItem = {
+                        id: flowObj.id,
+                        title: flowObj.id,
+                        action: 'FORM',
+                        formQuestions: flowObj.steps.map((s: any) => s.question || s.message || s.instruction).filter(Boolean),
+                        onCompleteMessage: "✅ Your information has been received."
+                      };
+                      break;
+                    }
                   }
                 }
               }
