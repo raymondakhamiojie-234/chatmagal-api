@@ -1,0 +1,1385 @@
+{
+  "company": {
+    "name": "Falcus Media Ltd",
+    "description": "Digital media, social media management, account services, monetization and digital marketing company."
+  },
+  "securityRules": {
+    "neverRequestPasswordsInChat": true,
+    "neverRequestBankPasswords": true,
+    "neverRequestOTP": true,
+    "neverRequest2FACodes": true,
+    "accountDetailsAllowed": [
+      "Page link",
+      "Profile link",
+      "Channel link",
+      "Username",
+      "Account email where necessary",
+      "Business information required for the requested service"
+    ],
+    "secureAccessMessage": "For security reasons, please do not send your password, OTP, 2FA code or other sensitive login credentials in this chat. If account access is required, we will provide a secure method for completing the process."
+  },
+  "welcomeMessage": "Welcome to Falcus Media Ltd! 👋\n\nWe are here to help you with social media services, monetization, account services, advertising and support.\n\nTo get started, we first need to identify the account/page you need help with.",
+  "mainMenu": [
+    {
+      "id": "menu_services",
+      "title": "Our Services",
+      "action": "SUBMENU",
+      "subMenu": {
+        "text": "Which service do you need?",
+        "options": [
+          {
+            "id": "service_create_facebook_page",
+            "title": "New Facebook Page",
+            "action": "FORM",
+            "formQuestions": [
+              "If applicable, please send the link to the account or page you are contacting us about. (Reply 'N/A' if this is for a new account)",
+              "What name should we use to identify this account or business?",
+              "What email address can we use to contact you about this request?",
+              "What name would you like for the Facebook Page?",
+              "What type of business, brand, organization or personality is the page for?",
+              "Please describe what the page will be used for.",
+              "Do you already have a Facebook account that should own the page? Reply Yes or No.",
+              "Do you have a logo and other branding materials? Reply Yes or No."
+            ],
+            "onCompleteMessage": "✅ Your Facebook Page creation request has been received. We will review the information and proceed with the setup."
+          },
+          {
+            "id": "service_create_criteria_page",
+            "title": "Criteria Facebook Page",
+            "action": "FORM",
+            "formQuestions": [
+              "If applicable, please send the link to the account or page you are contacting us about. (Reply 'N/A' if this is for a new account)",
+              "What name should we use to identify this account or business?",
+              "What email address can we use to contact you about this request?",
+              "Please describe the type of Facebook Page you want us to create.",
+              "What niche or category should the page belong to?",
+              "What country or location should the page target?",
+              "What name should the page have?",
+              "Please provide any specific criteria or requirements you have for the page."
+            ],
+            "onCompleteMessage": "✅ Your Criteria Facebook Page request has been received. Our team will review your requirements and contact you if additional information is required."
+          },
+          {
+            "id": "service_create_tiktok",
+            "title": "Create TikTok Account",
+            "action": "FORM",
+            "formQuestions": [
+              "If applicable, please send the link to the account or page you are contacting us about. (Reply 'N/A' if this is for a new account)",
+              "What name should we use to identify this account or business?",
+              "What email address can we use to contact you about this request?",
+              "Do you require a UK or USA TikTok account?",
+              "What will the TikTok account be used for?",
+              "What username or account name would you prefer?",
+              "What niche or content category will the account focus on?",
+              "Please provide any branding information you want us to use."
+            ],
+            "onCompleteMessage": "✅ Your TikTok account request has been received and will be reviewed by our team."
+          },
+          {
+            "id": "service_connected_entity",
+            "title": "Connected Entity",
+            "action": "FORM",
+            "formQuestions": [
+              "Please provide the relevant Facebook Page, Profile or Business link.",
+              "What name should we use to identify this account?",
+              "What email address can we use to contact you about this request?",
+              "Please describe what you want the Connected Entity service to help you achieve.",
+              "Please describe any existing problem or error you are experiencing."
+            ],
+            "onCompleteMessage": "✅ Your Connected Entity request has been received. Our team will review your account information and requirements."
+          },
+          {
+            "id": "service_name_change",
+            "title": "Name Change",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the Facebook Page link.",
+              "What name should we use to identify this account or business?",
+              "What email address can we use to contact you about this request?",
+              "What is the current Page name?",
+              "What new name would you like to use?",
+              "Please provide a brief reason for the requested name change.",
+              "If you wish to proceed, payment instructions will be provided."
+            ],
+            "onCompleteMessage": "✅ Your Name Change request has been received. We will verify the payment and information before processing your request."
+          },
+          {
+            "id": "service_watch_time",
+            "title": "Watch Time Service",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send your YouTube channel link.",
+              "What name should we use to identify this account?",
+              "What email address can we use to contact you about this request?",
+              "How many watch hours are you looking to achieve?",
+              "What is your current watch time, if known?",
+              "Please describe your current YouTube channel status."
+            ],
+            "onCompleteMessage": "✅ Your Watch Time Service request has been received. Our team will review your channel and requirements."
+          },
+          {
+            "id": "service_followers",
+            "title": "Followers Service",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the account or profile link.",
+              "What name should we use to identify this account?",
+              "What email address can we use to contact you about this request?",
+              "Which platform do you need followers for?",
+              "How many followers would you like?",
+              "What country or audience would you prefer, if applicable?"
+            ],
+            "onCompleteMessage": "✅ Your Followers Service request has been received. We will review your requirements and provide the available options."
+          },
+          {
+            "id": "service_advertising",
+            "title": "Ads Campaign Setup",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send your Facebook Page, Instagram or business link.",
+              "What name should we use to identify this account?",
+              "What email address can we use to contact you about this request?",
+              "What product or service are you advertising?",
+              "What is your advertising objective?",
+              "Who is your target audience?",
+              "What is your intended advertising budget?",
+              "Which location or country do you want to target?"
+            ],
+            "onCompleteMessage": "✅ Your advertising campaign request has been received. Our team will review your campaign information and contact you with the next steps."
+          },
+          {
+            "id": "service_page_optimization",
+            "title": "Page Optimization",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the Facebook Page or social media profile link.",
+              "What name should we use to identify this account?",
+              "What email address can we use to contact you about this request?",
+              "What would you like us to improve?",
+              "What is the main goal of the page?",
+              "Are there any specific problems you are currently experiencing?"
+            ],
+            "onCompleteMessage": "✅ Your Page Optimization request has been received. We will review the page and determine the improvements required."
+          },
+          {
+            "id": "service_social_media_management",
+            "title": "Social Media Management",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the relevant social media page/profile links.",
+              "What name should we use to identify this account or business?",
+              "What email address can we use to contact you about this request?",
+              "Which social media platforms do you want us to manage?",
+              "What type of content does your business provide?",
+              "What are your main goals for social media?",
+              "How frequently would you like content published?"
+            ],
+            "onCompleteMessage": "✅ Your Social Media Management request has been received. Our team will review your business information and contact you with the available management packages."
+          }
+        ]
+      }
+    },
+    {
+      "id": "menu_monetization",
+      "title": "Monetization",
+      "action": "SUBMENU",
+      "subMenu": {
+        "text": "What type of monetization service do you need?",
+        "options": [
+          {
+            "id": "monetize_page",
+            "title": "Monetize a Page",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send us your Facebook Page link.",
+              "Is the Page already set up for monetization? Reply Setup or Already Setup.",
+              "Please describe your current monetization status.",
+              "If admin access is required, we will provide secure instructions."
+            ],
+            "onCompleteMessage": "✅ Thank you. We have received your monetization request and will review the Page."
+          },
+          {
+            "id": "monetize_profile",
+            "title": "Monetize a Profile",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send us your Facebook Profile link.",
+              "Please describe the current monetization status of the profile.",
+              "If payment is required, we will provide the official Falcus Media Ltd payment details.",
+              "If account access is required, we will provide secure access instructions."
+            ],
+            "onCompleteMessage": "✅ Thank you. Your profile monetization request has been received."
+          }
+        ]
+      }
+    },
+    {
+      "id": "menu_buy_account",
+      "title": "Buy an Account",
+      "action": "SUBMENU",
+      "subMenu": {
+        "text": "Choose an account type:",
+        "options": [
+          {
+            "id": "buy_facebook_page",
+            "title": "Facebook Page",
+            "action": "FORM",
+            "formQuestions": [
+              "Do you want a Monetized Page or Non-Monetized Page?",
+              "How many followers would you like the Page to have?",
+              "What is your intended budget?",
+              "Please describe any additional requirements."
+            ],
+            "onCompleteMessage": "✅ Your Facebook Page request has been logged. Our team will contact you with available options."
+          },
+          {
+            "id": "buy_facebook_profile",
+            "title": "Facebook Profile",
+            "action": "FORM",
+            "formQuestions": [
+              "What type of Facebook Profile are you looking for?",
+              "What is your intended budget?",
+              "Do you have any specific requirements?"
+            ],
+            "onCompleteMessage": "✅ Your Facebook Profile request has been logged."
+          },
+          {
+            "id": "buy_tiktok",
+            "title": "TikTok Account",
+            "action": "FORM",
+            "formQuestions": [
+              "Which country/region do you require?",
+              "How many followers would you like?",
+              "What is your intended budget?",
+              "Please provide any additional requirements."
+            ],
+            "onCompleteMessage": "✅ Your TikTok account request has been logged."
+          },
+          {
+            "id": "buy_youtube",
+            "title": "YouTube Channel",
+            "action": "FORM",
+            "formQuestions": [
+              "How many subscribers would you like?",
+              "Do you require a monetized or non-monetized channel?",
+              "What is your intended budget?",
+              "What niche should the channel be in?"
+            ],
+            "onCompleteMessage": "✅ Your YouTube Channel request has been logged."
+          },
+          {
+            "id": "buy_instagram",
+            "title": "Instagram Account",
+            "action": "FORM",
+            "formQuestions": [
+              "How many followers would you like?",
+              "What niche should the account be in?",
+              "What is your intended budget?",
+              "Please provide any additional requirements."
+            ],
+            "onCompleteMessage": "✅ Your Instagram account request has been logged."
+          }
+        ]
+      }
+    },
+    {
+      "id": "menu_account_recovery",
+      "title": "Account Recovery",
+      "action": "SUBMENU",
+      "subMenu": {
+        "text": "What account problem are you experiencing?",
+        "options": [
+          {
+            "id": "recover_disabled_profile",
+            "title": "Disabled Profile",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the affected Profile link.",
+              "When was the profile disabled?",
+              "What message or reason does Facebook show?",
+              "Have you already submitted an appeal? Reply Yes or No.",
+              "If you wish to proceed, payment instructions will be provided."
+            ],
+            "onCompleteMessage": "✅ Your account recovery request has been received. Please ensure all submitted information is accurate. Our team will review the case before processing."
+          },
+          {
+            "id": "recover_suspended_page",
+            "title": "Suspended Page",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the Suspended Facebook Page link.",
+              "When was the Page suspended?",
+              "What reason or notification did Facebook provide?",
+              "Have you already submitted an appeal? Reply Yes or No.",
+              "If you wish to proceed, payment instructions will be provided."
+            ],
+            "onCompleteMessage": "✅ Your Suspended Page resolution request has been received."
+          },
+          {
+            "id": "verify_profile",
+            "title": "Verify Profile",
+            "action": "FORM",
+            "formQuestions": [
+              "Please send the Profile link.",
+              "Please describe the type of verification you require.",
+              "Payment instructions will be provided before payment."
+            ],
+            "onCompleteMessage": "✅ Your profile verification request has been received. We will review the account information and proceed with the verification process."
+          }
+        ]
+      }
+    },
+    {
+      "id": "menu_support",
+      "title": "Support / Existing Order",
+      "action": "SUBMENU",
+      "subMenu": {
+        "text": "What do you need help with?",
+        "options": [
+          {
+            "id": "support_existing_order",
+            "title": "Check Existing Order",
+            "action": "FORM",
+            "formQuestions": [
+              "Please provide your order/reference number if you have one.",
+              "Please describe what you need help with."
+            ],
+            "onCompleteMessage": "✅ Thank you. We have received your request and will check your order status."
+          },
+          {
+            "id": "support_payment",
+            "title": "Payment Issue",
+            "action": "FORM",
+            "formQuestions": [
+              "What payment issue are you experiencing?",
+              "Please provide your order/reference number.",
+              "If payment was made, please send your proof of payment."
+            ],
+            "onCompleteMessage": "✅ Your payment issue has been recorded. We will verify the transaction."
+          },
+          {
+            "id": "support_service_problem",
+            "title": "Problem With a Service",
+            "action": "FORM",
+            "formQuestions": [
+              "Which Falcus Media service are you having a problem with?",
+              "Please describe the problem clearly.",
+              "When did the problem begin?",
+              "Please send any relevant screenshot or evidence."
+            ],
+            "onCompleteMessage": "✅ Your service issue has been recorded. We will review the information provided."
+          },
+          {
+            "id": "support_general",
+            "title": "Other Problem",
+            "action": "TEXT",
+            "reply": "Please describe your issue in as much detail as possible. Our support system will first try to identify the appropriate solution before transferring you to a human agent."
+          }
+        ]
+      }
+    },
+    {
+      "id": "menu_human",
+      "title": "Talk to a Human",
+      "action": "TEXT",
+      "reply": "I am transferring you to a Falcus Media Ltd support agent. Please hold on while we connect you with a human representative."
+    }
+  ],
+  "aiKnowledgeBase": {
+    "enabled": true,
+    "purpose": "Answer common customer questions, troubleshoot common problems, explain Falcus Media services and resolve customer requests automatically whenever possible.",
+    "responseRules": {
+      "answerDirectlyWhenKnown": true,
+      "useCompanyInformationOnly": true,
+      "neverInventPrices": true,
+      "neverInventProcessingTimes": true,
+      "neverInventPolicies": true,
+      "neverPromiseGuaranteedResults": true,
+      "rememberInformationAlreadyProvided": true,
+      "doNotAskRepeatedQuestions": true,
+      "keepResponsesClearAndConcise": true,
+      "offerNextStepAfterAnswer": true,
+      "escalateWhenUncertain": true
+    },
+    "generalFaq": [
+      {
+        "id": "faq_about_falcus",
+        "questionPatterns": [
+          "What is Falcus Media?",
+          "What does Falcus Media do?",
+          "Tell me about your company",
+          "What services do you offer?"
+        ],
+        "answer": "Falcus Media Ltd provides digital media and social media services, including social media management, page creation, monetization services, account services, advertising campaign setup, page optimization, followers services, watch time services and other digital media solutions."
+      },
+      {
+        "id": "faq_human_support",
+        "questionPatterns": [
+          "I want to talk to someone",
+          "Can I speak to a human?",
+          "I need an agent",
+          "Connect me to support",
+          "I want human support"
+        ],
+        "answer": "Absolutely. I can first collect the important details about your request so you do not have to repeat yourself when the human agent joins. If you prefer, I can transfer you to a human agent now."
+      },
+      {
+        "id": "faq_payment",
+        "questionPatterns": [
+          "How do I pay?",
+          "Where do I make payment?",
+          "What account should I pay to?",
+          "Payment details"
+        ],
+        "answer": "Payment details depend on the service you selected. I will provide the official Falcus Media Ltd payment details when payment is required for your selected service. After payment, please send your proof of payment here."
+      },
+      {
+        "id": "faq_payment_not_verified",
+        "questionPatterns": [
+          "I have paid",
+          "My payment has not been confirmed",
+          "I paid already",
+          "Payment is pending"
+        ],
+        "answer": "No problem. Please send your proof of payment and your order/reference number if you have one. We will use the information to verify the transaction."
+      },
+      {
+        "id": "faq_no_response",
+        "questionPatterns": [
+          "Nobody has responded",
+          "Why has nobody contacted me?",
+          "I am still waiting",
+          "When will someone respond?"
+        ],
+        "answer": "I'm sorry about the delay. Let me check the details of your request. Please provide your order/reference number if you have one, or send the account/page link associated with the request."
+      },
+      {
+        "id": "faq_request_status",
+        "questionPatterns": [
+          "What is the status of my request?",
+          "Check my order",
+          "Has my request been processed?",
+          "What is happening with my order?"
+        ],
+        "answer": "I can help you check your request. Please provide your order/reference number. If you do not have one, provide the account or page link associated with the request."
+      }
+    ],
+    "serviceFaq": [
+      {
+        "service": "Create a New Facebook Page",
+        "commonQuestions": [
+          "Can you create a Facebook Page for me?",
+          "What do you need to create my page?",
+          "How long does page creation take?"
+        ],
+        "answer": "Yes. Falcus Media can assist with creating and setting up a new Facebook Page. We will collect the Page name, business/brand information, category, intended use and required branding information before processing the request.",
+        "requiredAction": "Open service_create_facebook_page"
+      },
+      {
+        "service": "Create a Criteria Facebook Page",
+        "commonQuestions": [
+          "Can you create a specific type of Facebook Page?",
+          "I need a page with specific requirements",
+          "Can you create a page according to my criteria?"
+        ],
+        "answer": "Yes. We can review your requirements and determine the appropriate Page setup. Please provide the niche, target location, preferred name and the specific criteria you require.",
+        "requiredAction": "Open service_create_criteria_page"
+      },
+      {
+        "service": "Create UK TikTok",
+        "commonQuestions": [
+          "Can you create a UK TikTok?",
+          "I need a UK TikTok account",
+          "Do you create UK TikTok accounts?"
+        ],
+        "answer": "Yes. Falcus Media provides a UK TikTok account creation service. I will collect the purpose of the account, preferred username, niche and other requirements before submitting the request.",
+        "requiredAction": "Open service_create_tiktok"
+      },
+      {
+        "service": "Create USA TikTok",
+        "commonQuestions": [
+          "Can you create a USA TikTok?",
+          "I need a US TikTok account",
+          "Do you create USA TikTok accounts?"
+        ],
+        "answer": "Yes. Falcus Media provides a USA TikTok account creation service. I will collect the account purpose, preferred username, niche and other requirements before submitting your request.",
+        "requiredAction": "Open service_create_tiktok"
+      },
+      {
+        "service": "Connected Entity",
+        "commonQuestions": [
+          "What is connected entity?",
+          "I need connected entity",
+          "Can you help with connected entity?"
+        ],
+        "answer": "Falcus Media provides Connected Entity assistance. Please provide the relevant Page, Profile or Business link and explain what you want to achieve or the problem you are experiencing.",
+        "requiredAction": "Open service_connected_entity"
+      },
+      {
+        "service": "Name Change",
+        "commonQuestions": [
+          "Can you change my page name?",
+          "I want to change my Facebook Page name",
+          "How much is name change?"
+        ],
+        "answer": "Yes. Falcus Media provides Facebook Page name change assistance. We will need your Page link, current name, desired new name and reason for the change.",
+        "requiredAction": "Open service_name_change"
+      },
+      {
+        "service": "Watch Time Service",
+        "commonQuestions": [
+          "Do you provide watch time?",
+          "Can you help with YouTube watch hours?",
+          "I need YouTube watch time"
+        ],
+        "answer": "Yes. Falcus Media provides a YouTube Watch Time Service. Please send your YouTube channel link and tell us your target watch hours and current channel status so we can review your request.",
+        "requiredAction": "Open service_watch_time"
+      },
+      {
+        "service": "Followers Service",
+        "commonQuestions": [
+          "Do you sell followers?",
+          "I need followers",
+          "Can you increase my followers?",
+          "How can I get more followers?"
+        ],
+        "answer": "Falcus Media provides followers services for supported social media platforms. Please tell me the platform, send the account link and specify the number of followers you require.",
+        "requiredAction": "Open service_followers"
+      },
+      {
+        "service": "Advertising Campaign Setup",
+        "commonQuestions": [
+          "Do you run ads?",
+          "Can you set up Facebook ads?",
+          "Can you run an advertising campaign?",
+          "I need an ad campaign"
+        ],
+        "answer": "Yes. Falcus Media can assist with advertising campaign setup. We will need your business/page link, product or service, advertising objective, target audience, location and intended advertising budget.",
+        "requiredAction": "Open service_advertising"
+      },
+      {
+        "service": "Page Optimization",
+        "commonQuestions": [
+          "Can you optimize my page?",
+          "My page needs improvement",
+          "Can you improve my Facebook Page?",
+          "What is page optimization?"
+        ],
+        "answer": "Yes. Page optimization involves reviewing your social media presence and identifying areas that can be improved. Send your Page/Profile link and explain what you want to improve.",
+        "requiredAction": "Open service_page_optimization"
+      },
+      {
+        "service": "Social Media Monthly Management",
+        "commonQuestions": [
+          "Do you manage social media?",
+          "Can you manage my social media account?",
+          "I need monthly social media management",
+          "Do you provide social media management?"
+        ],
+        "answer": "Yes. Falcus Media provides social media management services. We can review your platforms, business, content needs and goals and determine the appropriate management package.",
+        "requiredAction": "Open service_social_media_management"
+      },
+      {
+        "service": "Monetization",
+        "commonQuestions": [
+          "Can you monetize my page?",
+          "Can you monetize my profile?",
+          "I want to monetize my Facebook account",
+          "Why is my page not monetized?"
+        ],
+        "answer": "Yes. Falcus Media provides Facebook Page and Profile monetization assistance. Please send the relevant account link and describe the current monetization status or problem."
+      },
+      {
+        "service": "Disabled Profile",
+        "commonQuestions": [
+          "My Facebook profile is disabled",
+          "Can you recover my disabled account?",
+          "My account was disabled"
+        ],
+        "answer": "Falcus Media provides assistance with disabled profile resolution. Please send the affected Profile link, tell us when it was disabled, provide the reason/message shown by Facebook and tell us whether you have already appealed.",
+        "processingTime": "2 weeks minimum and 1 month maximum",
+        "refundPolicy": "100% refund if unsuccessful, subject to Falcus Media Ltd service terms."
+      },
+      {
+        "service": "Suspended Page",
+        "commonQuestions": [
+          "My Facebook Page is suspended",
+          "Can you recover my suspended page?",
+          "My page has been suspended"
+        ],
+        "answer": "Falcus Media provides assistance with suspended Facebook Pages. Please send the affected Page link, tell us when the suspension occurred, provide the reason shown by Facebook and tell us whether an appeal has already been submitted.",
+        "processingTime": "2 weeks minimum and 1 month maximum",
+        "refundPolicy": "100% refund if unsuccessful, subject to Falcus Media Ltd service terms."
+      },
+      {
+        "service": "Profile Verification",
+        "commonQuestions": [
+          "Can you verify my profile?",
+          "I want to verify my Facebook profile",
+          "How much is verification?"
+        ],
+        "answer": "Falcus Media provides profile verification assistance. Please send the relevant profile link to begin."
+      }
+    ],
+    "troubleshooting": [
+      {
+        "id": "page_not_monetized",
+        "triggers": [
+          "My page is not monetized",
+          "Why is my page not monetized?",
+          "Monetization rejected"
+        ],
+        "steps": [
+          "Ask for the Page link.",
+          "Ask what monetization feature the customer is trying to access.",
+          "Ask whether Facebook displays a restriction, rejection or eligibility message.",
+          "Ask the customer to send a screenshot if available.",
+          "Determine whether the issue can be explained automatically.",
+          "If account review or manual intervention is required, create an escalation."
+        ]
+      },
+      {
+        "id": "page_restricted",
+        "triggers": [
+          "My page is restricted",
+          "Facebook restricted my page",
+          "Page restriction"
+        ],
+        "steps": [
+          "Request the Page link.",
+          "Ask what restriction message Facebook displays.",
+          "Ask when the restriction started.",
+          "Request a screenshot if available.",
+          "Provide available guidance.",
+          "Escalate if manual review is required."
+        ]
+      },
+      {
+        "id": "account_disabled",
+        "triggers": [
+          "Account disabled",
+          "Facebook disabled my account",
+          "My profile was disabled"
+        ],
+        "steps": [
+          "Request the Profile link.",
+          "Ask when the account was disabled.",
+          "Ask for the reason/message shown by Facebook.",
+          "Ask whether an appeal has already been submitted.",
+          "Determine whether the customer requires Falcus Media's recovery service.",
+          "If yes, open the recovery service flow."
+        ]
+      },
+      {
+        "id": "payment_problem",
+        "triggers": [
+          "Payment failed",
+          "Payment not showing",
+          "I paid but my order is not active",
+          "Payment issue"
+        ],
+        "steps": [
+          "Request order/reference number.",
+          "Request proof of payment.",
+          "Ask what service the payment was for.",
+          "Check payment status if payment verification is integrated.",
+          "If verified, update the order automatically.",
+          "If payment cannot be verified, escalate to payment support."
+        ]
+      },
+      {
+        "id": "order_delayed",
+        "triggers": [
+          "My order is delayed",
+          "Why is my order taking long?",
+          "My service has not started"
+        ],
+        "steps": [
+          "Request order/reference number.",
+          "Identify the service.",
+          "Check current order status.",
+          "Compare status with the expected processing period.",
+          "Explain the current status.",
+          "Escalate only if the order requires manual intervention."
+        ]
+      }
+    ]
+  },
+  "customerProtection": {
+    "blockedRequests": [
+      "Password requests",
+      "OTP requests",
+      "2FA code requests",
+      "Bank PIN requests",
+      "Card PIN requests",
+      "Security question answers"
+    ],
+    "blockedResponse": "For your security, please do not send passwords, OTPs, 2FA codes, PINs or other security credentials in this chat. We only need the account/page link and information relevant to your request."
+  },
+  "humanEscalation": {
+    "enabled": true,
+    "triggerConditions": [
+      "Customer requests human support.",
+      "AI confidence is too low.",
+      "Two troubleshooting attempts failed.",
+      "Payment dispute cannot be automatically verified.",
+      "Manual account action is required.",
+      "Sensitive recovery case requires human review.",
+      "Customer reports a serious unresolved problem.",
+      "Request is outside Falcus Media services."
+    ],
+    "agentHandoffData": [
+      "Customer name",
+      "Customer email",
+      "Account link",
+      "Selected service",
+      "Customer's original request",
+      "Conversation summary",
+      "Information already collected",
+      "Payment status",
+      "Order/reference number",
+      "Screenshots/evidence",
+      "Troubleshooting already attempted"
+    ],
+    "handoffMessage": "I've collected the important information about your request, so you won't need to repeat everything to the next agent. I'm transferring your case to a human support representative now."
+  },
+  "conversationClosing": {
+    "resolved": "✅ Great! I'm glad I could help. Your issue has been resolved. If you need anything else, just send me a message.",
+    "requestSubmitted": "✅ Your request has been successfully submitted to Falcus Media Ltd.\n\nReference: {{referenceNumber}}\n\nPlease keep this reference number for future support.",
+    "humanTransferred": "✅ Your case has been transferred to a human agent. Your previous information has been attached to the case."
+  },
+  "paymentRules": {
+    "bankDetailsVariable": "{{bankDetails}}",
+    "paymentInstruction": "Only provide official Falcus Media Ltd payment details when the selected service requires payment. Customers should send proof of payment after completing the transaction.",
+    "neverRequestBankingCredentials": true,
+    "neverRequestCardPin": true,
+    "neverRequestOtp": true
+  },
+  "completionFlow": {
+    "step1": "Confirm all required information has been collected.",
+    "step2": "If payment is required, confirm that payment evidence has been submitted.",
+    "step3": "Create or update the customer's service request.",
+    "step4": "Provide the customer with a reference number where supported.",
+    "step5": "Tell the customer what happens next.",
+    "finalMessage": "✅ Your request has been successfully submitted to Falcus Media Ltd.\n\nReference: {{referenceNumber}}\n\nYou do not need to resend the information you have already provided. Our system has recorded your request and the appropriate team will handle the next step."
+  },
+  "aiSupportRules": {
+    "objective": "Resolve approximately 70-90% of common customer requests without human intervention while escalating complex, sensitive or unresolved issues to a human agent.",
+    "beforeEscalation": [
+      "Identify the customer's account.",
+      "Understand the customer's exact problem.",
+      "Check whether the problem matches a known solution.",
+      "Provide the appropriate troubleshooting or information.",
+      "Ask the customer whether the solution resolved the problem.",
+      "Only escalate if the problem remains unresolved or requires human authorization."
+    ],
+    "doNotRepeatQuestions": true,
+    "rememberConversationDetails": true,
+    "neverAskForInformationAlreadyProvided": true,
+    "escalateWhen": [
+      "The customer explicitly requests a human agent.",
+      "The issue requires manual account access or internal action.",
+      "The customer reports a payment dispute that cannot be automatically verified.",
+      "The AI cannot confidently determine the correct solution.",
+      "The customer has attempted the recommended solution and it did not work.",
+      "The request involves sensitive account recovery requiring manual review.",
+      "The request falls outside the available Falcus Media services."
+    ],
+    "escalationMessage": "I have collected the important information about your request so you do not need to explain everything again. I am now transferring your case to a human agent."
+  },
+  "chatFlowUpdate": {
+    "version": "2.0",
+    "purpose": "Upgrade Falcus Media Ltd chatbot from a basic keyword/form chatbot into an intent-based AI customer service system.",
+    "globalRules": {
+      "enabled": true,
+      "coreInstruction": "Always understand what the customer is trying to accomplish before deciding how to respond. Never require the customer to use the exact service name or exact wording used in the system.",
+      "semanticUnderstanding": true,
+      "spellingTolerance": true,
+      "slangTolerance": true,
+      "shortMessageUnderstanding": true,
+      "naturalLanguageUnderstanding": true,
+      "neverFallbackBecauseOfWordingMismatch": true,
+      "neverRepeatQuestions": true,
+      "rememberConversationContext": true,
+      "importantRule": "If the customer's message can reasonably be mapped to an existing service, support category, FAQ, payment request, order request or human-support request, route the customer to the appropriate flow instead of using the fallback response.",
+      "fallbackIsLastResort": true,
+      "security": {
+        "neverRequestPasswords": true,
+        "neverRequestOtp": true,
+        "neverRequest2FACodes": true,
+        "neverRequestBankPin": true,
+        "neverRequestCardPin": true,
+        "neverRequestSecurityAnswers": true,
+        "securityMessage": "For your security, please do not send passwords, OTPs, 2FA codes, PINs or other security credentials in this chat."
+      }
+    },
+    "intentRouter": {
+      "enabled": true,
+      "instruction": "Analyze every incoming customer message and determine the customer's intent before generating a response. Match meaning rather than exact words.",
+      "priorityOrder": [
+        "HUMAN_SUPPORT",
+        "PAYMENT_STATUS",
+        "PAYMENT",
+        "ORDER_STATUS",
+        "SUPPORT",
+        "SERVICE",
+        "FAQ",
+        "UNKNOWN"
+      ],
+      "intents": [
+        {
+          "id": "SERVICE_FOLLOWERS",
+          "category": "SERVICE",
+          "routeTo": "service_followers",
+          "examples": [
+            "i want followers",
+            "i want follower",
+            "i want to buy followers",
+            "i want to buy follower",
+            "buy followers",
+            "need followers",
+            "i need followers",
+            "give me followers",
+            "get me followers",
+            "help me get followers",
+            "increase my followers",
+            "i want more followers",
+            "can you increase my followers",
+            "followers service",
+            "how can i get followers",
+            "i need 10k followers"
+          ]
+        },
+        {
+          "id": "SERVICE_WATCH_TIME",
+          "category": "SERVICE",
+          "routeTo": "service_watch_time",
+          "examples": [
+            "i need watch time",
+            "i want watch time",
+            "buy watch time",
+            "youtube watch hours",
+            "youtube watch time",
+            "i need youtube hours",
+            "increase my youtube watch hours"
+          ]
+        },
+        {
+          "id": "SERVICE_CREATE_FACEBOOK_PAGE",
+          "category": "SERVICE",
+          "routeTo": "service_create_facebook_page",
+          "examples": [
+            "create facebook page",
+            "i need a facebook page",
+            "make me a facebook page",
+            "create a new page",
+            "i want a new facebook page",
+            "help me create a page"
+          ]
+        },
+        {
+          "id": "SERVICE_CRITERIA_FACEBOOK_PAGE",
+          "category": "SERVICE",
+          "routeTo": "service_create_criteria_page",
+          "examples": [
+            "criteria facebook page",
+            "create a facebook page with criteria",
+            "i need a specific type of facebook page",
+            "i need a page with requirements",
+            "create a page according to my requirements"
+          ]
+        },
+        {
+          "id": "SERVICE_UK_TIKTOK",
+          "category": "SERVICE",
+          "routeTo": "service_create_uk_tiktok",
+          "examples": [
+            "uk tiktok",
+            "create uk tiktok",
+            "i need uk tiktok",
+            "i want a uk tiktok account",
+            "make me a uk tiktok"
+          ]
+        },
+        {
+          "id": "SERVICE_USA_TIKTOK",
+          "category": "SERVICE",
+          "routeTo": "service_create_usa_tiktok",
+          "examples": [
+            "usa tiktok",
+            "us tiktok",
+            "create usa tiktok",
+            "i need usa tiktok",
+            "i want a us tiktok account",
+            "make me a usa tiktok"
+          ]
+        },
+        {
+          "id": "SERVICE_CONNECTED_ENTITY",
+          "category": "SERVICE",
+          "routeTo": "service_connected_entity",
+          "examples": [
+            "connected entity",
+            "i need connected entity",
+            "help with connected entity",
+            "can you fix connected entity",
+            "i need entity connection"
+          ]
+        },
+        {
+          "id": "SERVICE_NAME_CHANGE",
+          "category": "SERVICE",
+          "routeTo": "service_name_change",
+          "examples": [
+            "name change",
+            "change my page name",
+            "change facebook page name",
+            "rename my page",
+            "rename facebook page",
+            "i want to change my page name",
+            "can you change my page name"
+          ]
+        },
+        {
+          "id": "SERVICE_ADVERTISING",
+          "category": "SERVICE",
+          "routeTo": "service_advertising",
+          "examples": [
+            "advertising",
+            "advertisement",
+            "ads",
+            "facebook ads",
+            "instagram ads",
+            "run ads",
+            "i need ads",
+            "advertising campaign",
+            "set up ads",
+            "help me advertise my business"
+          ]
+        },
+        {
+          "id": "SERVICE_PAGE_OPTIMIZATION",
+          "category": "SERVICE",
+          "routeTo": "service_page_optimization",
+          "examples": [
+            "page optimization",
+            "optimize my page",
+            "improve my page",
+            "make my page better",
+            "fix my page",
+            "improve my facebook page"
+          ]
+        },
+        {
+          "id": "SERVICE_SOCIAL_MEDIA_MANAGEMENT",
+          "category": "SERVICE",
+          "routeTo": "service_social_media_management",
+          "examples": [
+            "social media management",
+            "manage my social media",
+            "manage my page",
+            "manage my accounts",
+            "monthly social media management",
+            "social media manager",
+            "i need someone to manage my social media"
+          ]
+        },
+        {
+          "id": "SERVICE_MONETIZATION",
+          "category": "SERVICE",
+          "routeTo": "menu_monetization",
+          "examples": [
+            "monetize my page",
+            "monetize my profile",
+            "i want monetization",
+            "facebook monetization",
+            "help me monetize",
+            "i want to monetize my account"
+          ]
+        },
+        {
+          "id": "SERVICE_ACCOUNT_RECOVERY",
+          "category": "SERVICE",
+          "routeTo": "menu_account_recovery",
+          "examples": [
+            "recover my account",
+            "account recovery",
+            "help me recover my account",
+            "my account is disabled",
+            "my profile is disabled",
+            "my page is suspended",
+            "recover suspended page"
+          ]
+        },
+        {
+          "id": "PAYMENT",
+          "category": "PAYMENT",
+          "routeTo": "payment_flow",
+          "examples": [
+            "where do i pay",
+            "where can i pay",
+            "how do i pay",
+            "payment details",
+            "where are your bank details",
+            "send me your account details",
+            "where should i send the money",
+            "where do i send payment",
+            "i want to make payment",
+            "i want to pay",
+            "how can i make payment",
+            "payment account",
+            "bank details"
+          ]
+        },
+        {
+          "id": "PAYMENT_STATUS",
+          "category": "PAYMENT",
+          "routeTo": "payment_support",
+          "examples": [
+            "i paid",
+            "i already paid",
+            "payment made",
+            "i have paid",
+            "payment sent",
+            "i sent the money",
+            "payment pending",
+            "payment not showing",
+            "payment not confirmed",
+            "my payment has not been confirmed",
+            "i paid yesterday"
+          ]
+        },
+        {
+          "id": "ORDER_STATUS",
+          "category": "SUPPORT",
+          "routeTo": "support_existing_order",
+          "examples": [
+            "check my order",
+            "order status",
+            "where is my order",
+            "what is happening with my order",
+            "my order",
+            "check my service",
+            "service status",
+            "has my order been completed",
+            "is my order ready",
+            "when will my order be ready"
+          ]
+        },
+        {
+          "id": "SUPPORT",
+          "category": "SUPPORT",
+          "routeTo": "menu_support",
+          "examples": [
+            "i need help",
+            "i have a problem",
+            "something is wrong",
+            "my account has a problem",
+            "my page has a problem",
+            "help me",
+            "i have an issue",
+            "service problem"
+          ]
+        },
+        {
+          "id": "HUMAN_SUPPORT",
+          "category": "HUMAN_SUPPORT",
+          "routeTo": "menu_human",
+          "examples": [
+            "human",
+            "talk to human",
+            "talk to a human",
+            "human agent",
+            "live agent",
+            "connect me to an agent",
+            "i want an agent",
+            "customer service",
+            "representative",
+            "let me talk to someone"
+          ]
+        }
+      ]
+    },
+    "semanticMatching": {
+      "enabled": true,
+      "instruction": "Do not require exact keyword matches. Determine the intended meaning of the customer's message.",
+      "examples": [
+        {
+          "messages": [
+            "i want followers",
+            "i want to buy followers",
+            "buy me followers",
+            "need follower",
+            "i need more people on my page",
+            "help me grow my followers"
+          ],
+          "intent": "SERVICE_FOLLOWERS"
+        },
+        {
+          "messages": [
+            "where do i pay",
+            "where can i send money",
+            "send account details",
+            "how do i make payment",
+            "payment details please"
+          ],
+          "intent": "PAYMENT"
+        },
+        {
+          "messages": [
+            "i paid",
+            "money has been sent",
+            "payment done",
+            "i already made payment",
+            "i paid yesterday"
+          ],
+          "intent": "PAYMENT_STATUS"
+        }
+      ]
+    },
+    "contextAwareness": {
+      "enabled": true,
+      "instruction": "Use previous conversation messages to understand short or incomplete customer messages.",
+      "remember": [
+        "customerName",
+        "customerEmail",
+        "accountLink",
+        "platform",
+        "selectedService",
+        "serviceId",
+        "orderNumber",
+        "paymentStatus",
+        "paymentProof",
+        "currentIntent",
+        "currentProblem",
+        "previousAnswers"
+      ],
+      "examples": [
+        {
+          "previousMessage": "I want to change my page name",
+          "currentMessage": "where do i pay",
+          "interpretation": "Customer wants payment information for the Name Change service.",
+          "routeTo": "payment_flow"
+        },
+        {
+          "previousMessage": "I want followers",
+          "currentMessage": "Facebook",
+          "interpretation": "Customer is answering the platform question for the Followers Service.",
+          "routeTo": "service_followers"
+        },
+        {
+          "previousMessage": "I paid for name change",
+          "currentMessage": "still waiting",
+          "interpretation": "Customer is reporting a delayed Name Change order.",
+          "routeTo": "support_existing_order"
+        }
+      ]
+    },
+    "serviceRouting": {
+      "enabled": true,
+      "instruction": "When an intent matches a service, immediately open the corresponding service flow. Do not send the customer back to the main menu unless necessary.",
+      "routes": {
+        "SERVICE_FOLLOWERS": "service_followers",
+        "SERVICE_WATCH_TIME": "service_watch_time",
+        "SERVICE_CREATE_FACEBOOK_PAGE": "service_create_facebook_page",
+        "SERVICE_CRITERIA_FACEBOOK_PAGE": "service_create_criteria_page",
+        "SERVICE_UK_TIKTOK": "service_create_uk_tiktok",
+        "SERVICE_USA_TIKTOK": "service_create_usa_tiktok",
+        "SERVICE_CONNECTED_ENTITY": "service_connected_entity",
+        "SERVICE_NAME_CHANGE": "service_name_change",
+        "SERVICE_ADVERTISING": "service_advertising",
+        "SERVICE_PAGE_OPTIMIZATION": "service_page_optimization",
+        "SERVICE_SOCIAL_MEDIA_MANAGEMENT": "service_social_media_management",
+        "SERVICE_MONETIZATION": "menu_monetization",
+        "SERVICE_ACCOUNT_RECOVERY": "menu_account_recovery"
+      }
+    },
+    "paymentFlow": {
+      "id": "payment_flow",
+      "enabled": true,
+      "instruction": "Recognize payment-related questions even when the customer does not mention the name of the service.",
+      "steps": [
+        {
+          "id": "identify_payment_service",
+          "instruction": "Check whether the customer has already selected a service in the current conversation."
+        },
+        {
+          "id": "use_existing_context",
+          "instruction": "If a service has already been selected, do not ask the customer what service they are paying for."
+        },
+        {
+          "id": "ask_service_if_missing",
+          "question": "Which Falcus Media service are you making payment for?"
+        },
+        {
+          "id": "provide_payment_details",
+          "message": "Sure. Here are the official Falcus Media Ltd payment details:\n\n{{bankDetails}}\n\nAfter payment, please send your proof of payment here."
+        },
+        {
+          "id": "payment_confirmation",
+          "message": "✅ Payment information received. We will verify your payment and update your request."
+        }
+      ]
+    },
+    "paymentSupport": {
+      "id": "payment_support",
+      "enabled": true,
+      "steps": [
+        {
+          "id": "request_proof",
+          "question": "Please send your proof of payment here."
+        },
+        {
+          "id": "request_reference",
+          "question": "If you have an order or reference number, please send it as well."
+        },
+        {
+          "id": "verify",
+          "instruction": "Verify the payment using the available payment system before telling the customer that payment has been confirmed."
+        },
+        {
+          "id": "verified",
+          "message": "✅ Your payment has been verified and your request has been updated."
+        },
+        {
+          "id": "not_verified",
+          "message": "We have received your payment information, but the payment could not be automatically verified. Your case will be sent for manual verification."
+        }
+      ]
+    },
+    "knowledgeBaseRouting": {
+      "enabled": true,
+      "instruction": "If the message is a question rather than a service request, search the AI knowledge base before using fallback.",
+      "searchOrder": [
+        "generalFaq",
+        "serviceFaq",
+        "troubleshooting",
+        "companyInformation",
+        "paymentInformation"
+      ]
+    },
+    "fallback": {
+      "enabled": true,
+      "importantRule": "Fallback must only be used when the AI cannot reasonably determine the customer's intent after checking intent routing, conversation context and the knowledge base.",
+      "neverSay": [
+        "I received your message, but I'm not entirely sure how to answer that based on my current training.",
+        "Please ask another question.",
+        "I don't know how to answer that."
+      ],
+      "firstFallback": "I want to make sure I direct you to the right place. Are you looking for a service, payment help, order support, or help with an existing account?",
+      "fallbackOptions": [
+        {
+          "title": "Our Services",
+          "routeTo": "menu_services"
+        },
+        {
+          "title": "Payment Help",
+          "routeTo": "payment_flow"
+        },
+        {
+          "title": "Check Order",
+          "routeTo": "support_existing_order"
+        },
+        {
+          "title": "Talk to Human",
+          "routeTo": "menu_human"
+        }
+      ],
+      "secondFallback": "Please describe what you need help with in a little more detail. You can also type 'human' if you would like to speak with a support agent.",
+      "maxAttempts": 2,
+      "afterMaxAttempts": {
+        "action": "ESCALATE",
+        "message": "I don't want to give you the wrong information. I have collected the information available and will transfer your request to a human support agent."
+      }
+    },
+    "responseRules": {
+      "enabled": true,
+      "rules": [
+        "Never respond with a generic fallback when an existing service matches the customer's intent.",
+        "Never require exact service names.",
+        "Understand spelling mistakes.",
+        "Understand singular and plural forms.",
+        "Understand short messages.",
+        "Understand informal language.",
+        "Understand natural variations of service requests.",
+        "Use conversation context.",
+        "If the customer says 'I want followers', open the Followers Service.",
+        "If the customer says 'I want to buy followers', open the Followers Service.",
+        "If the customer says 'Where do I pay?', detect Payment Intent.",
+        "If the customer says 'I paid', detect Payment Status Intent.",
+        "If the customer previously selected a service and then asks about payment, use that service context.",
+        "Do not ask for information already provided.",
+        "Do not send customers back to the main menu unnecessarily.",
+        "Ask only questions relevant to the current service.",
+        "Keep responses short, natural and conversational.",
+        "Do not mention internal AI systems, training, intent detection or knowledge bases to customers."
+      ]
+    },
+    "humanEscalation": {
+      "enabled": true,
+      "triggerWhen": [
+        "Customer explicitly requests a human.",
+        "AI cannot determine intent after two attempts.",
+        "Customer has tried the available troubleshooting steps and the problem remains unresolved.",
+        "Manual account intervention is required.",
+        "Payment cannot be automatically verified.",
+        "Customer has a complex complaint.",
+        "Customer requests something outside Falcus Media services."
+      ],
+      "handoffMessage": "I've collected the important information about your request, so you won't need to repeat everything. I'm transferring your case to a Falcus Media support agent now."
+    },
+    "developerImplementationRules": {
+      "important": true,
+      "instruction": "The application must perform intent detection and routing before triggering the generic fallback response.",
+      "processingOrder": [
+        "Receive customer message.",
+        "Normalize message.",
+        "Check current conversation context.",
+        "Detect intent using semantic understanding.",
+        "Check service intent.",
+        "Check payment intent.",
+        "Check payment status intent.",
+        "Check order status intent.",
+        "Check support intent.",
+        "Check human support intent.",
+        "Search knowledge base if the message is informational.",
+        "Open the matched flow.",
+        "Only use fallback if no reasonable intent can be determined."
+      ],
+      "normalization": {
+        "enabled": true,
+        "lowercase": true,
+        "trimWhitespace": true,
+        "ignoreRepeatedLetters": true,
+        "handleCommonTypos": true,
+        "handleSingularPlural": true
+      },
+      "examples": [
+        {
+          "input": "i want followers",
+          "intent": "SERVICE_FOLLOWERS",
+          "route": "service_followers",
+          "expectedResponse": "Absolutely! We can help with our Followers Service. Which platform do you need followers for?"
+        },
+        {
+          "input": "i want to buy followerss",
+          "intent": "SERVICE_FOLLOWERS",
+          "route": "service_followers",
+          "expectedResponse": "Absolutely! We can help with our Followers Service. Which platform do you need followers for?"
+        },
+        {
+          "input": "Where do I pay",
+          "intent": "PAYMENT",
+          "route": "payment_flow",
+          "expectedResponse": "Sure. Which Falcus Media service are you making payment for?"
+        },
+        {
+          "input": "i paid already",
+          "intent": "PAYMENT_STATUS",
+          "route": "payment_support",
+          "expectedResponse": "Thanks. Please send your proof of payment here so we can verify the transaction."
+        }
+      ]
+    }
+  }
+}
