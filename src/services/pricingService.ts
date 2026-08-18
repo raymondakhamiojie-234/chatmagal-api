@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 const PRICING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/18Xao0VU6frNik4OB8Tp85TpednvbNLPHnwNqa37ViG8/export?format=csv';
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
@@ -29,18 +29,21 @@ export async function fetchPricingSheet(): Promise<string> {
 }
 
 export async function getServicePrice(serviceName: string, customerQuery: string): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+  const apiKey = process.env.NVIDIA_API_KEY;
+  if (!apiKey) {
     return null;
   }
+  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
 
   const csvData = await fetchPricingSheet();
   if (!csvData) {
     return null;
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const openai = new OpenAI({
+    apiKey,
+    baseURL: 'https://integrate.api.nvidia.com/v1',
+  });
 
   const prompt = `You are an internal pricing API for Falcus Media.
 You have the following live pricing data (CSV format):
@@ -63,8 +66,14 @@ Rules:
 Response:`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+    const completion = await openai.chat.completions.create({
+      model: aiModel,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 100,
+    });
+    
+    const text = completion.choices[0]?.message?.content?.trim() || '';
     
     if (text === 'AMBIGUOUS' || text === 'NOT_FOUND' || text === '') {
       return null;
@@ -72,7 +81,7 @@ Response:`;
 
     return text;
   } catch (error) {
-    console.error('Failed to fetch price via Gemini:', error);
+    console.error('Failed to fetch price via NVIDIA NIM AI:', error);
     return null;
   }
 }

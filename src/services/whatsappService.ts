@@ -1,8 +1,9 @@
 import { PrismaClient, Prisma, MessageDirection, MessageLane, MessageStatus } from '@prisma/client';
 import { getIo } from '../../config/socket';
-import { getServicePrice } from './pricingService';
+import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getServicePrice } from './pricingService';
+import OpenAI from 'openai';
 
 const prisma = new PrismaClient();
 
@@ -47,15 +48,21 @@ function extractMessageText(msg: any): string {
 }
 
 // Conversational Gemini AI Generator & Intelligent Sandbox Fallback (Option G)
-async function detectIntent(workspace: any, contactId: string, queryText: string, activeFlowId?: string, currentQuestion?: string): Promise<any | null> {
+export async function detectIntent(workspace: any, contactId: string, queryText: string, activeFlowId?: string, currentQuestion?: string): Promise<any | null> {
   const flowConfig = workspace.flowConfig as any;
   if (!flowConfig?.chatFlowUpdate?.intentRouter?.enabled) return null;
   
   const intents = flowConfig.chatFlowUpdate.intentRouter.intents;
   if (!intents || !Array.isArray(intents) || intents.length === 0) return null;
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE' || apiKey.trim() === '') return null;
+  const apiKey = process.env.NVIDIA_API_KEY;
+  if (!apiKey) return null;
+  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+
+  const openai = new OpenAI({
+    apiKey,
+    baseURL: 'https://integrate.api.nvidia.com/v1',
+  });
 
   let historyText = '';
   try {
@@ -77,10 +84,6 @@ async function detectIntent(workspace: any, contactId: string, queryText: string
   }
 
   try {
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
     const intentDescriptions = intents.map((i: any) => `- ${i.id}: ${i.category} (Examples: ${i.examples?.slice(0,5).join(', ')})`).join('\n');
     const outsideScopeDesc = `- OUTSIDE_SCOPE: Use this if the customer asks completely unrelated questions (e.g. weather, jokes, homework, who is the president, write a poem).`;
     
@@ -112,9 +115,14 @@ Respond ONLY with a valid JSON object containing:
 Example: {"intentId": "SERVICE_FOLLOWERS", "isAnswerToCurrentFlow": false, "isFlowSwitchRequested": false}
 Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchRequested": false}
 `;
-    console.log(`🧠 [Gemini Intent AI] Classifying message: "${queryText}"`);
-    const result = await model.generateContent(prompt);
-    let text = result.response.text().trim();
+    console.log(`🧠 [NVIDIA NIM AI] Classifying message using ${aiModel}: "${queryText}"`);
+    const completion = await openai.chat.completions.create({
+      model: aiModel,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 1024,
+    });
+    let text = completion.choices[0]?.message?.content?.trim() || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       text = jsonMatch[0];
@@ -142,8 +150,9 @@ Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchR
 }
 
 export async function generateGeminiResponse(contactId: string, prompt: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const hasLiveKey = apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.trim() !== '';
+  const apiKey = process.env.NVIDIA_API_KEY;
+  const hasLiveKey = apiKey && apiKey.trim() !== '';
+  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
 
   let trainingContextText = '';
   let workspaceId = '';
@@ -234,7 +243,10 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
   }
 
   if (hasLiveKey) {
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const openai = new OpenAI({
+      apiKey,
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+    });
     const promptContext = `System Instruction: You are the automated AI assistant for the WhatsApp Business account of "${workspaceName}". 
 Answering Tone Guidelines: You must write in a tone that is "${systemTone}".
 ${systemPrompt ? `Brand Specific Instructions & System Guidelines:\n${systemPrompt}\n` : 'Provide exceptionally helpful, natural, human-like, concise, and professional responses to the customer.'} 
@@ -260,29 +272,18 @@ ${historyText}
 Customer: ${prompt}
 Bot:`;
 
-    // Attempt with gemini-1.5-flash first
     try {
-      console.log(`🧠 [Gemini AI] Querying live gemini-1.5-flash model with Google Search Grounding...`);
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        tools: [{ googleSearchRetrieval: {} }] 
+      console.log(`🧠 [NVIDIA NIM AI] Querying model ${aiModel}...`);
+      const completion = await openai.chat.completions.create({
+        model: aiModel,
+        messages: [{ role: 'user', content: promptContext }],
+        temperature: 0.7,
+        max_tokens: 1024,
       });
-      const result = await model.generateContent(promptContext);
-      const text = result.response.text();
+      const text = completion.choices[0]?.message?.content;
       if (text && text.trim()) return text.trim();
-    } catch (err1: any) {
-      console.warn('⚠️ [gemini-1.5-flash Failed] Attempting fallback to gemini-pro:', err1.message || err1);
-      
-      // Secondary fallback to legacy/classic gemini-pro endpoint model
-      try {
-        console.log(`🧠 [Gemini AI] Querying live gemini-pro model fallback...`);
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-        const result = await model.generateContent(promptContext);
-        const text = result.response.text();
-        if (text && text.trim()) return text.trim();
-      } catch (err2: any) {
-        console.error('⚠️ [Gemini AI API Error] Falling back to local AI engine:', err2.message || err2);
-      }
+    } catch (err: any) {
+      console.error('⚠️ [NVIDIA NIM AI API Error] Falling back to local AI engine:', err.message || err);
     }
   }
 
@@ -357,8 +358,9 @@ interface SentimentResult {
 }
 
 async function analyzeMessageSentiment(prompt: string): Promise<SentimentResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const hasLiveKey = apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.trim() !== '';
+  const apiKey = process.env.NVIDIA_API_KEY;
+  const hasLiveKey = apiKey && apiKey.trim() !== '';
+  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
 
   const systemInstructions = `Analyze the following customer message and return a strictly formatted JSON object with "sentiment" and "priority" keys.
   
@@ -369,19 +371,28 @@ Classification rules:
 Return ONLY the raw JSON object, no markdown wrappers and no explanation:
 {"sentiment": "NEUTRAL", "priority": "STANDARD"}`;
 
-  const promptContext = `${systemInstructions}\n\nCustomer Message: "${prompt}"`;
-
   if (hasLiveKey) {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Attempt with gemini-1.5-flash first, fallback to gemini-pro
     try {
-      console.log(`🧠 [Gemini Sentiment AI] Classifying message: "${prompt}" using gemini-1.5-flash...`);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(promptContext);
-      const text = result.response.text();
-      if (text && text.trim()) {
-        const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const openai = new OpenAI({
+        apiKey,
+        baseURL: 'https://integrate.api.nvidia.com/v1',
+      });
+      
+      const completion = await openai.chat.completions.create({
+        model: aiModel,
+        messages: [
+          { role: 'system', content: systemInstructions },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.1,
+        max_tokens: 150,
+      });
+
+      const text = completion.choices[0]?.message?.content?.trim() || '';
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const cleaned = jsonMatch[0].replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleaned);
         if (parsed.sentiment && parsed.priority) {
           return {
@@ -390,26 +401,8 @@ Return ONLY the raw JSON object, no markdown wrappers and no explanation:
           };
         }
       }
-    } catch (err1) {
-      console.warn('⚠️ [Gemini Sentiment gemini-1.5-flash Failed] Attempting fallback to gemini-pro:', err1);
-      try {
-        console.log(`🧠 [Gemini Sentiment AI] Classifying message: "${prompt}" using gemini-pro...`);
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-        const result = await model.generateContent(promptContext);
-        const text = result.response.text();
-        if (text && text.trim()) {
-          const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-          const parsed = JSON.parse(cleaned);
-          if (parsed.sentiment && parsed.priority) {
-            return {
-              sentiment: parsed.sentiment.toUpperCase(),
-              priority: parsed.priority.toUpperCase()
-            };
-          }
-        }
-      } catch (err2) {
-        console.error('⚠️ [Gemini Sentiment AI Error] Falling back to local classifier:', err2);
-      }
+    } catch (err) {
+      console.warn('⚠️ [NVIDIA NIM AI Sentiment Failed] Falling back to local classifier:', err);
     }
   }
 
