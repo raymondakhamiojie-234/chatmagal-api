@@ -531,6 +531,26 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                 });
                 replyText = matchedForm.formQuestions[1];
               }
+            } else if (!intentObj.isAnswerToCurrentFlow && intentObj.intentId === 'PRICE_QUERY' && currentData.selectedService) {
+              // EXPLICIT PRICE QUERY IN FLOW
+              const price = await getServicePrice(currentData.selectedService, queryText);
+              if (price) {
+                replyText = `The current price for ${currentData.selectedService} is ${price}.\n\nWould you like to proceed with your request? (Yes/No)`;
+                currentData.awaitingPriceConfirmation = true;
+                currentData.priceQuote = price;
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formData: currentData }
+                });
+              } else {
+                replyText = "I couldn't find a current price for that exact service or package. I don't want to give you incorrect information, so I'll connect you with a Falcus Media representative to confirm.";
+                // Clear state for handoff
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: { formState: null, formData: Prisma.DbNull }
+                });
+                // Note: Real system might trigger handoff logic here
+              }
             }
           }
 
@@ -552,16 +572,7 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
               }
             } else {
               currentData.answers.push(queryText);
-              // Check if we should fetch price
-              const serviceName = matchedForm.title;
-              const price = await getServicePrice(serviceName, queryText);
-              if (price) {
-                replyText = `The current price for ${serviceName} is ${price}.\n\nWould you like to proceed? (Yes/No)`;
-                currentData.awaitingPriceConfirmation = true;
-                currentData.priceQuote = price;
-              } else {
-                currentData.step = step + 1;
-              }
+              currentData.step = step + 1;
             }
 
             if (!replyText) {

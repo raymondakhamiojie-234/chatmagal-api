@@ -45,41 +45,45 @@ export async function getServicePrice(serviceName: string, customerQuery: string
     baseURL: 'https://integrate.api.nvidia.com/v1',
   });
 
-  const prompt = `You are an internal pricing API for Falcus Media.
+  const systemPrompt = `You are an internal pricing API for Falcus Media.
 You have the following live pricing data (CSV format):
 
 === PRICING DATA ===
 ${csvData}
 ====================
 
-The customer is asking about: "${serviceName}"
-Their exact message/quantity request was: "${customerQuery}"
-
-Find the exact price from the CSV that matches their request.
+Find the exact price from the CSV that matches the customer's request.
 Rules:
 1. Handle variations in quantity like 10k, 10000, 10,000.
-2. Return ONLY the exact price string as it appears in the CSV (e.g. "50,000").
-3. DO NOT format it as a full sentence. DO NOT invent prices.
-4. If the price cannot be clearly determined, or if multiple rows could match and you need more clarification from the customer, return EXACTLY: "AMBIGUOUS"
-5. If the service does not exist in the list, return EXACTLY: "NOT_FOUND"
+2. Return ONLY a strict JSON object with no markdown wrappers and no explanation. Do not include any reasoning or search logic.
+3. The JSON format must be EXACTLY: {"success": true, "amount": "50,000"} or {"success": false, "reason": "NOT_FOUND" / "AMBIGUOUS"}.`;
 
-Response:`;
+  const userPrompt = `The customer is asking about: "${serviceName}"
+Their exact message/quantity request was: "${customerQuery}"`;
 
   try {
     const completion = await openai.chat.completions.create({
       model: aiModel,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
       temperature: 0.1,
-      max_tokens: 100,
+      max_tokens: 150,
+      response_format: { type: 'json_object' }
     });
     
     const text = completion.choices[0]?.message?.content?.trim() || '';
     
-    if (text === 'AMBIGUOUS' || text === 'NOT_FOUND' || text === '') {
-      return null;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0].replace(/```json/g, '').replace(/```/g, '').trim());
+      if (parsed.success && parsed.amount) {
+        return parsed.amount;
+      }
     }
-
-    return text;
+    
+    return null;
   } catch (error) {
     console.error('Failed to fetch price via NVIDIA NIM AI:', error);
     return null;
