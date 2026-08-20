@@ -22,7 +22,8 @@ import {
   clearBotTraining,
   getTeamMembers,
   addTeamMember,
-  updateWorkspaceSettings
+  updateWorkspaceSettings,
+  updateContactName
 } from '../controllers/dashboardController';
 
 const router = Router();
@@ -53,6 +54,7 @@ router.post('/workspace/settings', authMiddleware, updateWorkspaceSettings);
 router.get('/media/:mediaId', authMiddleware, getMediaProxy);
 router.get('/billing/transactions', authMiddleware, getTransactions);
 router.post('/contacts/:contactId/assign', authMiddleware, assignContact);
+router.post('/contacts/:contactId/name', authMiddleware, updateContactName);
 router.post('/contacts/:contactId/bot-toggle', authMiddleware, toggleContactBot);
 router.get('/workspace/training', authMiddleware, getBotTraining);
 router.post('/workspace/training/upload', authMiddleware, uploadBotTraining);

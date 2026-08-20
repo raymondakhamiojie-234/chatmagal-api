@@ -966,3 +966,47 @@ export const addTeamMember = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// POST /api/contacts/:contactId/name
+export const updateContactName = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    const { contactId } = req.params;
+    const { name } = req.body;
+
+    if (!workspaceId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!contactId || typeof name !== 'string') {
+      return res.status(400).json({ error: 'Missing contactId or invalid name' });
+    }
+
+    const contact = await prisma.contact.findFirst({
+      where: { id: contactId, workspaceId }
+    });
+
+    if (!contact) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    const updatedContact = await prisma.contact.update({
+      where: { id: contactId },
+      data: { name: name.trim() || null }
+    });
+
+    // Broadcast the update so the UI updates instantly
+    try {
+      const io = getIo();
+      io.to(workspaceId).emit('contact_updated', {
+        contactId: contactId,
+        name: updatedContact.name
+      });
+    } catch (wsErr) {}
+
+    return res.status(200).json(updatedContact);
+  } catch (error) {
+    console.error('Error updating contact name:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

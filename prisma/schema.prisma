@@ -42,6 +42,7 @@ model Contact {
   id            String    @id @default(uuid())
   workspaceId   String
   phoneNumber   String
+  name          String?
   optInStatus   Boolean   @default(true)
   assignedAgent String?
   botEnabled    Boolean   @default(true) // New field: toggles bot automated replies

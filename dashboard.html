@@ -2638,6 +2638,30 @@
 
   <!-- APP CLIENT LOGIC -->
   <script>
+    // Update contact name
+    async function editContactName(contactId) {
+      const contact = contactsMap[contactId];
+      if (!contact) return;
+      
+      const newName = prompt('Enter contact name:', contact.name || '');
+      if (newName === null) return; // User cancelled
+      
+      try {
+        const res = await apiRequest(`/api/contacts/${contactId}/name`, {
+          method: 'POST',
+          body: JSON.stringify({ name: newName })
+        });
+        
+        contactsMap[contactId].name = res.name;
+        selectThread(contactId);
+        loadChatThreads(false);
+        showToast('Contact name updated');
+      } catch (err) {
+        console.error('Failed to update contact name', err);
+        showToast('Failed to update contact name', 'error');
+      }
+    }
+
     // Password visibility toggle helper
     function togglePasswordVisibility(inputId, toggleEl) {
       const input = document.getElementById(inputId);
@@ -3213,6 +3237,19 @@
         }
       });
 
+      socket.on('contact_updated', ({ contactId, name }) => {
+        if (contactsMap[contactId]) {
+          contactsMap[contactId].name = name;
+          if (activeContactId === contactId) {
+            document.getElementById('active-contact-title').innerHTML = `
+              ${name || '+' + contactsMap[contactId].phoneNumber}
+              <span onclick="editContactName('${contactId}')" style="cursor:pointer; margin-left:8px; font-size:0.8rem; color:var(--text-muted);" title="Edit Name">✎</span>
+            `;
+          }
+          loadChatThreads(false);
+        }
+      });
+
       socket.on('humanSupportRequested', ({ contactId, phone }) => {
         // Trigger visual toast
         showToast(`🔔 Customer +${phone} requests Human Support! Bot automatically paused.`, 'warning');
@@ -3521,7 +3558,7 @@
               <div class="thread-details">
                 <div class="thread-contact-info" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
                   <span class="thread-number" style="display:flex; align-items:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
-                    +${contact.phoneNumber}${assignedBadge}${botBadge}${priorityBadge}${sentimentBadge}
+                    ${contact.name ? contact.name : '+' + contact.phoneNumber}${assignedBadge}${botBadge}${priorityBadge}${sentimentBadge}
                   </span>
                   <div style="display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0;">
                     <span class="thread-time" style="font-size:0.68rem; color:${contact.unreadCount > 0 ? '#25D366' : 'var(--text-muted)'}; font-weight:${contact.unreadCount > 0 ? '700' : 'normal'};">${time}</span>
@@ -3601,7 +3638,10 @@
       }
 
       // Load thread inspector info
-      document.getElementById('active-contact-title').textContent = `+${contact.phoneNumber}`;
+      document.getElementById('active-contact-title').innerHTML = `
+        ${contact.name || '+' + contact.phoneNumber}
+        <span onclick="editContactName('${contact.id}')" style="cursor:pointer; margin-left:8px; font-size:0.8rem; color:var(--text-muted);" title="Edit Name">✎</span>
+      `;
       document.getElementById('inspector-phone').textContent = `+${contact.phoneNumber}`;
       document.getElementById('inspector-opt-in').innerHTML = contact.optInStatus ? '<span style="color:var(--success)">✓ Opted In</span>' : '<span style="color:var(--danger)">✗ Opted Out</span>';
       document.getElementById('inspector-id').textContent = contact.id;
