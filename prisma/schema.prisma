@@ -36,6 +36,7 @@ model Workspace {
   transactions      Transaction[]
   botTrainings      BotTraining[]
   teamMembers       TeamMember[]
+  orders            Order[]
 }
 
 model Contact {
@@ -51,9 +52,22 @@ model Contact {
   priority      String    @default("STANDARD") // NEW: STANDARD, HIGH, URGENT
   formState     String?   
   formData      Json?     
+  
+  // Account Fields
+  customerId         String?   @unique
+  email              String?
+  passwordHash       String?
+  emailVerified      Boolean   @default(false)
+  accountStatus      String    @default("GUEST") // GUEST, REGISTERED, VERIFIED, SUSPENDED
+  verificationCode   String?
+  verificationExpiry DateTime?
+  resetToken         String?
+  resetExpiry        DateTime?
+  suspendedFlowData  Json?
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
   messages    Message[]
+  orders      Order[]
 
   @@unique([workspaceId, phoneNumber])
 }
@@ -87,6 +101,21 @@ model Message {
 
   workspace   Workspace        @relation(fields: [workspaceId], references: [id])
   contact     Contact          @relation(fields: [contactId], references: [id])
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  workspaceId String
+  contactId   String
+  orderNumber String   @unique
+  serviceName String
+  status      String   @default("Pending")
+  price       String?
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  contact     Contact   @relation(fields: [contactId], references: [id])
 }
 
 enum CampaignStatus {

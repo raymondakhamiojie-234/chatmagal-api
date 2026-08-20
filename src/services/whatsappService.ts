@@ -486,6 +486,18 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
               }
             }
           }
+          if (!m && id === 'register_customer') {
+            m = {
+              id: 'register_customer',
+              title: 'Customer Registration',
+              action: 'FORM',
+              formQuestions: [
+                "Let's get your account set up!\n\nFirst, what is your full name?",
+                "Thank you. What is your email address?"
+              ],
+              onCompleteMessage: "✅ Registration submitted."
+            };
+          }
           return m;
         };
         
@@ -583,20 +595,143 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                 });
                 replyText = questions[currentData.step];
               } else {
-                // Form is complete!
-                try {
-                  const { appendRowToSheet } = require('./googleSheetsService');
-                  if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
-                    const sheetData = [new Date().toISOString(), phoneNumber, matchedForm.title || formId, ...currentData.answers];
-                    await appendRowToSheet(workspace.googleServiceAccountJson, workspace.googleSpreadsheetId, sheetData);
-                  }
-                } catch (err) { console.error('Sheet append error:', err); }
+                // --- CUSTOM NATIVE ACCOUNT FLOWS ---
+                if (formId === 'register_customer') {
+                  const name = currentData.answers[0];
+                  const email = currentData.answers[1];
+                  
+                  if (currentData.step === 2) {
+                    // Generate setup token
+                    const { v4: uuidv4 } = require('uuid');
+                    const setupToken = uuidv4();
+                    const expiry = new Date();
+                    expiry.setHours(expiry.getHours() + 1);
 
-                await prisma.contact.update({
-                  where: { id: contactId },
-                  data: { formState: null, formData: Prisma.DbNull }
-                });
-                replyText = matchedForm.onCompleteMessage || '✅ Thank you! We have received your information and our staff will process it shortly.';
+                    await prisma.contact.update({
+                      where: { id: contactId },
+                      data: {
+                        name: name,
+                        email: email,
+                        resetToken: setupToken,
+                        resetExpiry: expiry,
+                        accountStatus: 'REGISTERED'
+                      }
+                    });
+                    
+                    const setupLink = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/api/account/setup?token=${setupToken}`;
+                    replyText = `Great, ${name}! Please set up a secure password using this link:\n\n${setupLink}\n\n*Important: Once you set your password, we will send a 6-digit verification code to your email. Return to this chat and enter the code.*`;
+                    
+                    currentData.step = 3;
+                    await prisma.contact.update({
+                      where: { id: contactId },
+                      data: { formData: currentData }
+                    });
+                  } else if (currentData.step === 3) {
+                    // Check verification code
+                    const code = currentData.answers[2];
+                    if (contact.verificationCode === code && contact.verificationExpiry && contact.verificationExpiry > new Date()) {
+                      // Verified!
+                      const customerId = `FM-${Math.floor(100000 + Math.random() * 900000)}`;
+                      await prisma.contact.update({
+                        where: { id: contactId },
+                        data: {
+                          emailVerified: true,
+                          accountStatus: 'VERIFIED',
+                          customerId: customerId,
+                          verificationCode: null,
+                          verificationExpiry: null
+                        }
+                      });
+                      
+                      replyText = `✅ Account successfully verified!\nYour Falcus Media Customer ID is: ${customerId}`;
+                      
+                      // Check if there was a suspended flow
+                      if (contact.suspendedFlowData) {
+                        const suspended = JSON.parse(JSON.stringify(contact.suspendedFlowData));
+                        replyText += `\n\nResuming your previous request...`;
+                        
+                        // We will complete the suspended flow!
+                        try {
+                          const orderNumber = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
+                          await prisma.order.create({
+                            data: {
+                              workspaceId: workspace.id,
+                              contactId: contact.id,
+                              orderNumber: orderNumber,
+                              serviceName: suspended.selectedService || 'Service Request',
+                              price: suspended.priceQuote || null,
+                              details: suspended.answers || []
+                            }
+                          });
+                          replyText += `\n\n✅ Your request for ${suspended.selectedService || 'Service'} has been submitted.\nOrder Reference: ${orderNumber}`;
+                          
+                          const { appendRowToSheet } = require('./googleSheetsService');
+                          if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+                            const sheetData = [new Date().toISOString(), phoneNumber, suspended.selectedService || 'Service', ...suspended.answers];
+                            await appendRowToSheet(workspace.googleServiceAccountJson, workspace.googleSpreadsheetId, sheetData);
+                          }
+                        } catch (err) { console.error('Error saving suspended order:', err); }
+                      }
+
+                      // Clear form state completely
+                      await prisma.contact.update({
+                        where: { id: contactId },
+                        data: { formState: null, formData: Prisma.DbNull, suspendedFlowData: Prisma.DbNull }
+                      });
+                    } else {
+                      // Failed verification
+                      currentData.step = 2; // rollback step to ask again
+                      currentData.answers.pop();
+                      await prisma.contact.update({
+                        where: { id: contactId },
+                        data: { formData: currentData }
+                      });
+                      replyText = `❌ Invalid or expired verification code. Please try again. Enter the 6-digit code sent to ${contact.email}.`;
+                    }
+                  }
+                } else {
+                  // --- GENERIC FLOW COMPLETION (Service Requests) ---
+                  // Intercept if GUEST
+                  if (contact.accountStatus === 'GUEST' || !contact.emailVerified) {
+                    // Stash current flow data
+                    await prisma.contact.update({
+                      where: { id: contactId },
+                      data: {
+                        suspendedFlowData: currentData,
+                        formState: 'DYNAMIC_FORM',
+                        formData: { formId: 'register_customer', step: 0, answers: [] }
+                      }
+                    });
+                    replyText = `To complete your request for ${matchedForm.title}, you need a Falcus Media customer account.\n\nWhat is your full name?`;
+                  } else {
+                    // Normal completion (already verified)
+                    try {
+                      const orderNumber = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
+                      await prisma.order.create({
+                        data: {
+                          workspaceId: workspace.id,
+                          contactId: contact.id,
+                          orderNumber: orderNumber,
+                          serviceName: matchedForm.title || formId,
+                          price: currentData.priceQuote || null,
+                          details: currentData.answers || []
+                        }
+                      });
+
+                      const { appendRowToSheet } = require('./googleSheetsService');
+                      if (workspace.googleServiceAccountJson && workspace.googleSpreadsheetId) {
+                        const sheetData = [new Date().toISOString(), phoneNumber, matchedForm.title || formId, ...currentData.answers];
+                        await appendRowToSheet(workspace.googleServiceAccountJson, workspace.googleSpreadsheetId, sheetData);
+                      }
+                    } catch (err) { console.error('Order/Sheet save error:', err); }
+
+                    await prisma.contact.update({
+                      where: { id: contactId },
+                      data: { formState: null, formData: Prisma.DbNull }
+                    });
+                    replyText = matchedForm.onCompleteMessage || '✅ Thank you! We have received your information and our staff will process it shortly.';
+                  }
+                }
               }
             } else {
               // update state if we replied (e.g. price check)
@@ -741,7 +876,70 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                   }
                 }
               }
+              
+              if (!matchedItem && intentOverride === 'register_customer') {
+                matchedItem = {
+                  id: 'register_customer',
+                  title: 'Customer Registration',
+                  action: 'FORM',
+                  formQuestions: [
+                    "Let's get your account set up!\n\nFirst, what is your full name?",
+                    "Thank you. What is your email address?"
+                  ],
+                  onCompleteMessage: "✅ Registration submitted."
+                };
+              }
+
+              if (intentObj.intentId === 'TALK_TO_HUMAN') {
+                replyText = "Connecting you with a human agent now...";
+                // Add logic for human agent handoff here
+              }
             }
+          }
+
+          // NATIVE ACCOUNT INTENTS INTERCEPTOR
+          if (['my_orders', 'my_payments', 'my_account', 'account_recovery', 'login_customer'].includes(intentOverride)) {
+            if (intentOverride === 'account_recovery' || intentOverride === 'login_customer') {
+              if (contact.email) {
+                // Generate setup token for recovery
+                const { v4: uuidv4 } = require('uuid');
+                const setupToken = uuidv4();
+                const expiry = new Date();
+                expiry.setHours(expiry.getHours() + 1);
+
+                await prisma.contact.update({
+                  where: { id: contactId },
+                  data: {
+                    resetToken: setupToken,
+                    resetExpiry: expiry,
+                  }
+                });
+                const setupLink = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/api/account/recover?token=${setupToken}`;
+                replyText = `🔐 Need to reset your password or login? Use this secure link:\n\n${setupLink}\n\n*Note: Do NOT share this link with anyone.*`;
+              } else {
+                replyText = `We don't have an email on file for you. Would you like to create an account? Type 'register me'.`;
+              }
+            } else if (contact.accountStatus === 'GUEST' || !contact.emailVerified) {
+              replyText = `You need a verified Falcus Media account to access this feature. Would you like to create one now? Type 'register me'.`;
+            } else {
+              if (intentOverride === 'my_orders' || intentOverride === 'my_payments') {
+                const orders = await prisma.order.findMany({
+                  where: { contactId: contact.id },
+                  orderBy: { createdAt: 'desc' },
+                  take: 5
+                });
+                
+                if (orders.length === 0) {
+                  replyText = `📦 You don't have any recent orders or service requests.`;
+                } else {
+                  replyText = `📦 *Your Recent Orders*\n\n` + orders.map(o => `• Order: ${o.orderNumber}\n  Service: ${o.serviceName}\n  Status: ${o.status}\n  Date: ${o.createdAt.toLocaleDateString()}`).join('\n\n');
+                }
+              } else if (intentOverride === 'my_account') {
+                replyText = `👤 *My Account*\n\nName: ${contact.name || 'Not set'}\nEmail: ${contact.email || 'Not set'}\nCustomer ID: ${contact.customerId || 'N/A'}\nStatus: ${contact.accountStatus}`;
+              }
+            }
+            // Skip further processing for these intents
+            matchedItem = null;
           }
 
           if (matchedItem) {

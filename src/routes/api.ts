@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { sendBroadcast } from '../controllers/broadcastController';
+import { renderAccountSetup, processAccountSetup, renderAccountRecover, processAccountRecover } from '../controllers/accountController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   getWorkspace,
@@ -31,6 +32,12 @@ const router = Router();
 // Public onboarding / registration route
 router.post('/workspaces', createWorkspace);
 router.post('/workspaces/login', loginWorkspace);
+
+// Account Web UI Routes (Public, token based)
+router.get('/account/setup', renderAccountSetup);
+router.post('/account/setup', processAccountSetup);
+router.get('/account/recover', renderAccountRecover);
+router.post('/account/recover', processAccountRecover);
 
 // Public API Config route (used by frontend to retrieve META_APP_ID and META_CONFIG_ID for Facebook Login SDK)
 router.get('/config', (req, res) => {
