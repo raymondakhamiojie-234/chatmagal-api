@@ -3580,6 +3580,10 @@
 
       } catch (err) {
         console.error('Failed to load chat threads:', err);
+        const threadsList = document.getElementById('chat-threads-list');
+        if (threadsList) {
+          threadsList.innerHTML = `<div style="color:var(--text-danger); padding:1rem; text-align:center; font-size:0.8rem; border:1px solid red; margin:1rem; border-radius:8px;"><b>Error:</b> ${err.message || String(err)}<br><pre style="text-align:left; font-size:10px; margin-top:8px; overflow-x:auto;">${err.stack || ''}</pre></div>`;
+        }
       }
     }
 

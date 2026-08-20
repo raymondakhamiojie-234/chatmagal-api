@@ -113,8 +113,7 @@ export const getContacts = async (req: Request, res: Response) => {
 
     return res.status(200).json(sortedContacts);
   } catch (error) {
-    console.error('Error fetching contacts:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
   }
 };
 
