@@ -99,9 +99,9 @@ export const processAccountSetup = async (req: Request, res: Response) => {
   });
 
   // Mock sending email: In a real app we'd use SendGrid or Nodemailer here.
-  console.log(\`📧 [EMAIL MOCK] Sent verification code \${verificationCode} to \${contact.email}\`);
+  console.log(`📧 [EMAIL MOCK] Sent verification code ${verificationCode} to ${contact.email}`);
 
-  res.send(\`
+  res.send(`
     <html>
       <head>
         <title>Password Saved</title>
@@ -120,7 +120,7 @@ export const processAccountSetup = async (req: Request, res: Response) => {
         </div>
       </body>
     </html>
-  \`);
+  `);
 };
 
 // Render Password Reset Page
@@ -139,7 +139,7 @@ export const renderAccountRecover = async (req: Request, res: Response) => {
     return res.status(400).send('Reset link expired or invalid.');
   }
 
-  res.send(\`
+  res.send(`
     <html>
       <head>
         <title>Falcus Media - Reset Password</title>
@@ -164,7 +164,7 @@ export const renderAccountRecover = async (req: Request, res: Response) => {
         </div>
       </body>
     </html>
-  \`);
+  `);
 };
 
 // Process Password Reset
@@ -197,7 +197,7 @@ export const processAccountRecover = async (req: Request, res: Response) => {
     }
   });
 
-  res.send(\`
+  res.send(`
     <html>
       <head><title>Password Reset Successful</title>
       <style>body{font-family:sans-serif;text-align:center;padding:50px;}</style></head>
@@ -206,5 +206,5 @@ export const processAccountRecover = async (req: Request, res: Response) => {
         <p>You can now return to the chat.</p>
       </body>
     </html>
-  \`);
+  `);
 };
