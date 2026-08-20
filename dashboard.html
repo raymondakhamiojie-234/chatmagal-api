@@ -3484,17 +3484,17 @@
             const isInbound = msg.direction === 'INBOUND';
             
             let bodyPreview = '';
-            if (msg.content.text && msg.content.text.body) {
+            if (msg.content && msg.content.text && msg.content.text.body) {
               bodyPreview = msg.content.text.body;
-            } else if (msg.content.type === 'image') {
+            } else if (msg.content && msg.content.type === 'image') {
               bodyPreview = '📷 Image Attachment';
-            } else if (msg.content.type === 'document') {
+            } else if (msg.content && msg.content.type === 'document') {
               bodyPreview = '📄 Document Attachment';
-            } else if (msg.content.type === 'audio' || msg.content.type === 'voice') {
+            } else if (msg.content && (msg.content.type === 'audio' || msg.content.type === 'voice')) {
               bodyPreview = '🎵 Voice Recording';
-            } else if (msg.content.type === 'location') {
+            } else if (msg.content && msg.content.type === 'location') {
               bodyPreview = '📍 Location Pin';
-            } else if (msg.content.template && msg.content.template.name) {
+            } else if (msg.content && msg.content.template && msg.content.template.name) {
               bodyPreview = `🚀 Broadcast: ${msg.content.template.name}`;
             } else {
               bodyPreview = `[Outbound status: ${msg.status}]`;
@@ -3699,7 +3699,7 @@
 
       // Extract text content body
       let bodyText = '';
-      const msgType = message.content.type;
+      const msgType = message.content ? message.content.type : undefined;
 
       if (msgType === 'image') {
         const imageObj = message.content.image;
@@ -3798,7 +3798,7 @@
             }
           } else if (message.content.text && message.content.text.body) {
             bodyText = message.content.text.body;
-          } else if (message.content.template && message.content.template.name) {
+          } else if (message.content && message.content.template && message.content.template.name) {
             bodyText = `🚀 Marketing Template Sent: "${message.content.template.name}"`;
           } else {
             bodyText = `Outbound message processed.`;
