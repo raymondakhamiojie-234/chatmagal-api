@@ -3334,7 +3334,7 @@
         const data = await response.json();
         
         if (!response.ok) {
-          throw new Error(data.error || `HTTP error ${response.status}`);
+          throw new Error((data.error || `HTTP error ${response.status}`) + (data.details ? ` - Details: ${data.details}` : ''));
         }
         return data;
       } catch (err) {
