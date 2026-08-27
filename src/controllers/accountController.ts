@@ -98,8 +98,35 @@ export const processAccountSetup = async (req: Request, res: Response) => {
     }
   });
 
-  // Mock sending email: In a real app we'd use SendGrid or Nodemailer here.
-  console.log(`📧 [EMAIL MOCK] Sent verification code ${verificationCode} to ${contact.email}`);
+  // Send email using Nodemailer if configured, otherwise mock
+  if (process.env.SMTP_HOST) {
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || '"Falcus Media" <noreply@chatmagal.com>',
+        to: contact.email,
+        subject: 'Your Login Verification Code',
+        text: `Hello ${contact.name},\n\nYour account verification code is: ${verificationCode}\n\nPlease enter this code in the WhatsApp chat to complete your registration.\n\nThank you,\nFalcus Media`,
+        html: `<p>Hello ${contact.name},</p><p>Your account verification code is: <strong>${verificationCode}</strong></p><p>Please enter this code in the WhatsApp chat to complete your registration.</p><p>Thank you,<br/>Falcus Media</p>`
+      });
+      console.log(`📧 [EMAIL SENT] Verification code sent to ${contact.email}`);
+    } catch (emailErr) {
+      console.error(`📧 [EMAIL ERROR] Failed to send email to ${contact.email}:`, emailErr);
+    }
+  } else {
+    // Mock sending email: In a real app we'd use SendGrid or Nodemailer here.
+    console.log(`📧 [EMAIL MOCK] Sent verification code ${verificationCode} to ${contact.email}`);
+  }
 
   res.send(`
     <html>
