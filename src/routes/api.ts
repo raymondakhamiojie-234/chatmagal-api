@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { sendBroadcast } from '../controllers/broadcastController';
 import { renderAccountSetup, processAccountSetup, renderAccountRecover, processAccountRecover } from '../controllers/accountController';
+import { externalSupportChat } from '../controllers/externalSupportController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
   getWorkspace,
@@ -38,6 +39,9 @@ router.get('/account/setup', renderAccountSetup);
 router.post('/account/setup', processAccountSetup);
 router.get('/account/recover', renderAccountRecover);
 router.post('/account/recover', processAccountRecover);
+
+// External AI Support Chat (Public)
+router.post('/external/chat', externalSupportChat);
 
 // Public API Config route (used by frontend to retrieve META_APP_ID and META_CONFIG_ID for Facebook Login SDK)
 router.get('/config', (req, res) => {
