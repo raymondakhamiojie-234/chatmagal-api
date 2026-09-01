@@ -3,7 +3,6 @@ import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // POST /api/support/chat
 export const externalSupportChat = async (req: Request, res: Response) => {
@@ -13,6 +12,18 @@ export const externalSupportChat = async (req: Request, res: Response) => {
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
+
+    const apiKey = process.env.NVIDIA_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'NVIDIA_API_KEY is not configured on the server.' });
+    }
+
+    const openai = new OpenAI({ 
+      apiKey: apiKey,
+      baseURL: 'https://integrate.api.nvidia.com/v1' 
+    });
+
+    const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
 
     // Prepare a powerful system prompt injected with deep social media knowledge
     const systemPrompt = `You are a highly intelligent Support Agent and Expert for Falcus Media Ltd.
@@ -30,18 +41,13 @@ Your objective is to provide professional, accurate, and helpful answers to user
       { role: 'system', content: systemPrompt }
     ];
 
-    if (sessionId) {
-      // We can use the sessionId to fetch past context from our database if we want to store it,
-      // but for a pure stateless endpoint, we will just pass the current message.
-      // (You can expand this later to save/load messages from the DB using sessionId).
-    }
-
     messages.push({ role: 'user', content: message });
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // or gpt-4 if you prefer
+      model: aiModel,
       messages: messages,
       temperature: 0.7,
+      max_tokens: 1024,
     });
 
     const reply = completion.choices[0]?.message?.content || 'I am sorry, I am currently unable to process your request.';
