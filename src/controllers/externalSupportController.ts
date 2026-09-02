@@ -13,17 +13,17 @@ export const externalSupportChat = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    const apiKey = process.env.NVIDIA_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'NVIDIA_API_KEY is not configured on the server.' });
+      return res.status(500).json({ error: 'OPENAI_API_KEY is not configured on the server.' });
     }
 
     const openai = new OpenAI({ 
       apiKey: apiKey,
-      baseURL: 'https://integrate.api.nvidia.com/v1' 
+       
     });
 
-    const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+    const aiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
     // Prepare a powerful system prompt injected with deep social media knowledge
     const systemPrompt = `You are a highly intelligent Support Agent and Expert for Falcus Media Ltd.

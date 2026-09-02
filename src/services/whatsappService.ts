@@ -55,13 +55,13 @@ export async function detectIntent(workspace: any, contactId: string, queryText:
   const intents = flowConfig.chatFlowUpdate.intentRouter.intents;
   if (!intents || !Array.isArray(intents) || intents.length === 0) return null;
 
-  const apiKey = process.env.NVIDIA_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
-  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+  const aiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
   const openai = new OpenAI({
     apiKey,
-    baseURL: 'https://integrate.api.nvidia.com/v1',
+    
   });
 
   let historyText = '';
@@ -115,7 +115,7 @@ Respond ONLY with a valid JSON object containing:
 Example: {"intentId": "SERVICE_FOLLOWERS", "isAnswerToCurrentFlow": false, "isFlowSwitchRequested": false}
 Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchRequested": false}
 `;
-    console.log(`🧠 [NVIDIA NIM AI] Classifying message using ${aiModel}: "${queryText}"`);
+    console.log(`🧠 [OpenAI] Classifying message using ${aiModel}: "${queryText}"`);
     const completion = await openai.chat.completions.create({
       model: aiModel,
       messages: [{ role: 'user', content: prompt }],
@@ -150,9 +150,9 @@ Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchR
 }
 
 export async function generateGeminiResponse(contactId: string, prompt: string): Promise<string> {
-  const apiKey = process.env.NVIDIA_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   const hasLiveKey = apiKey && apiKey.trim() !== '';
-  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+  const aiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
   let trainingContextText = '';
   let workspaceId = '';
@@ -245,7 +245,7 @@ export async function generateGeminiResponse(contactId: string, prompt: string):
   if (hasLiveKey) {
     const openai = new OpenAI({
       apiKey,
-      baseURL: 'https://integrate.api.nvidia.com/v1',
+      
     });
     const promptContext = `System Instruction: You are the automated AI assistant for the WhatsApp Business account of "${workspaceName}". 
 Answering Tone Guidelines: You must write in a tone that is "${systemTone}".
@@ -273,7 +273,7 @@ Customer: ${prompt}
 Bot:`;
 
     try {
-      console.log(`🧠 [NVIDIA NIM AI] Querying model ${aiModel}...`);
+      console.log(`🧠 [OpenAI] Querying model ${aiModel}...`);
       const completion = await openai.chat.completions.create({
         model: aiModel,
         messages: [{ role: 'user', content: promptContext }],
@@ -283,7 +283,7 @@ Bot:`;
       const text = completion.choices[0]?.message?.content;
       if (text && text.trim()) return text.trim();
     } catch (err: any) {
-      console.error('⚠️ [NVIDIA NIM AI API Error] Falling back to local AI engine:', err.message || err);
+      console.error('⚠️ [OpenAI API Error] Falling back to local AI engine:', err.message || err);
     }
   }
 
@@ -358,9 +358,9 @@ interface SentimentResult {
 }
 
 async function analyzeMessageSentiment(prompt: string): Promise<SentimentResult> {
-  const apiKey = process.env.NVIDIA_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   const hasLiveKey = apiKey && apiKey.trim() !== '';
-  const aiModel = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+  const aiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
   const systemInstructions = `Analyze the following customer message and return a strictly formatted JSON object with "sentiment" and "priority" keys.
   
@@ -375,7 +375,7 @@ Return ONLY the raw JSON object, no markdown wrappers and no explanation:
     try {
       const openai = new OpenAI({
         apiKey,
-        baseURL: 'https://integrate.api.nvidia.com/v1',
+        
       });
       
       const completion = await openai.chat.completions.create({
@@ -402,7 +402,7 @@ Return ONLY the raw JSON object, no markdown wrappers and no explanation:
         }
       }
     } catch (err) {
-      console.warn('⚠️ [NVIDIA NIM AI Sentiment Failed] Falling back to local classifier:', err);
+      console.warn('⚠️ [OpenAI Sentiment Failed] Falling back to local classifier:', err);
     }
   }
 
