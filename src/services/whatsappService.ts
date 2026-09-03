@@ -85,7 +85,8 @@ export async function detectIntent(workspace: any, contactId: string, queryText:
 
   try {
     const intentDescriptions = intents.map((i: any) => `- ${i.id}: ${i.category} (Examples: ${i.examples?.slice(0,5).join(', ')})`).join('\n');
-    const outsideScopeDesc = `- OUTSIDE_SCOPE: Use this if the customer asks completely unrelated questions (e.g. weather, jokes, homework, who is the president, write a poem).`;
+    const outsideScopeDesc = `- OUTSIDE_SCOPE: Use this if the customer asks completely unrelated questions (e.g. weather, jokes, homework, who is the president, write a poem).
+- MAIN_MENU: Use this if the customer says a general greeting (hi, hello), asks to see the menu, asks for a list of services, or asks 'can I see your services'.`;
     
     let activeFlowContextText = '';
     if (activeFlowId && currentQuestion) {
@@ -108,13 +109,13 @@ ${activeFlowContextText}
 Customer Message: "${queryText}"
 
 Respond ONLY with a valid JSON object containing:
-- "intentId": the matched intent ID, or "UNKNOWN", or "OUTSIDE_SCOPE".
+- "intentId": the matched intent ID, or "UNKNOWN", "OUTSIDE_SCOPE", or "MAIN_MENU".
 - "isAnswerToCurrentFlow": boolean. True ONLY if their message is a reasonable answer to the "CURRENT FLOW STATUS" question. If they are completely ignoring the question to ask something new, false. (If no flow is active, false).
 - "isFlowSwitchRequested": boolean. True if they are explicitly asking to stop the current flow and start a different service.
 
 Example: {"intentId": "SERVICE_FOLLOWERS", "isAnswerToCurrentFlow": false, "isFlowSwitchRequested": false}
 Example 2: {"intentId": "UNKNOWN", "isAnswerToCurrentFlow": true, "isFlowSwitchRequested": false}
-`;
+Example 3: {"intentId": "MAIN_MENU", "isAnswerToCurrentFlow": false, "isFlowSwitchRequested": false}`;
     console.log(`🧠 [OpenAI] Classifying message using ${aiModel}: "${queryText}"`);
     const completion = await openai.chat.completions.create({
       model: aiModel,
@@ -840,6 +841,24 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                   interactive: {
                     type: 'list',
                     header: { type: 'text', text: 'Falcus Media Ltd' },
+                    body: { text: 'Choose an option:' },
+                    action: { button: 'Menu', sections: [{ title: 'Options', rows }] }
+                  }
+                };
+              } else if (intentObj.intentId === 'MAIN_MENU') {
+                replyText = flowConfig.welcomeMessage || `Welcome to ${workspace.businessName || workspace.name || 'our service'}! 👋\n\nHow can we assist you today?`;
+                const rows = flowConfig.mainMenu.map((item: any) => ({
+                  id: item.id,
+                  title: item.title.substring(0, 24)
+                }));
+                payload = {
+                  messaging_product: 'whatsapp',
+                  recipient_type: 'individual',
+                  to: phoneNumber,
+                  type: 'interactive',
+                  interactive: {
+                    type: 'list',
+                    header: { type: 'text', text: 'Welcome' },
                     body: { text: 'Choose an option:' },
                     action: { button: 'Menu', sections: [{ title: 'Options', rows }] }
                   }
