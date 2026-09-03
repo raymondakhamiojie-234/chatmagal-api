@@ -822,7 +822,13 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
           }
 
           // If no direct button match, try AI Intent Routing for natural language!
-          if (!matchedItem && flowConfig?.chatFlowUpdate?.intentRouter?.enabled) {
+          const nativeIntents = ['my_orders', 'my_payments', 'my_account', 'account_recovery', 'login_customer', 'register_customer'];
+          const skipAI = nativeIntents.includes(intentOverride) || intentOverride.toLowerCase() === 'register me';
+          if (intentOverride.toLowerCase() === 'register me') {
+            intentOverride = 'register_customer';
+          }
+
+          if (!matchedItem && !skipAI && flowConfig?.chatFlowUpdate?.intentRouter?.enabled) {
             const intentObj = await detectIntent(workspace, contactId, queryText);
             if (intentObj) {
               if (intentObj.intentId === 'OUTSIDE_SCOPE') {
@@ -895,25 +901,25 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                   }
                 }
               }
-              
-              if (!matchedItem && intentOverride === 'register_customer') {
-                matchedItem = {
-                  id: 'register_customer',
-                  title: 'Customer Registration',
-                  action: 'FORM',
-                  formQuestions: [
-                    "Let's get your account set up!\n\nFirst, what is your full name?",
-                    "Thank you. What is your email address?"
-                  ],
-                  onCompleteMessage: "✅ Registration submitted."
-                };
-              }
 
               if (intentObj.intentId === 'TALK_TO_HUMAN') {
                 replyText = "Connecting you with a human agent now...";
                 // Add logic for human agent handoff here
               }
             }
+          }
+
+          if (!matchedItem && intentOverride === 'register_customer') {
+            matchedItem = {
+              id: 'register_customer',
+              title: 'Customer Registration',
+              action: 'FORM',
+              formQuestions: [
+                "Let's get your account set up!\n\nFirst, what is your full name?",
+                "Thank you. What is your email address?"
+              ],
+              onCompleteMessage: "✅ Registration submitted."
+            };
           }
 
           // NATIVE ACCOUNT INTENTS INTERCEPTOR
