@@ -15,18 +15,16 @@ export const renderAccountSetup = async (req: Request, res: Response) => {
   // Find contact by resetToken (reused for setup token initially)
   const contact = await prisma.contact.findFirst({
     where: {
-      resetToken: token,
-      resetExpiry: { gt: new Date() }
+      resetToken: token
     }
   });
 
   if (!contact) {
-    return res.status(400).send(`
-      <html><body style="font-family:sans-serif; text-align:center; padding:50px;">
-        <h2>Link Expired or Invalid</h2>
-        <p>Please request a new setup link from the Falcus Media chat.</p>
-      </body></html>
-    `);
+    return res.status(400).send('This link is invalid or has already been used. Please request a new setup link from the chat.');
+  }
+
+  if (contact.resetExpiry && new Date() > contact.resetExpiry) {
+    return res.status(400).send('This link has expired (it is only valid for 1 hour). Please request a new setup link from the chat.');
   }
 
   res.send(`
@@ -70,13 +68,16 @@ export const processAccountSetup = async (req: Request, res: Response) => {
 
   const contact = await prisma.contact.findFirst({
     where: {
-      resetToken: token,
-      resetExpiry: { gt: new Date() }
+      resetToken: token
     }
   });
 
   if (!contact) {
-    return res.status(400).send('Link Expired or Invalid.');
+    return res.status(400).send('This link is invalid or has already been used. Please request a new setup link from the chat.');
+  }
+
+  if (contact.resetExpiry && new Date() > contact.resetExpiry) {
+    return res.status(400).send('This link has expired. Please request a new setup link from the chat.');
   }
 
   const saltRounds = 10;
@@ -204,13 +205,16 @@ export const processAccountRecover = async (req: Request, res: Response) => {
 
   const contact = await prisma.contact.findFirst({
     where: {
-      resetToken: token,
-      resetExpiry: { gt: new Date() }
+      resetToken: token
     }
   });
 
   if (!contact) {
-    return res.status(400).send('Link Expired or Invalid.');
+    return res.status(400).send('This link is invalid or has already been used. Please request a new setup link from the chat.');
+  }
+
+  if (contact.resetExpiry && new Date() > contact.resetExpiry) {
+    return res.status(400).send('This link has expired. Please request a new setup link from the chat.');
   }
 
   const hash = await bcrypt.hash(password, 10);
