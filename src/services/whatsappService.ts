@@ -494,7 +494,8 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
               action: 'FORM',
               formQuestions: [
                 "Let's get your account set up!\n\nFirst, what is your full name?",
-                "Thank you. What is your email address?"
+                "Thank you. What is your email address?",
+                "Please enter the 6-digit verification code we sent to your email."
               ],
               onCompleteMessage: "✅ Registration submitted."
             };
@@ -508,7 +509,10 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
           const questions = matchedForm.formQuestions;
           
           // INTENT DETECT & FLOW SWITCHING
-          const intentObj = await detectIntent(workspace, contactId, queryText, formId, questions[step]);
+          let intentObj: any = null;
+          if (formId !== 'register_customer') {
+            intentObj = await detectIntent(workspace, contactId, queryText, formId, questions[step]);
+          }
           
           if (intentObj) {
             if (intentObj.intentId === 'OUTSIDE_SCOPE') {
@@ -622,7 +626,8 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
                     const setupLink = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/api/account/setup?token=${setupToken}`;
                     replyText = `Great, ${name}! Please set up a secure password using this link:\n\n${setupLink}\n\n*Important: Once you set your password, we will send a 6-digit verification code to your email. Return to this chat and enter the code.*`;
                     
-                    currentData.step = 3;
+                    // Stay at step 2 so that the next reply from the user pushes step to 3
+                    currentData.step = 2;
                     await prisma.contact.update({
                       where: { id: contactId },
                       data: { formData: currentData }
@@ -916,7 +921,8 @@ export const triggerAutoResponse = async (workspaceId: string, contactId: string
               action: 'FORM',
               formQuestions: [
                 "Let's get your account set up!\n\nFirst, what is your full name?",
-                "Thank you. What is your email address?"
+                "Thank you. What is your email address?",
+                "Please enter the 6-digit verification code we sent to your email."
               ],
               onCompleteMessage: "✅ Registration submitted."
             };
