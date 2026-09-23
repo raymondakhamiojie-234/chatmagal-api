@@ -46,7 +46,7 @@ export const renderAccountSetup = async (req: Request, res: Response) => {
         <div class="card">
           <h2>Secure Account Setup</h2>
           <p>Hi ${contact.name}, please create a secure password for your Falcus Media account (${contact.email}).</p>
-          <form action="/api/account/setup" method="POST">
+          <form action="/api/account/setup" method="POST" onsubmit="document.getElementById('submitBtn').disabled = true; document.getElementById('submitBtn').innerText = 'Saving...';">
             <input type="hidden" name="token" value="${token}" />
             <input type="password" name="password" placeholder="Create Password" required minlength="8" />
             <input type="password" name="confirmPassword" placeholder="Confirm Password" required minlength="8" />
@@ -184,10 +184,10 @@ export const renderAccountRecover = async (req: Request, res: Response) => {
         <div class="card">
           <h2>Reset Password</h2>
           <p>Enter a new password for \${contact.email}.</p>
-          <form action="/api/account/recover" method="POST">
+          <form action="/api/account/recover" method="POST" onsubmit="document.getElementById('submitBtn').disabled = true; document.getElementById('submitBtn').innerText = 'Resetting...';">
             <input type="hidden" name="token" value="\${token}" />
             <input type="password" name="password" placeholder="New Password" required minlength="8" />
-            <button type="submit">Reset Password</button>
+            <button id="submitBtn" type="submit">Reset Password</button>
           </form>
         </div>
       </body>
