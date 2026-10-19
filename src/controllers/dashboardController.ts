@@ -1009,3 +1009,33 @@ export const updateContactName = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// GET /api/orders
+export const getWorkspaceOrders = async (req: Request, res: Response) => {
+  try {
+    const workspaceId = req.user?.workspaceId;
+    if (!workspaceId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const orders = await prisma.order.findMany({
+      where: { workspaceId },
+      include: {
+        contact: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            customerId: true,
+            accountStatus: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.json({ success: true, orders });
+  } catch (err: any) {
+    console.error('Error fetching workspace orders:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+

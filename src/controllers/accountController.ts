@@ -239,3 +239,161 @@ export const processAccountRecover = async (req: Request, res: Response) => {
     </html>
   `);
 };
+
+// ==========================================
+// CLIENT PORTAL API ENDPOINTS (MOBILE APP)
+// ==========================================
+
+// POST /api/account/client-login
+export const clientLogin = async (req: Request, res: Response) => {
+  try {
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Please provide email or phone number and password.' });
+    }
+
+    const trimmed = identifier.trim();
+    const contact = await prisma.contact.findFirst({
+      where: {
+        OR: [
+          { email: { equals: trimmed, mode: 'insensitive' } },
+          { phoneNumber: trimmed }
+        ]
+      },
+      include: {
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 20
+        }
+      }
+    });
+
+    if (!contact || !contact.passwordHash) {
+      return res.status(401).json({ error: 'Invalid credentials or no password set for this account.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, contact.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email/phone or password.' });
+    }
+
+    return res.json({
+      success: true,
+      client: {
+        id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phoneNumber: contact.phoneNumber,
+        customerId: contact.customerId,
+        accountStatus: contact.accountStatus,
+        emailVerified: contact.emailVerified,
+        workspaceId: contact.workspaceId
+      },
+      orders: contact.orders
+    });
+  } catch (err: any) {
+    console.error('Error in clientLogin:', err);
+    return res.status(500).json({ error: 'Server error during client login' });
+  }
+};
+
+// GET /api/account/client-orders
+export const getClientOrders = async (req: Request, res: Response) => {
+  try {
+    const contactId = req.query.contactId as string;
+    if (!contactId) return res.status(400).json({ error: 'Missing contactId' });
+
+    const orders = await prisma.order.findMany({
+      where: { contactId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.json({ success: true, orders });
+  } catch (err: any) {
+    console.error('Error fetching client orders:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// GET /api/account/client-messages
+export const getClientMessages = async (req: Request, res: Response) => {
+  try {
+    const contactId = req.query.contactId as string;
+    if (!contactId) return res.status(400).json({ error: 'Missing contactId' });
+
+    const messages = await prisma.message.findMany({
+      where: { contactId },
+      orderBy: { createdAt: 'asc' },
+      take: 100
+    });
+
+    return res.json({ success: true, messages });
+  } catch (err: any) {
+    console.error('Error fetching client messages:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// POST /api/account/client-message
+export const sendClientMessage = async (req: Request, res: Response) => {
+  try {
+    const { contactId, messageText } = req.body;
+    if (!contactId || !messageText) {
+      return res.status(400).json({ error: 'Missing contactId or messageText' });
+    }
+
+    const contact = await prisma.contact.findUnique({
+      where: { id: contactId },
+      include: { workspace: true }
+    });
+
+    if (!contact) return res.status(404).json({ error: 'Contact not found' });
+
+    const newMessage = await prisma.message.create({
+      data: {
+        workspaceId: contact.workspaceId,
+        contactId: contact.id,
+        direction: 'INBOUND',
+        lane: 'SUPPORT',
+        content: { body: messageText },
+        status: 'READ'
+      }
+    });
+
+    // Notify workspace and contact socket rooms
+    try {
+      const { getIo } = require('../../config/socket');
+      const io = getIo();
+      io.to(contact.workspaceId).emit('newMessage', newMessage);
+      io.to(`contact:${contact.id}`).emit('newMessage', newMessage);
+    } catch (e) {}
+
+    // If bot is enabled, generate automated AI response
+    if (contact.botEnabled) {
+      const { processInboundWhatsAppMessage } = require('../services/whatsappService');
+      processInboundWhatsAppMessage({
+        entry: [{
+          changes: [{
+            value: {
+              metadata: { phone_number_id: contact.workspace.metaPhoneNumberId || 'mobile-sim' },
+              contacts: [{ wa_id: contact.phoneNumber, profile: { name: contact.name || 'Client' } }],
+              messages: [{
+                from: contact.phoneNumber,
+                id: 'm_' + Date.now(),
+                timestamp: Math.floor(Date.now() / 1000).toString(),
+                text: { body: messageText },
+                type: 'text'
+              }]
+            }
+          }]
+        }]
+      }).catch((botErr: any) => console.error('Error generating AI reply:', botErr));
+    }
+
+    return res.json({ success: true, message: newMessage });
+  } catch (err: any) {
+    console.error('Error in sendClientMessage:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+

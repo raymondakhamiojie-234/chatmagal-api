@@ -24,6 +24,11 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       console.log(`Socket ${socket.id} joined workspace ${workspaceId}`);
     });
 
+    socket.on('joinContact', (contactId: string) => {
+      socket.join(`contact:${contactId}`);
+      console.log(`Socket ${socket.id} joined contact room contact:${contactId}`);
+    });
+
     socket.on('typing', ({ workspaceId, contactId, isTyping }) => {
       console.log(`⚡ Socket typing status broadcast: workspace=${workspaceId}, contact=${contactId}, isTyping=${isTyping}`);
       socket.to(workspaceId).emit('typingStatus', { contactId, isTyping });

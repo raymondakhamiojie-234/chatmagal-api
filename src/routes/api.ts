@@ -1,6 +1,15 @@
 import { Router } from 'express';
 import { sendBroadcast } from '../controllers/broadcastController';
-import { renderAccountSetup, processAccountSetup, renderAccountRecover, processAccountRecover } from '../controllers/accountController';
+import { 
+  renderAccountSetup, 
+  processAccountSetup, 
+  renderAccountRecover, 
+  processAccountRecover,
+  clientLogin,
+  getClientOrders,
+  getClientMessages,
+  sendClientMessage
+} from '../controllers/accountController';
 import { externalSupportChat } from '../controllers/externalSupportController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import {
@@ -25,7 +34,8 @@ import {
   getTeamMembers,
   addTeamMember,
   updateWorkspaceSettings,
-  updateContactName
+  updateContactName,
+  getWorkspaceOrders
 } from '../controllers/dashboardController';
 
 const router = Router();
@@ -39,6 +49,12 @@ router.get('/account/setup', renderAccountSetup);
 router.post('/account/setup', processAccountSetup);
 router.get('/account/recover', renderAccountRecover);
 router.post('/account/recover', processAccountRecover);
+
+// Client Portal Mobile Endpoints
+router.post('/account/client-login', clientLogin);
+router.get('/account/client-orders', getClientOrders);
+router.get('/account/client-messages', getClientMessages);
+router.post('/account/client-message', sendClientMessage);
 
 // External AI Support Chat (Public)
 router.post('/external/chat', externalSupportChat);
@@ -55,6 +71,7 @@ router.get('/config', (req, res) => {
 router.post('/broadcast', authMiddleware, sendBroadcast);
 router.get('/workspace', authMiddleware, getWorkspace);
 router.get('/contacts', authMiddleware, getContacts);
+router.get('/orders', authMiddleware, getWorkspaceOrders);
 router.get('/messages/:contactId', authMiddleware, getMessages);
 router.get('/campaigns', authMiddleware, getCampaigns);
 router.delete('/campaigns/:campaignId', authMiddleware, cancelCampaign);
