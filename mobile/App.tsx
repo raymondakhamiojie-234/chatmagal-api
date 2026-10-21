@@ -82,7 +82,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" backgroundColor="#008069" />
 
       {/* Main Web View Wrapping Chatmagal Web Project */}
       <View style={styles.container}>
@@ -202,7 +202,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#008069',
   },
   container: {
     flex: 1,
