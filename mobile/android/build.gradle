@@ -8,6 +8,7 @@ buildscript {
     targetSdkVersion = 34
     ndkVersion = "28.2.13676358"
     ndkPath = "C:/Users/USER/AppData/Local/Android/Sdk/ndk/28.2.13676358"
+    cmakeVersion = "3.22.1"
   }
   repositories {
     google()
@@ -28,6 +29,7 @@ ext {
   targetSdkVersion = 34
   ndkVersion = "28.2.13676358"
   ndkPath = "C:/Users/USER/AppData/Local/Android/Sdk/ndk/28.2.13676358"
+  cmakeVersion = "3.22.1"
 }
 
 allprojects {
